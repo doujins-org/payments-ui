@@ -1,15 +1,15 @@
 import React, { createContext, useContext, useEffect, useMemo } from 'react'
-import type {
-  PaymentConfig,
-  PaymentFetcher,
-  AuthTokenProvider,
-} from '../types/config'
+import type { PaymentConfig, PaymentFetcher } from '../types/config'
 import { loadCollectJs } from '../utils/collect'
+import { EventEmitter, PaymentApp, ServiceContainer } from '../core'
 
 export interface PaymentContextValue {
   config: PaymentConfig
   fetcher: PaymentFetcher
   resolveAuthToken: () => Promise<string | null>
+  app: PaymentApp
+  events: EventEmitter
+  services: ServiceContainer
 }
 
 const PaymentContext = createContext<PaymentContextValue | undefined>(undefined)
@@ -19,40 +19,27 @@ export interface PaymentProviderProps {
   children: React.ReactNode
 }
 
-const resolveTokenProvider = async (
-  provider?: AuthTokenProvider
-): Promise<string | null> => {
-  if (!provider) return null
-  try {
-    const result = provider()
-    if (result instanceof Promise) {
-      return (await result) ?? null
-    }
-    return result ?? null
-  } catch (error) {
-    console.warn('payments-ui: failed to resolve auth token', error)
-    return null
-  }
-}
-
 export const PaymentProvider: React.FC<PaymentProviderProps> = ({
   config,
   children,
 }) => {
-  const value = useMemo<PaymentContextValue>(() => {
-    const fetcher: PaymentFetcher = config.fetcher ?? (globalThis.fetch?.bind(globalThis) as PaymentFetcher)
+  const app = useMemo(() => new PaymentApp({ config }), [config])
 
+  const value = useMemo<PaymentContextValue>(() => {
     return {
-      config,
-      fetcher,
-      resolveAuthToken: async () => resolveTokenProvider(config.getAuthToken),
+      config: app.getConfig(),
+      fetcher: app.getFetcher(),
+      resolveAuthToken: app.resolveAuthToken,
+      app,
+      events: app.getEvents(),
+      services: app.getServices(),
     }
-  }, [config])
+  }, [app])
 
   useEffect(() => {
-    if (!config.collectJsKey) return
-    loadCollectJs(config.collectJsKey)
-  }, [config.collectJsKey])
+    if (!value.config.collectJsKey) return
+    loadCollectJs(value.config.collectJsKey)
+  }, [value.config.collectJsKey])
 
   return <PaymentContext.Provider value={value}>{children}</PaymentContext.Provider>
 }
