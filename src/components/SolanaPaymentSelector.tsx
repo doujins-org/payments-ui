@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { CreditCard, Loader2, X } from 'lucide-react'
@@ -7,6 +7,8 @@ import { QRCodePayment } from './QRCodePayment'
 import { PaymentStatus } from './PaymentStatus'
 import type { SubmitPaymentResponse, TokenInfo } from '../types'
 import { useSupportedTokens } from '../hooks/useSupportedTokens'
+import { usePaymentStore } from '../hooks/usePaymentStore'
+import { selectSolanaFlow } from '../state/selectors'
 
 interface SolanaPaymentSelectorProps {
   isOpen: boolean
@@ -17,13 +19,6 @@ interface SolanaPaymentSelectorProps {
   onSuccess: (result: SubmitPaymentResponse | string) => void
 }
 
-type PaymentState =
-  | 'selecting'
-  | 'processing'
-  | 'confirming'
-  | 'success'
-  | 'error'
-
 export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
   isOpen,
   onClose,
@@ -33,19 +28,29 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
   onError,
 }) => {
   const { connected } = useWallet()
-  const [activeTab, setActiveTab] = useState<string>(connected ? 'wallet' : 'qr')
-  const [paymentState, setPaymentState] = useState<PaymentState>('selecting')
-  const [transactionId, setTransactionId] = useState<string | null>(null)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [tokenAmount, setTokenAmount] = useState<number>(0)
+  const {
+    tab: activeTab,
+    status: paymentState,
+    error: errorMessage,
+    transactionId,
+    tokenAmount,
+    selectedTokenSymbol,
+    setTab,
+    setTokenAmount,
+    setTransactionId,
+    setSelectedTokenSymbol,
+    startSolanaPayment,
+    confirmSolanaPayment,
+    completeSolanaPayment,
+    failSolanaPayment,
+    resetSolanaPayment,
+  } = usePaymentStore(selectSolanaFlow)
 
   const {
     tokens,
     isLoading: tokensLoading,
     error: tokensError,
   } = useSupportedTokens()
-
-  const [selectedTokenSymbol, setSelectedTokenSymbol] = useState<string>('')
 
   const selectedToken = useMemo<TokenInfo | null>(() => {
     if (!tokens.length) return null
@@ -55,59 +60,73 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
 
   useEffect(() => {
     if (!selectedTokenSymbol && tokens.length) {
-      const defaultToken = tokens.find((token) => token.symbol === 'SOL') || tokens[0]
+      const defaultToken =
+        tokens.find((token) => token.symbol === 'SOL') || tokens[0]
       setSelectedTokenSymbol(defaultToken.symbol)
     }
-  }, [tokens, selectedTokenSymbol])
+  }, [tokens, selectedTokenSymbol, setSelectedTokenSymbol])
 
   const handlePaymentStart = useCallback(() => {
-    setPaymentState('processing')
-    setErrorMessage(null)
-  }, [])
+    startSolanaPayment()
+  }, [startSolanaPayment])
 
   const handlePaymentConfirming = useCallback(() => {
-    setPaymentState('confirming')
-  }, [])
+    confirmSolanaPayment()
+  }, [confirmSolanaPayment])
 
   const handlePaymentSuccess = useCallback(
     (result: SubmitPaymentResponse | string, txId?: string) => {
-      setTransactionId(
-        txId || (typeof result === 'string' ? result : result.transaction_id)
+      const resolvedTx = txId ||
+        (typeof result === 'string' ? result : result.transaction_id)
+      setTransactionId(resolvedTx)
+      completeSolanaPayment(
+        typeof result === 'string'
+          ? {
+              transactionId: resolvedTx,
+              processor: 'solana',
+              metadata: { source: 'solana-pay' },
+            }
+          : {
+              transactionId: result.transaction_id,
+              intentId: result.intent_id,
+              processor: 'solana',
+              metadata: {
+                purchaseId: result.purchase_id,
+                amount: result.amount,
+                currency: result.currency,
+              },
+            }
       )
-      setPaymentState('success')
 
       setTimeout(() => {
         onSuccess(result)
       }, 1500)
     },
-    [onSuccess]
+    [completeSolanaPayment, onSuccess, setTransactionId]
   )
 
   const handlePaymentError = useCallback(
     (error: string) => {
-      setErrorMessage(error)
-      setPaymentState('error')
+      failSolanaPayment(error)
       onError?.(error)
     },
-    [onError]
+    [failSolanaPayment, onError]
   )
 
   const handleRetry = useCallback(() => {
-    setPaymentState('selecting')
-    setErrorMessage(null)
+    resetSolanaPayment()
     setTransactionId(null)
-  }, [])
+  }, [resetSolanaPayment, setTransactionId])
 
   const handleClose = useCallback(() => {
     if (paymentState === 'processing' || paymentState === 'confirming') {
       return
     }
 
-    setPaymentState('selecting')
-    setErrorMessage(null)
+    resetSolanaPayment()
     setTransactionId(null)
     onClose()
-  }, [paymentState, onClose])
+  }, [paymentState, resetSolanaPayment, setTransactionId, onClose])
 
   useEffect(() => {
     if (!isOpen || !selectedToken || usdAmount === 0) {
@@ -122,25 +141,28 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
     }
 
     setTokenAmount(usdAmount / price)
-  }, [isOpen, usdAmount, selectedToken])
+  }, [isOpen, usdAmount, selectedToken, setTokenAmount])
 
-  const handleTokenChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedTokenSymbol(event.target.value)
-  }, [])
+  const handleTokenChange = useCallback(
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      setSelectedTokenSymbol(event.target.value)
+    },
+    [setSelectedTokenSymbol]
+  )
 
   const wasConnectedRef = useRef(connected)
 
   useEffect(() => {
     if (connected && !wasConnectedRef.current) {
-      setActiveTab('wallet')
+      setTab('wallet')
     }
 
     if (!connected && wasConnectedRef.current) {
-      setActiveTab('qr')
+      setTab('qr')
     }
 
     wasConnectedRef.current = connected
-  }, [connected])
+  }, [connected, setTab])
 
   const renderSelector = () => {
     if (tokensLoading) {
@@ -163,7 +185,7 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
       <div className="payments-ui-token-select">
         <label>
           Payment token
-          <select value={selectedTokenSymbol} onChange={handleTokenChange}>
+          <select value={selectedTokenSymbol ?? ''} onChange={handleTokenChange}>
             {tokens.map((token) => (
               <option key={token.symbol} value={token.symbol}>
                 {token.name} ({token.symbol})
@@ -189,7 +211,10 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
                 <h3>Complete your payment</h3>
                 <p>Follow the prompts below to finish.</p>
               </div>
-              <Dialog.Close className="payments-ui-icon-button" disabled={paymentState === 'processing' || paymentState === 'confirming'}>
+              <Dialog.Close
+                className="payments-ui-icon-button"
+                disabled={paymentState === 'processing' || paymentState === 'confirming'}
+              >
                 <X className="payments-ui-icon" />
               </Dialog.Close>
             </div>
@@ -227,7 +252,7 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
             <button
               type="button"
               className={activeTab === 'wallet' ? 'active' : ''}
-              onClick={() => setActiveTab('wallet')}
+              onClick={() => setTab('wallet')}
               disabled={!connected}
             >
               Pay with wallet
@@ -235,7 +260,7 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
             <button
               type="button"
               className={activeTab === 'qr' ? 'active' : ''}
-              onClick={() => setActiveTab('qr')}
+              onClick={() => setTab('qr')}
             >
               Scan QR
             </button>

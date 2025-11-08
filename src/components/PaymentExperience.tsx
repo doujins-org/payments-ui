@@ -5,7 +5,7 @@ import { CardDetailsForm } from './CardDetailsForm'
 import { StoredPaymentMethods } from './StoredPaymentMethods'
 import { SolanaPaymentSelector } from './SolanaPaymentSelector'
 import { usePaymentStore } from '../hooks/usePaymentStore'
-import { usePaymentContext } from '../context/PaymentContext'
+import { selectCheckoutFlow } from '../state/selectors'
 
 export interface PaymentExperienceProps {
   priceId: string
@@ -38,51 +38,59 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   onSolanaSuccess,
   onSolanaError,
 }) => {
-  const { store } = usePaymentContext()
   const showNewCard = enableNewCard && Boolean(onNewCardPayment)
   const showStored = enableStoredMethods
 
-  const selectedMethodId = usePaymentStore((state) => state.selectedMethodId)
-  const setSelectedMethodId = usePaymentStore((state) => state.setSelectedMethod)
-  const savedStatus = usePaymentStore((state) => state.savedPaymentStatus)
-  const savedError = usePaymentStore((state) => state.savedPaymentError)
-  const newCardStatus = usePaymentStore((state) => state.newCardStatus)
-  const newCardError = usePaymentStore((state) => state.newCardError)
-  const setSolanaModalOpen = usePaymentStore((state) => state.setSolanaModalOpen)
-  const solanaModalOpen = usePaymentStore((state) => state.solanaModalOpen)
+  const {
+    selectedMethodId,
+    savedStatus,
+    savedError,
+    newCardStatus,
+    newCardError,
+    solanaModalOpen,
+    setSelectedMethod,
+    setSolanaModalOpen,
+    startSavedPayment,
+    completeSavedPayment,
+    failSavedPayment,
+    startNewCardPayment,
+    completeNewCardPayment,
+    failNewCardPayment,
+    resetSavedPayment,
+  } = usePaymentStore(selectCheckoutFlow)
 
   const handleMethodSelect = (method: PaymentMethod) => {
-    setSelectedMethodId(method.id)
-    store.getState().resetSavedPayment()
+    setSelectedMethod(method.id)
+    resetSavedPayment()
   }
 
   const handleNewCardTokenize = async (token: string, billing: BillingDetails) => {
     if (!onNewCardPayment) return
     try {
-      store.getState().startNewCardPayment()
+      startNewCardPayment()
       await onNewCardPayment({ token, billing })
-      store.getState().completeNewCardPayment()
+      completeNewCardPayment()
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to complete payment'
-      store.getState().failNewCardPayment(message)
+      failNewCardPayment(message)
     }
   }
 
   const handleSavedPayment = async () => {
     if (!onSavedMethodPayment || !selectedMethodId) return
     try {
-      store.getState().startSavedPayment()
+      startSavedPayment()
       await onSavedMethodPayment({
         paymentMethodId: selectedMethodId,
         amount: usdAmount,
       })
-      store.getState().completeSavedPayment()
+      completeSavedPayment()
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
           : 'Unable to complete payment with saved card'
-      store.getState().failSavedPayment(message)
+      failSavedPayment(message)
     }
   }
 

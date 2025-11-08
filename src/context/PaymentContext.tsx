@@ -29,7 +29,10 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
   children,
 }) => {
   const app = useMemo(() => new PaymentApp({ config }), [config])
-  const store = useMemo(() => createPaymentStore(), [app])
+  const store = useMemo(
+    () => createPaymentStore({ callbacks: config.callbacks }),
+    [config.callbacks]
+  )
 
   const value = useMemo<PaymentContextValue>(() => {
     return {
