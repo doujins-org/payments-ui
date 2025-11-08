@@ -1,15 +1,14 @@
 import React, { createContext, useContext, useEffect, useMemo } from 'react'
 import type { PaymentConfig, PaymentFetcher } from '../types/config'
 import { loadCollectJs } from '../utils/collect'
-import { EventEmitter, PaymentApp, ServiceContainer } from '../core'
+import { PaymentApp, type PaymentServices } from '../core'
 
 export interface PaymentContextValue {
   config: PaymentConfig
   fetcher: PaymentFetcher
   resolveAuthToken: () => Promise<string | null>
   app: PaymentApp
-  events: EventEmitter
-  services: ServiceContainer
+  services: PaymentServices
 }
 
 const PaymentContext = createContext<PaymentContextValue | undefined>(undefined)
@@ -31,7 +30,6 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
       fetcher: app.getFetcher(),
       resolveAuthToken: app.resolveAuthToken,
       app,
-      events: app.getEvents(),
       services: app.getServices(),
     }
   }, [app])

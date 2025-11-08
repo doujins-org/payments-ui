@@ -1,6 +1,18 @@
-import { EventEmitter } from './EventEmitter'
-import { ServiceContainer, ServiceToken } from './ServiceContainer'
 import type { PaymentConfig, PaymentFetcher } from '../types'
+import { createApiClient } from '../services/apiClient'
+import { CardPaymentService } from '../services/CardPaymentService'
+import { PaymentMethodService } from '../services/PaymentMethodService'
+import { SolanaPaymentService } from '../services/SolanaPaymentService'
+import { TokenCatalog } from '../services/TokenCatalog'
+import { WalletGateway } from '../services/WalletGateway'
+
+export interface PaymentServices {
+  cardPayments: CardPaymentService
+  paymentMethods: PaymentMethodService
+  solanaPayments: SolanaPaymentService
+  tokenCatalog: TokenCatalog
+  walletGateway: WalletGateway
+}
 
 export interface PaymentAppOptions {
   config: PaymentConfig
@@ -10,8 +22,7 @@ export interface PaymentAppOptions {
 export class PaymentApp {
   private readonly config: PaymentConfig
   private readonly fetcher: PaymentFetcher
-  private readonly events = new EventEmitter()
-  private readonly services = new ServiceContainer()
+  private readonly services: PaymentServices
 
   constructor(options: PaymentAppOptions) {
     this.config = options.config
@@ -24,10 +35,7 @@ export class PaymentApp {
       throw new Error('payments-ui: fetch implementation is required')
     }
 
-    // Expose core singletons through the registry for downstream services
-    this.services.set('events' as ServiceToken<EventEmitter>, this.events)
-    this.services.set('config' as ServiceToken<PaymentConfig>, this.config)
-    this.services.set('fetcher' as ServiceToken<PaymentFetcher>, this.fetcher)
+    this.services = this.createServices()
   }
 
   getConfig(): PaymentConfig {
@@ -38,12 +46,40 @@ export class PaymentApp {
     return this.fetcher
   }
 
-  getEvents(): EventEmitter {
-    return this.events
+  getServices(): PaymentServices {
+    return this.services
   }
 
-  getServices(): ServiceContainer {
-    return this.services
+  private createServices(): PaymentServices {
+    const billingApi = createApiClient(
+      this.config,
+      this.config.endpoints.billingBaseUrl,
+      this.fetcher,
+      this.resolveAuthToken
+    )
+
+    const accountBaseUrl =
+      this.config.endpoints.accountBaseUrl ?? this.config.endpoints.billingBaseUrl
+    const accountApi = createApiClient(
+      this.config,
+      accountBaseUrl,
+      this.fetcher,
+      this.resolveAuthToken
+    )
+
+    const solanaPayments = new SolanaPaymentService(billingApi)
+    const paymentMethods = new PaymentMethodService(accountApi)
+    const cardPayments = new CardPaymentService(this.config)
+    const walletGateway = new WalletGateway()
+    const tokenCatalog = new TokenCatalog(solanaPayments)
+
+    return {
+      cardPayments,
+      paymentMethods,
+      solanaPayments,
+      tokenCatalog,
+      walletGateway,
+    }
   }
 
   resolveAuthToken = async (): Promise<string | null> => {
