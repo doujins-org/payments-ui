@@ -1,9 +1,11 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { CreditCard, Sparkles } from 'lucide-react'
 import type { BillingDetails, PaymentMethod, SubmitPaymentResponse } from '../types'
 import { CardDetailsForm } from './CardDetailsForm'
 import { StoredPaymentMethods } from './StoredPaymentMethods'
 import { SolanaPaymentSelector } from './SolanaPaymentSelector'
+import { usePaymentStore } from '../hooks/usePaymentStore'
+import { usePaymentContext } from '../context/PaymentContext'
 
 export interface PaymentExperienceProps {
   priceId: string
@@ -36,44 +38,51 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   onSolanaSuccess,
   onSolanaError,
 }) => {
+  const { store } = usePaymentContext()
   const showNewCard = enableNewCard && Boolean(onNewCardPayment)
   const showStored = enableStoredMethods
 
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null)
-  const [isPayingSaved, setIsPayingSaved] = useState(false)
-  const [savedError, setSavedError] = useState<string | null>(null)
-  const [newCardError, setNewCardError] = useState<string | null>(null)
-  const [isProcessingNewCard, setIsProcessingNewCard] = useState(false)
-  const [isSolanaOpen, setIsSolanaOpen] = useState(false)
+  const selectedMethodId = usePaymentStore((state) => state.selectedMethodId)
+  const setSelectedMethodId = usePaymentStore((state) => state.setSelectedMethod)
+  const savedStatus = usePaymentStore((state) => state.savedPaymentStatus)
+  const savedError = usePaymentStore((state) => state.savedPaymentError)
+  const newCardStatus = usePaymentStore((state) => state.newCardStatus)
+  const newCardError = usePaymentStore((state) => state.newCardError)
+  const setSolanaModalOpen = usePaymentStore((state) => state.setSolanaModalOpen)
+  const solanaModalOpen = usePaymentStore((state) => state.solanaModalOpen)
+
+  const handleMethodSelect = (method: PaymentMethod) => {
+    setSelectedMethodId(method.id)
+    store.getState().resetSavedPayment()
+  }
 
   const handleNewCardTokenize = async (token: string, billing: BillingDetails) => {
     if (!onNewCardPayment) return
     try {
-      setNewCardError(null)
-      setIsProcessingNewCard(true)
+      store.getState().startNewCardPayment()
       await onNewCardPayment({ token, billing })
+      store.getState().completeNewCardPayment()
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to complete payment'
-      setNewCardError(message)
-    } finally {
-      setIsProcessingNewCard(false)
+      store.getState().failNewCardPayment(message)
     }
   }
 
   const handleSavedPayment = async () => {
-    if (!onSavedMethodPayment || !selectedMethod) return
+    if (!onSavedMethodPayment || !selectedMethodId) return
     try {
-      setSavedError(null)
-      setIsPayingSaved(true)
+      store.getState().startSavedPayment()
       await onSavedMethodPayment({
-        paymentMethodId: selectedMethod.id,
+        paymentMethodId: selectedMethodId,
         amount: usdAmount,
       })
+      store.getState().completeSavedPayment()
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to complete payment with saved card'
-      setSavedError(message)
-    } finally {
-      setIsPayingSaved(false)
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unable to complete payment with saved card'
+      store.getState().failSavedPayment(message)
     }
   }
 
@@ -93,8 +102,8 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
         {showStored && (
           <div className="payments-ui-column">
             <StoredPaymentMethods
-              selectedMethodId={selectedMethod?.id}
-              onMethodSelect={setSelectedMethod}
+              selectedMethodId={selectedMethodId}
+              onMethodSelect={handleMethodSelect}
               heading="Saved cards"
               description="Use or manage your saved payment methods."
             />
@@ -102,10 +111,10 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
               <button
                 type="button"
                 className="payments-ui-button"
-                disabled={!selectedMethod || isPayingSaved}
+                disabled={!selectedMethodId || savedStatus === 'processing'}
                 onClick={handleSavedPayment}
               >
-                {isPayingSaved ? 'Processing…' : 'Pay with selected card'}
+                {savedStatus === 'processing' ? 'Processing…' : 'Pay with selected card'}
               </button>
             )}
             {savedError && <p className="payments-ui-error">{savedError}</p>}
@@ -128,7 +137,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
               <CardDetailsForm
                 visible
                 submitLabel="Pay now"
-                submitting={isProcessingNewCard}
+                submitting={newCardStatus === 'processing'}
                 externalError={newCardError}
                 onTokenize={handleNewCardTokenize}
               />
@@ -148,7 +157,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
           <button
             type="button"
             className="payments-ui-button"
-            onClick={() => setIsSolanaOpen(true)}
+            onClick={() => setSolanaModalOpen(true)}
           >
             Open Solana Pay
           </button>
@@ -157,12 +166,12 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
 
       {enableSolanaPay && (
         <SolanaPaymentSelector
-          isOpen={isSolanaOpen}
-          onClose={() => setIsSolanaOpen(false)}
+          isOpen={solanaModalOpen}
+          onClose={() => setSolanaModalOpen(false)}
           priceId={priceId}
           usdAmount={usdAmount}
           onSuccess={(result) => {
-            setIsSolanaOpen(false)
+            setSolanaModalOpen(false)
             onSolanaSuccess?.(result)
           }}
           onError={onSolanaError}
