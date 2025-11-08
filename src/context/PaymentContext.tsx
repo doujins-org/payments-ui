@@ -1,7 +1,12 @@
 import React, { createContext, useContext, useEffect, useMemo } from 'react'
+import type { StoreApi } from 'zustand'
 import type { PaymentConfig, PaymentFetcher } from '../types/config'
 import { loadCollectJs } from '../utils/collect'
 import { PaymentApp, type PaymentServices } from '../core'
+import {
+  createPaymentStore,
+  type PaymentStoreState,
+} from '../state/paymentStore'
 
 export interface PaymentContextValue {
   config: PaymentConfig
@@ -9,6 +14,7 @@ export interface PaymentContextValue {
   resolveAuthToken: () => Promise<string | null>
   app: PaymentApp
   services: PaymentServices
+  store: StoreApi<PaymentStoreState>
 }
 
 const PaymentContext = createContext<PaymentContextValue | undefined>(undefined)
@@ -23,6 +29,7 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
   children,
 }) => {
   const app = useMemo(() => new PaymentApp({ config }), [config])
+  const store = useMemo(() => createPaymentStore(), [app])
 
   const value = useMemo<PaymentContextValue>(() => {
     return {
@@ -31,8 +38,9 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
       resolveAuthToken: app.resolveAuthToken,
       app,
       services: app.getServices(),
+      store,
     }
-  }, [app])
+  }, [app, store])
 
   useEffect(() => {
     if (!value.config.collectJsKey) return
