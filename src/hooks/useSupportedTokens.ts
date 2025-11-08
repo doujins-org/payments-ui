@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { TokenInfo } from '../types'
-import { useSolanaService } from '../services/solana'
+import { useSolanaService } from './useSolanaService'
 
 export const useSupportedTokens = () => {
   const solanaService = useSolanaService()

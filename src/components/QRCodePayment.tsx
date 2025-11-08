@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import QRCode from 'qrcode'
 import { Loader2, RefreshCw } from 'lucide-react'
 import type { SubmitPaymentResponse, TokenInfo } from '../types'
-import { useSolanaService } from '../services/solana'
+import { useSolanaService } from '../hooks/useSolanaService'
 
 interface QRCodePaymentProps {
   priceId: string

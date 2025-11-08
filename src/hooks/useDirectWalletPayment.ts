@@ -3,7 +3,7 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { Transaction } from '@solana/web3.js'
 import { Buffer } from 'buffer'
 import { TokenInfo, SubmitPaymentResponse } from '../types'
-import { useSolanaService } from '../services/solana'
+import { useSolanaService } from './useSolanaService'
 
 interface DirectPaymentState {
   loading: boolean

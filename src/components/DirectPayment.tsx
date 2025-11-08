@@ -7,7 +7,7 @@ import {
 } from '@solana/web3.js'
 import { Loader2, Wallet } from 'lucide-react'
 import { Buffer } from 'buffer'
-import { useSolanaService } from '../services/solana'
+import { useSolanaService } from '../hooks/useSolanaService'
 import type { SubmitPaymentResponse, TokenInfo } from '../types'
 import {
   fetchSupportedTokenBalances,

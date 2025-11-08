@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useConnection } from '@solana/wallet-adapter-react'
 import { TransactionStatus, PaymentStatusResponse } from '../types'
-import { useBillingApi } from '../services/useBillingApi'
+import { usePaymentContext } from '../context/PaymentContext'
 
 interface PaymentStatusHookOptions {
   transactionId?: string
@@ -14,7 +14,8 @@ interface PaymentStatusHookOptions {
 
 export const usePaymentStatus = (options: PaymentStatusHookOptions = {}) => {
   const { connection } = useConnection()
-  const billingApi = useBillingApi()
+  const { services } = usePaymentContext()
+  const billingApi = services.billingApi
   const {
     transactionId,
     purchaseId,

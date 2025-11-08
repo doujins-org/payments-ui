@@ -1,5 +1,5 @@
 import type { PaymentConfig, PaymentFetcher } from '../types'
-import { createApiClient } from '../services/apiClient'
+import { createApiClient, type ApiClient } from '../services/apiClient'
 import { CardPaymentService } from '../services/CardPaymentService'
 import { PaymentMethodService } from '../services/PaymentMethodService'
 import { SolanaPaymentService } from '../services/SolanaPaymentService'
@@ -12,6 +12,8 @@ export interface PaymentServices {
   solanaPayments: SolanaPaymentService
   tokenCatalog: TokenCatalog
   walletGateway: WalletGateway
+  billingApi: ApiClient
+  accountApi: ApiClient
 }
 
 export interface PaymentAppOptions {
@@ -79,6 +81,8 @@ export class PaymentApp {
       solanaPayments,
       tokenCatalog,
       walletGateway,
+      billingApi,
+      accountApi,
     }
   }
 

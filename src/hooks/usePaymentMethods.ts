@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { usePaymentMethodService } from '../services/paymentMethods'
+import { usePaymentMethodService } from './usePaymentMethodService'
 import type {
   BillingDetails,
   CreatePaymentMethodPayload,
@@ -15,7 +15,7 @@ export const usePaymentMethods = () => {
 
   const listQuery = useQuery<PaginatedPaymentMethods>({
     queryKey: PAYMENT_METHODS_KEY,
-    queryFn: () => service.list({ page_size: 50 }),
+    queryFn: () => service.list({ pageSize: 50 }),
   })
 
   const createMutation = useMutation<
