@@ -39,6 +39,7 @@
   },
   "devDependencies": {
     "@solana/spl-token": "^0.4.8",
+    "@types/country-list": "^2.1.4",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",

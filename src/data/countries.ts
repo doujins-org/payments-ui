@@ -28,4 +28,4 @@ countryList.overwrite(customCountries)
 // Get the countries from the package and sort them alphabetically by name
 export const countries: Country[] = countryList
   .getData()
-  .sort((a, b) => a.name.localeCompare(b.name))
+  .sort((a: Country, b: Country) => a.name.localeCompare(b.name))
