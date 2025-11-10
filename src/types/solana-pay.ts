@@ -45,6 +45,26 @@ export interface PaymentStatusResponse {
   confirmed_at?: string
 }
 
+export interface SolanaPayQRCodeIntent {
+  url: string
+  amount: number
+  token_amount: string
+  token_symbol: string
+  label: string
+  message: string
+  expires_at: number
+  reference: string
+  intent_id: string
+}
+
+export interface SolanaPayStatusResponse {
+  status: 'confirmed' | 'pending' | 'failed'
+  payment_id: string
+  transaction?: string | null
+  error_message?: string
+  intent_id?: string
+}
+
 export interface SupportedTokensResponse {
   tokens: TokenInfo[]
 }

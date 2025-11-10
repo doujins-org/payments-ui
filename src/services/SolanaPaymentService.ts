@@ -2,6 +2,8 @@ import type {
   GeneratePaymentResponse,
   SubmitPaymentResponse,
   TokenInfo,
+  SolanaPayQRCodeIntent,
+  SolanaPayStatusResponse,
 } from '../types'
 import type { ApiClient } from './apiClient'
 
@@ -49,7 +51,7 @@ export class SolanaPaymentService {
     priceId: string,
     token: string,
     userWallet?: string
-  ): Promise<unknown> {
+  ): Promise<SolanaPayQRCodeIntent> {
     return this.api.post('/solana/qr', {
       body: {
         price_id: priceId,
@@ -63,11 +65,14 @@ export class SolanaPaymentService {
     priceId: string,
     token: string,
     userWallet?: string
-  ): Promise<unknown> {
+  ): Promise<SolanaPayQRCodeIntent> {
     return this.generateQrCode(priceId, token, userWallet)
   }
 
-  async checkPaymentStatus(reference: string, memo?: string): Promise<unknown> {
+  async checkPaymentStatus(
+    reference: string,
+    memo?: string
+  ): Promise<SolanaPayStatusResponse> {
     return this.api.get('/solana/check', {
       query: {
         reference,
