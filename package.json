@@ -1,5 +1,5 @@
 {
-  "name": "@doujins-org/payments-ui",
+  "name": "@doujins/payments-ui",
   "version": "0.1.0",
   "description": "Payments UI",
   "type": "module",
