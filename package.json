@@ -18,7 +18,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup --config tsup.config.ts && cp src/styles.css dist/styles.css",
+    "build": "tsup --config tsup.config.ts && tailwindcss -c tailwind.config.ts -i ./src/styles.css -o dist/styles.css --minify",
     "dev": "tsup --config tsup.config.ts --watch",
     "typecheck": "tsc --noEmit"
   },
@@ -45,17 +45,25 @@
     "@types/react-dom": "^19.0.2",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
+    "tailwindcss-animate": "^1.0.7",
     "tailwindcss": "^3.4.17",
     "tsup": "^8.4.0",
     "typescript": "^5.7.2"
   },
   "dependencies": {
+    "@radix-ui/react-scroll-area": "^1.0.5",
+    "@radix-ui/react-select": "^2.1.4",
+    "@radix-ui/react-tabs": "^1.0.5",
     "@radix-ui/react-dialog": "^1.1.4",
+    "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-checkbox": "^1.1.4",
     "buffer": "^6.0.3",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "country-list": "^2.3.0",
     "lucide-react": "^0.469.0",
     "qrcode": "^1.5.4",
+    "tailwind-merge": "^2.5.5",
     "zustand": "^5.0.8"
   }
 }
