@@ -1,75 +1,82 @@
 import React from 'react'
-import { CheckCircle, Loader2, XCircle, RotateCcw } from 'lucide-react'
+import { CheckCircle, Loader2, RotateCcw, XCircle } from 'lucide-react'
+import { Button } from '../ui/button'
 
 interface PaymentStatusProps {
   state: 'selecting' | 'processing' | 'confirming' | 'success' | 'error'
   usdAmount: number
-  solAmount: number
-  errorMessage?: string | null
+  solAmount?: number
   transactionId?: string | null
-  onRetry: () => void
-  onClose: () => void
+  errorMessage?: string | null
+  onRetry?: () => void
+  onClose?: () => void
 }
 
 export const PaymentStatus: React.FC<PaymentStatusProps> = ({
   state,
   usdAmount,
   solAmount,
-  errorMessage,
   transactionId,
+  errorMessage,
   onRetry,
   onClose,
 }) => {
+  if (state === 'processing' || state === 'confirming') {
+    return (
+      <div className="flex flex-col items-center gap-3 text-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <div>
+          <p className="text-lg font-semibold text-foreground">
+            {state === 'processing' ? 'Processing payment…' : 'Awaiting confirmation…'}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            ${usdAmount.toFixed(2)} {solAmount ? `· ≈ ${solAmount.toFixed(4)} SOL` : ''}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   if (state === 'success') {
     return (
-      <div className="payments-ui-status success">
-        <CheckCircle className="payments-ui-status-icon" />
-        <h3>Payment confirmed</h3>
-        <p>
-          {usdAmount.toFixed(2)} USD (~{solAmount.toFixed(4)} SOL).
-        </p>
-        {transactionId && (
-          <p className="payments-ui-status-meta">Txn: {transactionId}</p>
-        )}
-        <button className="payments-ui-button" type="button" onClick={onClose}>
+      <div className="flex flex-col items-center gap-4 text-center">
+        <CheckCircle className="h-12 w-12 text-primary" />
+        <div>
+          <p className="text-lg font-semibold text-foreground">Payment complete</p>
+          {transactionId && (
+            <p className="text-xs text-muted-foreground">Txn: {transactionId}</p>
+          )}
+        </div>
+        <Button variant="secondary" onClick={onClose} className="w-full">
           Close
-        </button>
+        </Button>
       </div>
     )
   }
 
   if (state === 'error') {
     return (
-      <div className="payments-ui-status error">
-        <XCircle className="payments-ui-status-icon" />
-        <h3>Payment failed</h3>
-        <p>{errorMessage ?? 'Please try again.'}</p>
-        <div className="payments-ui-status-actions">
-          <button className="payments-ui-button" type="button" onClick={onRetry}>
-            <RotateCcw className="payments-ui-icon" /> Retry
-          </button>
-          <button className="payments-ui-text-button" type="button" onClick={onClose}>
-            Cancel
-          </button>
+      <div className="flex flex-col items-center gap-4 text-center">
+        <XCircle className="h-12 w-12 text-destructive" />
+        <div>
+          <p className="text-lg font-semibold text-foreground">Payment failed</p>
+          {errorMessage && (
+            <p className="text-sm text-muted-foreground">{errorMessage}</p>
+          )}
+        </div>
+        <div className="flex w-full flex-col gap-2 sm:flex-row">
+          {onRetry && (
+            <Button variant="secondary" className="flex-1" onClick={onRetry}>
+              <RotateCcw className="mr-2 h-4 w-4" /> Try again
+            </Button>
+          )}
+          <Button className="flex-1" onClick={onClose}>
+            Close
+          </Button>
         </div>
       </div>
     )
   }
 
-  return (
-    <div className="payments-ui-status pending">
-      <Loader2 className="payments-ui-spinner" />
-      <h3>
-        {state === 'confirming'
-          ? 'Waiting for confirmations'
-          : 'Processing payment'}
-      </h3>
-      <p>
-        Paying {usdAmount.toFixed(2)} USD (~{solAmount.toFixed(4)} SOL).
-      </p>
-      <p className="payments-ui-status-meta">
-        This can take up to 60 seconds on Solana mainnet.
-      </p>
-    </div>
-  )
+  return null
 }

@@ -2,6 +2,8 @@ import React from 'react'
 import { Loader2, Wallet } from 'lucide-react'
 import type { SubmitPaymentResponse, TokenInfo } from '../types'
 import { useSolanaDirectPayment } from '../hooks/useSolanaDirectPayment'
+import { Button } from '../ui/button'
+import { Card } from '../ui/card'
 
 interface DirectPaymentProps {
   priceId: string
@@ -37,42 +39,41 @@ export const DirectPayment: React.FC<DirectPaymentProps> = ({
     })
 
   return (
-    <div className="payments-ui-panel">
-      <div className="payments-ui-panel-header">
-        <div>
-          <p className="payments-ui-panel-title">
-            <Wallet className="payments-ui-icon" /> Pay with connected wallet
-          </p>
-          <p className="payments-ui-panel-description">
-            Sign the transaction directly in your Solana wallet.
-          </p>
-        </div>
+    <Card className="space-y-4 border border-border/60 bg-background/80 p-6">
+      <div className="space-y-1">
+        <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <Wallet className="h-4 w-4" /> Pay with connected wallet
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Sign the transaction directly in your Solana wallet.
+        </p>
       </div>
 
-      <div className="payments-ui-panel-body">
-        <div className="payments-ui-balance-row">
-          <span>Available balance</span>
-          {isBalanceLoading ? (
-            <Loader2 className="payments-ui-spinner" />
-          ) : (
-            <strong>{balanceLabel}</strong>
-          )}
-        </div>
-
-        <button
-          type="button"
-          className="payments-ui-button"
-          disabled={!canPay}
-          onClick={pay}
-        >
-          {isProcessing ? (
-            <Loader2 className="payments-ui-spinner" />
-          ) : (
-            <Wallet className="payments-ui-icon" />
-          )}
-          {isProcessing ? 'Processing...' : 'Pay with wallet'}
-        </button>
+      <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/10 px-4 py-3 text-sm">
+        <span className="text-muted-foreground">Available balance</span>
+        {isBalanceLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        ) : (
+          <strong className="text-foreground">{balanceLabel}</strong>
+        )}
       </div>
-    </div>
+
+      <Button
+        type="button"
+        className="w-full"
+        disabled={!canPay}
+        onClick={pay}
+      >
+        {isProcessing ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing…
+          </>
+        ) : (
+          <>
+            <Wallet className="mr-2 h-4 w-4" /> Pay with wallet
+          </>
+        )}
+      </Button>
+    </Card>
   )
 }

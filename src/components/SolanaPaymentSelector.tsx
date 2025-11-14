@@ -1,14 +1,30 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import * as Dialog from '@radix-ui/react-dialog'
-import { CreditCard, Loader2, X } from 'lucide-react'
+import { CreditCard, Loader2, Wallet } from 'lucide-react'
+import type { SubmitPaymentResponse, TokenInfo } from '../types'
 import { DirectPayment } from './DirectPayment'
 import { QRCodePayment } from './QRCodePayment'
 import { PaymentStatus } from './PaymentStatus'
-import type { SubmitPaymentResponse, TokenInfo } from '../types'
 import { useSupportedTokens } from '../hooks/useSupportedTokens'
 import { usePaymentStore } from '../hooks/usePaymentStore'
 import { selectSolanaFlow } from '../state/selectors'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../ui/dialog'
+import { Button } from '../ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select'
+import { cn } from '../lib/utils'
 
 interface SolanaPaymentSelectorProps {
   isOpen: boolean
@@ -76,8 +92,7 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
 
   const handlePaymentSuccess = useCallback(
     (result: SubmitPaymentResponse | string, txId?: string) => {
-      const resolvedTx = txId ||
-        (typeof result === 'string' ? result : result.transaction_id)
+      const resolvedTx = txId || (typeof result === 'string' ? result : result.transaction_id)
       setTransactionId(resolvedTx)
       completeSolanaPayment(
         typeof result === 'string'
@@ -144,8 +159,8 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
   }, [isOpen, usdAmount, selectedToken, setTokenAmount])
 
   const handleTokenChange = useCallback(
-    (event: React.ChangeEvent<HTMLSelectElement>) => {
-      setSelectedTokenSymbol(event.target.value)
+    (value: string) => {
+      setSelectedTokenSymbol(value)
     },
     [setSelectedTokenSymbol]
   )
@@ -164,131 +179,118 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
     wasConnectedRef.current = connected
   }, [connected, setTab])
 
-  const renderSelector = () => {
-    if (tokensLoading) {
+  const renderBody = () => {
+    if (paymentState !== 'selecting') {
       return (
-        <div className="payments-ui-empty">
-          <Loader2 className="payments-ui-spinner" /> Loading tokens…
-        </div>
+        <PaymentStatus
+          state={paymentState}
+          usdAmount={usdAmount}
+          solAmount={tokenAmount}
+          onRetry={handleRetry}
+          onClose={handleClose}
+          errorMessage={errorMessage}
+          transactionId={transactionId}
+        />
       )
     }
 
-    if (tokensError) {
-      return <div className="payments-ui-error">{tokensError}</div>
-    }
-
-    if (!tokens.length) {
-      return <div className="payments-ui-empty">No payment tokens available.</div>
-    }
-
     return (
-      <div className="payments-ui-token-select">
-        <label>
-          Payment token
-          <select value={selectedTokenSymbol ?? ''} onChange={handleTokenChange}>
-            {tokens.map((token) => (
-              <option key={token.symbol} value={token.symbol}>
-                {token.name} ({token.symbol})
-              </option>
-            ))}
-          </select>
-        </label>
-        <p className="payments-ui-token-meta">
-          ≈ {tokenAmount.toFixed(4)} {selectedToken?.symbol}
-        </p>
+      <div className="space-y-6">
+        {tokensLoading ? (
+          <div className="flex items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/10 py-8 text-sm text-muted-foreground">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading supported tokens…
+          </div>
+        ) : tokensError ? (
+          <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {tokensError}
+          </div>
+        ) : !tokens.length ? (
+          <div className="rounded-lg border border-dashed border-border/60 bg-muted/10 px-4 py-6 text-sm text-muted-foreground">
+            No payment tokens available.
+          </div>
+        ) : (
+          <>
+            <div className="rounded-xl border border-border/60 bg-muted/10 p-4 text-center">
+              <div className="text-2xl font-semibold text-foreground">
+                ${usdAmount.toFixed(2)} USD
+              </div>
+              {selectedToken && tokenAmount > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  ≈ {tokenAmount.toFixed(selectedToken.symbol === 'SOL' ? 4 : 2)} {selectedToken.symbol}
+                </div>
+              )}
+            </div>
+
+            <Select value={selectedToken?.symbol ?? ''} onValueChange={handleTokenChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select token" />
+              </SelectTrigger>
+              <SelectContent className="max-h-64">
+                {tokens.map((token) => (
+                  <SelectItem key={token.symbol} value={token.symbol}>
+                    {token.name} ({token.symbol})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Tabs
+              value={activeTab}
+              onValueChange={(value) => setTab(value as 'wallet' | 'qr')}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-2 bg-muted/20">
+                <TabsTrigger value="wallet" disabled={!connected}>
+                  <Wallet className="mr-2 h-4 w-4" /> Pay with Wallet
+                </TabsTrigger>
+                <TabsTrigger value="qr">
+                  <CreditCard className="mr-2 h-4 w-4" /> Scan QR Code
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="wallet" className="mt-4">
+                <DirectPayment
+                  priceId={priceId}
+                  tokenAmount={tokenAmount}
+                  selectedToken={selectedToken}
+                  supportedTokens={tokens}
+                  onPaymentStart={handlePaymentStart}
+                  onPaymentConfirming={handlePaymentConfirming}
+                  onPaymentSuccess={handlePaymentSuccess}
+                  onPaymentError={handlePaymentError}
+                />
+              </TabsContent>
+              <TabsContent value="qr" className="mt-4">
+                <QRCodePayment
+                  priceId={priceId}
+                  selectedToken={selectedToken}
+                  onPaymentError={handlePaymentError}
+                  onPaymentSuccess={handlePaymentSuccess}
+                />
+              </TabsContent>
+            </Tabs>
+
+            {!connected && activeTab === 'wallet' && (
+              <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100">
+                Please connect your Solana wallet to complete this payment, or switch to QR mode.
+              </div>
+            )}
+          </>
+        )}
       </div>
     )
   }
 
-  if (paymentState !== 'selecting') {
-    return (
-      <Dialog.Root open={isOpen} onOpenChange={handleClose}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="payments-ui-modal-overlay" />
-          <Dialog.Content className="payments-ui-modal">
-            <div className="payments-ui-modal-header">
-              <div>
-                <h3>Complete your payment</h3>
-                <p>Follow the prompts below to finish.</p>
-              </div>
-              <Dialog.Close
-                className="payments-ui-icon-button"
-                disabled={paymentState === 'processing' || paymentState === 'confirming'}
-              >
-                <X className="payments-ui-icon" />
-              </Dialog.Close>
-            </div>
-            <PaymentStatus
-              state={paymentState}
-              usdAmount={usdAmount}
-              solAmount={tokenAmount}
-              onRetry={handleRetry}
-              onClose={handleClose}
-              errorMessage={errorMessage}
-              transactionId={transactionId}
-            />
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-    )
-  }
-
   return (
-    <Dialog.Root open={isOpen} onOpenChange={handleClose}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="payments-ui-modal-overlay" />
-        <Dialog.Content className="payments-ui-modal">
-          <div className="payments-ui-modal-header">
-            <div>
-              <h3>Complete your payment</h3>
-              <p>Select a token and preferred method.</p>
-            </div>
-            <Dialog.Close className="payments-ui-icon-button">
-              <X className="payments-ui-icon" />
-            </Dialog.Close>
-          </div>
-
-          <div className="payments-ui-tab-header">
-            <button
-              type="button"
-              className={activeTab === 'wallet' ? 'active' : ''}
-              onClick={() => setTab('wallet')}
-              disabled={!connected}
-            >
-              Pay with wallet
-            </button>
-            <button
-              type="button"
-              className={activeTab === 'qr' ? 'active' : ''}
-              onClick={() => setTab('qr')}
-            >
-              Scan QR
-            </button>
-          </div>
-
-          {renderSelector()}
-
-          {activeTab === 'wallet' ? (
-            <DirectPayment
-              priceId={priceId}
-              tokenAmount={tokenAmount}
-              selectedToken={selectedToken}
-              supportedTokens={tokens}
-              onPaymentStart={handlePaymentStart}
-              onPaymentConfirming={handlePaymentConfirming}
-              onPaymentSuccess={handlePaymentSuccess}
-              onPaymentError={handlePaymentError}
-            />
-          ) : (
-            <QRCodePayment
-              priceId={priceId}
-              selectedToken={selectedToken}
-              onPaymentError={handlePaymentError}
-              onPaymentSuccess={handlePaymentSuccess}
-            />
-          )}
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader className="space-y-1">
+          <DialogTitle>Complete your payment</DialogTitle>
+          <DialogDescription>
+            Select a token and preferred method. We’ll guide you through the rest.
+          </DialogDescription>
+        </DialogHeader>
+        {renderBody()}
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -1,10 +1,20 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { CreditCard, Loader2, MapPin, User, Search, ChevronDown } from 'lucide-react'
-import { useCountryDropdown } from '../hooks/useCountryDropdown'
+import { CreditCard, Loader2, MapPin, User } from 'lucide-react'
 import type { BillingDetails } from '../types'
 import type { CollectJSResponse } from '../types/collect'
 import { usePaymentContext } from '../context/PaymentContext'
-import clsx from 'clsx'
+import { countries } from '../data/countries'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select'
+import { cn } from '../lib/utils'
 
 export interface CardDetailsFormProps {
   visible: boolean
@@ -69,15 +79,6 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
   const [email, setEmail] = useState(mergedDefaults.email ?? '')
   const [localError, setLocalError] = useState<string | null>(null)
   const [isTokenizing, setIsTokenizing] = useState(false)
-
-  const {
-    countryDropdownRef,
-    countryOpen,
-    setCountryOpen,
-    countrySearch,
-    setCountrySearch,
-    filteredCountries,
-  } = useCountryDropdown()
 
   useEffect(() => {
     if (!visible) {
@@ -217,180 +218,163 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
   }
 
   const errorMessage = localError ?? externalError
+  const collectFieldClass =
+    'flex h-11 w-full items-center rounded-md border border-dashed border-muted-foreground/40 bg-muted/20 px-3 text-sm text-muted-foreground'
 
   return (
     <form
-      className={clsx('payments-ui-card-form', className)}
+      className={cn(
+        'space-y-6 rounded-2xl border border-border/60 bg-card/90 p-6 shadow-lg',
+        className
+      )}
       onSubmit={handleSubmit}
       noValidate
     >
-      <div className="payments-ui-grid">
-        <label className="payments-ui-label">
-          <span>
-            <User className="payments-ui-icon" /> First name
-          </span>
-          <input
-            className="payments-ui-input"
+      {errorMessage && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm text-destructive">
+          {errorMessage}
+        </div>
+      )}
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="payments-first" className="flex items-center gap-2 text-muted-foreground">
+            <User className="h-4 w-4" /> First name
+          </Label>
+          <Input
+            id="payments-first"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             required
           />
-        </label>
-        <label className="payments-ui-label">
-          <span>
-            <User className="payments-ui-icon" /> Last name
-          </span>
-          <input
-            className="payments-ui-input"
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="payments-last" className="flex items-center gap-2 text-muted-foreground">
+            <User className="h-4 w-4" /> Last name
+          </Label>
+          <Input
+            id="payments-last"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             required
           />
-        </label>
+        </div>
       </div>
 
-      <label className="payments-ui-label">
-        <span>Email</span>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="payments-email">Email</Label>
+        <Input
+          id="payments-email"
           type="email"
-          className="payments-ui-input"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-      </label>
+      </div>
 
-      <label className="payments-ui-label">
-        <span>Address line 1</span>
-        <input
-          className="payments-ui-input"
+      <div className="space-y-2">
+        <Label htmlFor="payments-address1">Address line 1</Label>
+        <Input
+          id="payments-address1"
           value={address1}
           onChange={(e) => setAddress1(e.target.value)}
           required
         />
-      </label>
+      </div>
 
-      <label className="payments-ui-label">
-        <span>Address line 2 (optional)</span>
-        <input
-          className="payments-ui-input"
+      <div className="space-y-2">
+        <Label htmlFor="payments-address2">Address line 2 (optional)</Label>
+        <Input
+          id="payments-address2"
           value={address2}
           onChange={(e) => setAddress2(e.target.value)}
         />
-      </label>
+      </div>
 
-      <div className="payments-ui-grid">
-        <label className="payments-ui-label">
-          <span>City</span>
-          <input
-            className="payments-ui-input"
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="payments-city">City</Label>
+          <Input
+            id="payments-city"
             value={city}
             onChange={(e) => setCity(e.target.value)}
             required
           />
-        </label>
-        <label className="payments-ui-label">
-          <span>State / Region</span>
-          <input
-            className="payments-ui-input"
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="payments-state">State / Region</Label>
+          <Input
+            id="payments-state"
             value={stateRegion}
             onChange={(e) => setStateRegion(e.target.value)}
           />
-        </label>
+        </div>
       </div>
 
-      <div className="payments-ui-grid">
-        <label className="payments-ui-label">
-          <span>
-            <MapPin className="payments-ui-icon" /> Postal code
-          </span>
-          <input
-            className="payments-ui-input"
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="payments-postal" className="flex items-center gap-2 text-muted-foreground">
+            <MapPin className="h-4 w-4" /> Postal code
+          </Label>
+          <Input
+            id="payments-postal"
             value={postalCode}
             onChange={(e) => setPostalCode(e.target.value)}
             required
           />
-        </label>
-        <div className="payments-ui-label">
-          <span>Country</span>
-          <div className="payments-ui-country" ref={countryDropdownRef}>
-            <button
-              type="button"
-              className="payments-ui-country-toggle"
-              onClick={() => setCountryOpen((prev) => !prev)}
-            >
-              <span>{country}</span>
-              <ChevronDown className="payments-ui-icon" />
-            </button>
-            {countryOpen && (
-              <div className="payments-ui-country-menu">
-                <div className="payments-ui-country-search">
-                  <Search className="payments-ui-icon" />
-                  <input
-                    placeholder="Search country"
-                    value={countrySearch}
-                    onChange={(e) => setCountrySearch(e.target.value)}
-                  />
-                </div>
-                <ul>
-                  {filteredCountries.map((option) => (
-                    <li key={option.code}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCountry(option.code)
-                          setCountryOpen(false)
-                        }}
-                      >
-                        {option.name}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Country</Label>
+          <Select value={country} onValueChange={setCountry}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a country" />
+            </SelectTrigger>
+            <SelectContent className="max-h-64">
+              {countries.map((option) => (
+                <SelectItem key={option.code} value={option.code}>
+                  {option.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <div className="payments-ui-label">
-        <span>Card number</span>
-        <div
-          id={buildSelector(collectPrefix, 'ccnumber').slice(1)}
-          className="payments-ui-collect-field"
-        />
+      <div className="space-y-2">
+        <Label>Card number</Label>
+        <div id={buildSelector(collectPrefix, 'ccnumber').slice(1)} className={collectFieldClass} />
       </div>
 
-      <div className="payments-ui-grid">
-        <div className="payments-ui-label">
-          <span>Expiry</span>
-          <div
-            id={buildSelector(collectPrefix, 'ccexp').slice(1)}
-            className="payments-ui-collect-field"
-          />
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label>Expiry</Label>
+          <div id={buildSelector(collectPrefix, 'ccexp').slice(1)} className={collectFieldClass} />
         </div>
-        <div className="payments-ui-label">
-          <span>CVV</span>
-          <div
-            id={buildSelector(collectPrefix, 'cvv').slice(1)}
-            className="payments-ui-collect-field"
-          />
+        <div className="space-y-2">
+          <Label>CVV</Label>
+          <div id={buildSelector(collectPrefix, 'cvv').slice(1)} className={collectFieldClass} />
         </div>
       </div>
 
-      {errorMessage && <p className="payments-ui-error">{errorMessage}</p>}
-
-      <button
+      <Button
         type="submit"
-        className="payments-ui-button"
-        disabled={submitting || isTokenizing || submitDisabled}
+        className="w-full"
+        disabled={submitting || submitDisabled || isTokenizing}
       >
-        {(submitting || isTokenizing) && (
-          <Loader2 className="payments-ui-spinner" />
+        {submitting || isTokenizing ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing…
+          </>
+        ) : (
+          <>
+            <CreditCard className="mr-2 h-4 w-4" /> {submitLabel}
+          </>
         )}
-        <CreditCard className="payments-ui-icon" />
-        {submitting || isTokenizing ? 'Processing...' : submitLabel}
-      </button>
+      </Button>
+
+      <p className="flex items-center gap-2 text-xs text-muted-foreground">
+        <CreditCard className="h-4 w-4" /> Your payment information is encrypted and processed securely.
+      </p>
     </form>
   )
 }

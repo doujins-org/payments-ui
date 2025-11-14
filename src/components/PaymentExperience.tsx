@@ -6,6 +6,9 @@ import { StoredPaymentMethods } from './StoredPaymentMethods'
 import { SolanaPaymentSelector } from './SolanaPaymentSelector'
 import { usePaymentStore } from '../hooks/usePaymentStore'
 import { selectCheckoutFlow } from '../state/selectors'
+import { Button } from '../ui/button'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card'
+import { Separator } from '../ui/separator'
 
 export interface PaymentExperienceProps {
   priceId: string
@@ -95,81 +98,79 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   }
 
   return (
-    <div className="payments-ui-experience">
-      <header className="payments-ui-experience-header">
-        <div>
-          <h2>
-            <CreditCard className="payments-ui-icon" /> Secure checkout
-          </h2>
-          <p>Amount due: ${usdAmount.toFixed(2)}</p>
-        </div>
-        {checkoutSummary && <div className="payments-ui-summary">{checkoutSummary}</div>}
-      </header>
-
-      <div className="payments-ui-experience-grid">
-        {showStored && (
-          <div className="payments-ui-column">
-            <StoredPaymentMethods
-              selectedMethodId={selectedMethodId}
-              onMethodSelect={handleMethodSelect}
-              heading="Saved cards"
-              description="Use or manage your saved payment methods."
-            />
-            {onSavedMethodPayment && (
-              <button
-                type="button"
-                className="payments-ui-button"
-                disabled={!selectedMethodId || savedStatus === 'processing'}
-                onClick={handleSavedPayment}
-              >
-                {savedStatus === 'processing' ? 'Processing…' : 'Pay with selected card'}
-              </button>
-            )}
-            {savedError && <p className="payments-ui-error">{savedError}</p>}
+    <div className="space-y-8">
+      <Card className="border-border/60 bg-card/95">
+        <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+              <CreditCard className="h-5 w-5 text-primary" /> Secure checkout
+            </CardTitle>
+            <CardDescription>Amount due: ${usdAmount.toFixed(2)}</CardDescription>
           </div>
-        )}
+          {checkoutSummary && <div>{checkoutSummary}</div>}
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-8 lg:grid-cols-2">
+            {showStored && (
+              <div className="space-y-4">
+                <StoredPaymentMethods
+                  selectedMethodId={selectedMethodId}
+                  onMethodSelect={handleMethodSelect}
+                  heading="Saved cards"
+                  description="Use or manage your saved payment methods."
+                />
+                {onSavedMethodPayment && (
+                  <Button
+                    className="w-full"
+                    disabled={!selectedMethodId || savedStatus === 'processing'}
+                    onClick={handleSavedPayment}
+                  >
+                    {savedStatus === 'processing' ? 'Processing…' : 'Pay with selected card'}
+                  </Button>
+                )}
+                {savedError && (
+                  <p className="text-sm text-destructive">{savedError}</p>
+                )}
+              </div>
+            )}
 
-        {showNewCard && (
-          <div className="payments-ui-column">
-            <div className="payments-ui-panel">
-              <div className="payments-ui-panel-header">
-                <div>
-                  <p className="payments-ui-panel-title">
-                    <CreditCard className="payments-ui-icon" /> Pay with a new card
-                  </p>
-                  <p className="payments-ui-panel-description">
-                    Card details are tokenized via Collect.js and never hit your server.
-                  </p>
+            {showNewCard && (
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-border/60 bg-background/80 p-6">
+                  <div className="mb-4 space-y-1">
+                    <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                      <CreditCard className="h-4 w-4" /> Pay with a new card
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Card details are tokenized via Collect.js and never hit your server.
+                    </p>
+                  </div>
+                  <CardDetailsForm
+                    visible
+                    submitLabel="Pay now"
+                    submitting={newCardStatus === 'processing'}
+                    externalError={newCardError}
+                    onTokenize={handleNewCardTokenize}
+                  />
                 </div>
               </div>
-              <CardDetailsForm
-                visible
-                submitLabel="Pay now"
-                submitting={newCardStatus === 'processing'}
-                externalError={newCardError}
-                onTokenize={handleNewCardTokenize}
-              />
-            </div>
+            )}
           </div>
-        )}
-      </div>
+        </CardContent>
+      </Card>
 
       {enableSolanaPay && (
-        <div className="payments-ui-solana-banner">
-          <div>
-            <h3>
-              <Sparkles className="payments-ui-icon" /> Prefer Solana Pay?
-            </h3>
-            <p>Use a Solana wallet or QR code for instant settlement.</p>
-          </div>
-          <button
-            type="button"
-            className="payments-ui-button"
-            onClick={() => setSolanaModalOpen(true)}
-          >
-            Open Solana Pay
-          </button>
-        </div>
+        <Card className="border border-primary/40 bg-primary/5">
+          <CardContent className="flex flex-col gap-4 text-sm text-primary md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="flex items-center gap-2 text-base font-semibold text-primary">
+                <Sparkles className="h-4 w-4" /> Prefer Solana Pay?
+              </p>
+              <p className="text-sm text-primary/80">Use a Solana wallet or QR code for instant settlement.</p>
+            </div>
+            <Button onClick={() => setSolanaModalOpen(true)}>Open Solana Pay</Button>
+          </CardContent>
+        </Card>
       )}
 
       {enableSolanaPay && (
