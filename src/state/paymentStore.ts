@@ -87,15 +87,30 @@ export const createPaymentStore = (options?: PaymentStoreOptions) =>
 
     return {
       ...initialState,
-      setSelectedMethod: (methodId) =>
-        set({ selectedMethodId: methodId }),
-      setSolanaModalOpen: (open) =>
-        set({ solanaModalOpen: open }),
-      setSolanaTab: (tab) => set({ solanaTab: tab }),
-      setSolanaSelectedToken: (symbol) =>
-        set({ solanaSelectedToken: symbol }),
-      setSolanaTokenAmount: (amount) => set({ solanaTokenAmount: amount }),
-      setSolanaTransactionId: (txId) => set({ solanaTransactionId: txId }),
+      setSelectedMethod: (methodId) => {
+        if (get().selectedMethodId === methodId) return
+        set({ selectedMethodId: methodId })
+      },
+      setSolanaModalOpen: (open) => {
+        if (get().solanaModalOpen === open) return
+        set({ solanaModalOpen: open })
+      },
+      setSolanaTab: (tab) => {
+        if (get().solanaTab === tab) return
+        set({ solanaTab: tab })
+      },
+      setSolanaSelectedToken: (symbol) => {
+        if (get().solanaSelectedToken === symbol) return
+        set({ solanaSelectedToken: symbol })
+      },
+      setSolanaTokenAmount: (amount) => {
+        if (get().solanaTokenAmount === amount) return
+        set({ solanaTokenAmount: amount })
+      },
+      setSolanaTransactionId: (txId) => {
+        if (get().solanaTransactionId === txId) return
+        set({ solanaTransactionId: txId })
+      },
       startSavedPayment: () => {
         notifyStatus('processing', { source: 'saved-payment' })
         set({ savedPaymentStatus: 'processing', savedPaymentError: null })
