@@ -35,6 +35,7 @@ export const useSupportedTokens = () => {
     setError(null)
 
     try {
+      console.log('payments-ui: fetching supported Solana tokens')
       const tokens = await solanaService.getSupportedTokens()
 
       // Sort tokens by symbol for consistent ordering
@@ -43,6 +44,9 @@ export const useSupportedTokens = () => {
       )
 
       setTokens(sortedTokens)
+      console.log('payments-ui: loaded supported tokens', {
+        count: sortedTokens.length,
+      })
       setLastFetched(Date.now())
       return sortedTokens
     } catch (error) {

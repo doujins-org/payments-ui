@@ -85,7 +85,10 @@ export const usePaymentStatus = (options: PaymentStatusHookOptions = {}) => {
           error: err ? `Transaction failed: ${err}` : undefined,
         }
       } catch (error) {
-        console.error('Failed to check transaction status:', error)
+        console.error('Failed to check transaction status:', {
+          signature,
+          error,
+        })
         return {
           signature,
           confirmationStatus: 'failed',
@@ -112,7 +115,10 @@ export const usePaymentStatus = (options: PaymentStatusHookOptions = {}) => {
         if (error?.status === 404) {
           return null // Payment not found
         }
-        console.error('Failed to check payment status:', error)
+        console.error('Failed to check payment status:', {
+          purchaseId: id,
+          error,
+        })
         return null
       }
     },
@@ -197,7 +203,11 @@ export const usePaymentStatus = (options: PaymentStatusHookOptions = {}) => {
           return
         }
       } catch (error) {
-        console.error('Error monitoring payment:', error)
+        console.error('Error monitoring payment:', {
+          transactionId,
+          purchaseId,
+          error,
+        })
         setRetryCount((prev) => prev + 1)
 
         if (retryCount >= maxRetries) {
@@ -260,6 +270,11 @@ export const usePaymentStatus = (options: PaymentStatusHookOptions = {}) => {
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to check status'
       setError(errorMessage)
+      console.error('Failed to check payment status:', {
+        transactionId,
+        purchaseId,
+        error,
+      })
     } finally {
       setIsLoading(false)
     }

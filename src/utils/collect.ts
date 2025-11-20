@@ -19,5 +19,11 @@ export const loadCollectJs = (tokenizationKey: string): void => {
   script.setAttribute('data-field-cvv-placeholder', '123')
   script.setAttribute('data-variant', 'inline')
   script.async = true
+  script.addEventListener('load', () => {
+    console.log('payments-ui: Collect.js loaded')
+  })
+  script.addEventListener('error', (event) => {
+    console.error('payments-ui: failed to load Collect.js', event)
+  })
   document.head.appendChild(script)
 }

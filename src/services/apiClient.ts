@@ -68,23 +68,34 @@ export const createApiClient = (
       headers.Authorization = `Bearer ${token}`
     }
 
-    const response = await fetcher(url, {
-      method,
-      headers,
-      body: options?.body ? JSON.stringify(options.body) : undefined,
-    })
+    try {
+      const response = await fetcher(url, {
+        method,
+        headers,
+        body: options?.body ? JSON.stringify(options.body) : undefined,
+      })
 
-    if (!response.ok) {
-      const message = await response.text()
-      throw new Error(message || `Request failed with status ${response.status}`)
+      if (!response.ok) {
+        const message = await response.text()
+        console.error('payments-ui: API request failed', {
+          url,
+          method,
+          status: response.status,
+          message,
+        })
+        throw new Error(message || `Request failed with status ${response.status}`)
+      }
+
+      if (response.status === 204) {
+        return undefined as T
+      }
+
+      const data = (await response.json()) as T
+      return data
+    } catch (error) {
+      console.error('payments-ui: API request error', { url, method, error })
+      throw error
     }
-
-    if (response.status === 204) {
-      return undefined as T
-    }
-
-    const data = (await response.json()) as T
-    return data
   }
 
   return {

@@ -76,8 +76,16 @@ export const useSolanaDirectPayment = (
       const hasBalanceFlag = hasSufficientBalance(balance, tokenAmount)
 
       setTokenBalance({ balance, hasBalance: hasBalanceFlag })
+      console.log('payments-ui: Solana wallet balance', {
+        token: selectedToken.symbol,
+        balance,
+        required: tokenAmount,
+      })
     } catch (error) {
-      console.error('Failed to fetch token balance:', error)
+      console.error('Failed to fetch token balance:', {
+        token: selectedToken?.symbol,
+        error,
+      })
       setTokenBalance({ balance: 0, hasBalance: false })
     } finally {
       setIsBalanceLoading(false)
@@ -160,6 +168,9 @@ export const useSolanaDirectPayment = (
     }
 
     if (!tokenBalance?.hasBalance) {
+      console.warn('payments-ui: insufficient balance for Solana direct payment', {
+        token: selectedToken.symbol,
+      })
       onError('Insufficient balance for this token')
       return
     }
@@ -167,18 +178,27 @@ export const useSolanaDirectPayment = (
     try {
       setIsProcessing(true)
       onStart()
+      console.log('payments-ui: initiating Solana direct payment', {
+        priceId,
+        token: selectedToken.symbol,
+      })
 
       const paymentData = await solanaService.generatePayment(
         priceId,
         selectedToken.symbol,
         publicKey.toBase58()
       )
+      console.log('payments-ui: Solana payment intent created', {
+        intentId: paymentData.intent_id,
+      })
 
       const transactionToSign = decodeTransaction(paymentData.transaction)
+      console.log('payments-ui: requesting Solana wallet signature')
       const signedTx = await signWithWallet(transactionToSign)
       const signedSerialized = Buffer.from(signedTx.serialize()).toString('base64')
 
       onConfirming()
+      console.log('payments-ui: submitting signed Solana transaction')
 
       const result = await solanaService.submitPayment(
         signedSerialized,
@@ -187,9 +207,16 @@ export const useSolanaDirectPayment = (
         `Payment for subscription - ${selectedToken.symbol}`
       )
 
+      console.log('payments-ui: Solana direct payment confirmed', {
+        transactionId: result.transaction_id,
+      })
       onSuccess(result, result.transaction_id)
     } catch (err) {
-      console.error('Payment failed:', err)
+      console.error('Solana direct payment failed:', {
+        priceId,
+        token: selectedToken.symbol,
+        error: err,
+      })
 
       let errorMessage = 'Payment failed. Please try again.'
       const message =
