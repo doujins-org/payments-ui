@@ -248,24 +248,28 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="wallet" className="mt-4">
-                <DirectPayment
-                  priceId={priceId}
-                  tokenAmount={tokenAmount}
-                  selectedToken={selectedToken}
-                  supportedTokens={tokens}
-                  onPaymentStart={handlePaymentStart}
-                  onPaymentConfirming={handlePaymentConfirming}
-                  onPaymentSuccess={handlePaymentSuccess}
-                  onPaymentError={handlePaymentError}
-                />
+                {activeTab === 'wallet' && (
+                  <DirectPayment
+                    priceId={priceId}
+                    tokenAmount={tokenAmount}
+                    selectedToken={selectedToken}
+                    supportedTokens={tokens}
+                    onPaymentStart={handlePaymentStart}
+                    onPaymentConfirming={handlePaymentConfirming}
+                    onPaymentSuccess={handlePaymentSuccess}
+                    onPaymentError={handlePaymentError}
+                  />
+                )}
               </TabsContent>
               <TabsContent value="qr" className="mt-4">
-                <QRCodePayment
-                  priceId={priceId}
-                  selectedToken={selectedToken}
-                  onPaymentError={handlePaymentError}
-                  onPaymentSuccess={handlePaymentSuccess}
-                />
+                {activeTab === 'qr' && (
+                  <QRCodePayment
+                    priceId={priceId}
+                    selectedToken={selectedToken}
+                    onPaymentError={handlePaymentError}
+                    onPaymentSuccess={handlePaymentSuccess}
+                  />
+                )}
               </TabsContent>
             </Tabs>
 
