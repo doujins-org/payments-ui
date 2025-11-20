@@ -29,6 +29,8 @@ export const useSolanaQrPayment = (
   const { priceId, selectedToken, onSuccess, onError } = options
   const solanaService = useSolanaService()
   const tokenSymbol = selectedToken?.symbol ?? null
+  const onSuccessRef = useRef(onSuccess)
+  const onErrorRef = useRef(onError)
 
   const [intent, setIntent] = useState<SolanaPayQRCodeIntent | null>(null)
   const [qrDataUri, setQrDataUri] = useState<string | null>(null)
@@ -71,16 +73,24 @@ export const useSolanaQrPayment = (
     [clearTimers]
   )
 
+  useEffect(() => {
+    onSuccessRef.current = onSuccess
+  }, [onSuccess])
+
+  useEffect(() => {
+    onErrorRef.current = onError
+  }, [onError])
+
   const handleError = useCallback(
     (message: string, notifyParent = false) => {
       console.error('[payments-ui] Solana Pay QR error:', message)
       clearTimers()
       resetState(message)
       if (notifyParent) {
-        onError(message)
+        onErrorRef.current?.(message)
       }
     },
-    [clearTimers, onError, resetState]
+    [clearTimers, resetState]
   )
 
   const handleSuccess = useCallback(
@@ -91,9 +101,9 @@ export const useSolanaQrPayment = (
         paymentId: status.payment_id,
         intentId: status.intent_id,
       })
-      onSuccess(status.payment_id, status.transaction || '')
+      onSuccessRef.current?.(status.payment_id, status.transaction || '')
     },
-    [clearTimers, onSuccess, resetState]
+    [clearTimers, resetState]
   )
 
   const pollStatus = useCallback(
