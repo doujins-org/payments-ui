@@ -63,3 +63,13 @@ export interface PaymentConfig {
   collectJsKey?: string
   solanaRpcUrl?: string
 }
+
+export type NotificationStatus = 'default' | 'success' | 'info' | 'destructive'
+
+export interface NotificationPayload {
+  title: string
+  description?: string
+  status?: NotificationStatus
+}
+
+export type NotificationHandler = (payload: NotificationPayload) => void

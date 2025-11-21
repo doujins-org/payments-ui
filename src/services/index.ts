@@ -1,6 +1,7 @@
 export * from './CardPaymentService'
 export * from './PaymentMethodService'
 export * from './SolanaPaymentService'
+export * from './SolanaWalletService'
 export * from './TokenCatalog'
 export * from './WalletGateway'
 export * from './SubscriptionService'

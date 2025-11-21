@@ -6,11 +6,13 @@ import { SolanaPaymentService } from '../services/SolanaPaymentService'
 import { TokenCatalog } from '../services/TokenCatalog'
 import { WalletGateway } from '../services/WalletGateway'
 import { SubscriptionService } from '../services/SubscriptionService'
+import { SolanaWalletService } from '../services/SolanaWalletService'
 
 export interface PaymentServices {
   cardPayments: CardPaymentService
   paymentMethods: PaymentMethodService
   solanaPayments: SolanaPaymentService
+  solanaWallets: SolanaWalletService
   tokenCatalog: TokenCatalog
   walletGateway: WalletGateway
   subscriptions: SubscriptionService
@@ -72,6 +74,7 @@ export class PaymentApp {
     )
 
     const solanaPayments = new SolanaPaymentService(billingApi)
+    const solanaWallets = new SolanaWalletService(billingApi)
     const paymentMethods = new PaymentMethodService(accountApi)
     const cardPayments = new CardPaymentService(this.config)
     const walletGateway = new WalletGateway()
@@ -82,6 +85,7 @@ export class PaymentApp {
       cardPayments,
       paymentMethods,
       solanaPayments,
+      solanaWallets,
       tokenCatalog,
       walletGateway,
       subscriptions,

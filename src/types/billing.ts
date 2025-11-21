@@ -39,3 +39,42 @@ export interface PaginatedPaymentMethods {
   total?: number
   next_page?: number | null
 }
+
+export interface Payment {
+  id: string
+  subscription_id?: string | null
+  processor: string
+  transaction_id: string
+  amount: number
+  currency: string
+  purchased_at: string
+  status?: string
+  description?: string
+}
+
+export interface PaginatedPayments {
+  data: Payment[]
+  total_items: number
+  limit?: number
+  offset?: number
+  page?: number
+  page_size?: number
+  total_pages?: number
+}
+
+export interface BillingAccessGrant {
+  kind: string
+  entitlement: string
+  subscription_id?: string | null
+  processor?: string | null
+  processor_subscription_id?: string | null
+  source_type?: string | null
+  source_id?: string | null
+  start_at?: string | null
+  end_at?: string | null
+}
+
+export interface BillingStatus {
+  is_premium: boolean
+  access: BillingAccessGrant[]
+}
