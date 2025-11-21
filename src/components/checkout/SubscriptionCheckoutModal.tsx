@@ -1,0 +1,131 @@
+import React, { useCallback, useMemo, useState } from 'react'
+import { Dialog, DialogContent } from '../../ui/dialog'
+import { Button } from '../../ui/button'
+import { AlertCircle } from 'lucide-react'
+import { PaymentExperience } from '../PaymentExperience'
+import { SubscriptionSuccessDialog } from './SubscriptionSuccessDialog'
+import { useSubscriptionActions } from '../../hooks/useSubscriptionActions'
+import type { BillingDetails, SubmitPaymentResponse } from '../../types'
+
+interface SubscriptionCheckoutModalProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  priceId?: string | null
+  usdAmount?: number
+  planName?: string
+  amountLabel?: string
+  billingPeriodLabel?: string
+  userEmail?: string | null
+  provider?: string
+  onSuccess?: () => void
+  enableSolanaPay?: boolean
+}
+
+export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps> = ({
+  open,
+  onOpenChange,
+  priceId,
+  usdAmount = 0,
+  planName,
+  amountLabel,
+  billingPeriodLabel,
+  userEmail,
+  provider = 'mobius',
+  onSuccess,
+  enableSolanaPay = true,
+}) => {
+  const [showSuccess, setShowSuccess] = useState(false)
+  const { subscribeWithCard, subscribeWithSavedMethod } = useSubscriptionActions()
+
+  const handleClose = useCallback(
+    (nextOpen: boolean) => {
+      onOpenChange(nextOpen)
+      if (!nextOpen) {
+        setShowSuccess(false)
+      }
+    },
+    [onOpenChange]
+  )
+
+  const ensurePrice = () => {
+    if (!priceId) {
+      throw new Error('Select a plan before subscribing.')
+    }
+    return priceId
+  }
+
+  const notifySuccess = (result?: SubmitPaymentResponse | string) => {
+    setShowSuccess(true)
+    onSuccess?.()
+    if (result && typeof window !== 'undefined') {
+      console.debug('[payments-ui] subscription success', result)
+    }
+  }
+
+  const handleNewCardPayment = async ({ token, billing }: { token: string; billing: BillingDetails }) => {
+    await subscribeWithCard({
+      priceId: ensurePrice(),
+      provider,
+      paymentToken: token,
+      billing,
+    })
+    notifySuccess()
+  }
+
+  const handleSavedMethodPayment = async ({ paymentMethodId }: { paymentMethodId: string }) => {
+    await subscribeWithSavedMethod({
+      priceId: ensurePrice(),
+      provider,
+      paymentMethodId,
+      email: userEmail ?? '',
+    })
+    notifySuccess()
+  }
+
+  const solanaSuccess = (result: SubmitPaymentResponse | string) => {
+    notifySuccess(result)
+    onOpenChange(false)
+  }
+
+  const summary = useMemo(() => {
+    if (!planName && !amountLabel) return null
+    return (
+      <div className="rounded-xl border border-border/60 bg-muted/10 p-3 text-sm text-muted-foreground">
+        <p className="font-medium text-foreground">{planName ?? 'Selected plan'}</p>
+        <p>{amountLabel ?? `$${usdAmount.toFixed(2)}`} {billingPeriodLabel ? `/ ${billingPeriodLabel}` : ''}</p>
+      </div>
+    )
+  }, [planName, amountLabel, billingPeriodLabel, usdAmount])
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-3xl">
+          {!priceId && (
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4" /> Select a subscription plan to continue.
+            </div>
+          )}
+          <PaymentExperience
+            priceId={priceId ?? ''}
+            usdAmount={usdAmount}
+            checkoutSummary={summary}
+            onNewCardPayment={priceId ? handleNewCardPayment : undefined}
+            onSavedMethodPayment={priceId ? handleSavedMethodPayment : undefined}
+            enableNewCard={Boolean(priceId)}
+            enableStoredMethods={Boolean(priceId)}
+            enableSolanaPay={enableSolanaPay && Boolean(priceId)}
+            onSolanaSuccess={solanaSuccess}
+          />
+        </DialogContent>
+      </Dialog>
+      <SubscriptionSuccessDialog
+        open={showSuccess}
+        onClose={() => setShowSuccess(false)}
+        planName={planName}
+        amountLabel={amountLabel ?? `$${usdAmount.toFixed(2)}`}
+        billingPeriodLabel={billingPeriodLabel}
+      />
+    </>
+  )
+}
