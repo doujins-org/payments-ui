@@ -62,13 +62,10 @@ export const useSolanaQrPayment = (
   const resetState = useCallback(
     (message?: string | null) => {
       clearTimers()
-      setIntent((prev) => (prev ? null : prev))
-      setQrDataUri((prev) => (prev ? null : prev))
-      setTimeRemaining((prev) => (prev !== 0 ? 0 : prev))
-      setError((prev) => {
-        const next = message === undefined ? null : message
-        return prev === next ? prev : next
-      })
+      setIntent(null)
+      setQrDataUri(null)
+      setTimeRemaining(0)
+      setError(message ?? null)
     },
     [clearTimers]
   )
