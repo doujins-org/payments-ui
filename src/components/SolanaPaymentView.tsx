@@ -188,31 +188,23 @@ export const SolanaPaymentView: React.FC<SolanaPaymentViewProps> = ({
 
     if (tokensLoading) {
       return (
-        <div className="flex items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/10 py-10 text-sm text-muted-foreground">
+        <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading supported tokens…
         </div>
       )
     }
 
     if (tokensError) {
-      return (
-        <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {tokensError}
-        </div>
-      )
+      return <p className="text-sm text-destructive">{tokensError}</p>
     }
 
     if (!tokens.length) {
-      return (
-        <div className="rounded-md border border-dashed border-border/60 bg-muted/10 px-4 py-6 text-sm text-muted-foreground">
-          No payment tokens available.
-        </div>
-      )
+      return <p className="text-sm text-muted-foreground">No payment tokens available.</p>
     }
 
     return (
       <div className="space-y-6">
-        <div className="rounded-2xl border border-border/60 bg-background/80 p-5 text-center">
+        <div className="space-y-1 text-center">
           <p className="text-sm text-muted-foreground">Amount due</p>
           <p className="text-3xl font-semibold text-foreground">${usdAmount.toFixed(2)} USD</p>
           {selectedToken && tokenAmount > 0 && (
@@ -238,13 +230,13 @@ export const SolanaPaymentView: React.FC<SolanaPaymentViewProps> = ({
           </Select>
         </div>
 
-        <div className="rounded-2xl border border-border/60 bg-background/80">
+        <div className="space-y-3">
           <Tabs
             value={activeTab}
             onValueChange={(value) => setActiveTab(value as 'wallet' | 'qr')}
-            className="w-full"
+            className="w-full space-y-3"
           >
-            <TabsList className="grid w-full grid-cols-2 rounded-t-2xl bg-muted/10 p-1">
+            <TabsList className="grid w-full grid-cols-2 bg-muted/10">
               <TabsTrigger value="wallet" disabled={!connected}>
                 <Wallet className="mr-2 h-4 w-4" /> Wallet
               </TabsTrigger>
@@ -252,7 +244,7 @@ export const SolanaPaymentView: React.FC<SolanaPaymentViewProps> = ({
                 <CreditCard className="mr-2 h-4 w-4" /> QR Code
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="wallet" className="p-4">
+            <TabsContent value="wallet" className="space-y-4">
               {activeTab === 'wallet' && (
                 <DirectPayment
                   priceId={priceId}
@@ -266,12 +258,12 @@ export const SolanaPaymentView: React.FC<SolanaPaymentViewProps> = ({
                 />
               )}
               {!connected && (
-                <div className="mt-4 rounded-md border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100">
+                <div className="text-sm text-amber-100">
                   Connect your Solana wallet to continue or switch to QR mode.
                 </div>
               )}
             </TabsContent>
-            <TabsContent value="qr" className="p-4">
+            <TabsContent value="qr">
               {activeTab === 'qr' && (
                 <QRCodePayment
                   priceId={priceId}
@@ -288,11 +280,10 @@ export const SolanaPaymentView: React.FC<SolanaPaymentViewProps> = ({
   }
 
   return (
-    <div className="space-y-5 rounded-md border border-border/70 bg-background/95 p-5">
+    <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Solana Pay checkout</p>
-          <p className="text-2xl font-semibold text-foreground">Pay with Solana</p>
+        <div className="space-y-1">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Pay with Solana</p>
           <p className="text-sm text-muted-foreground">
             Choose a supported token and send the payment with your wallet or a QR code.
           </p>

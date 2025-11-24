@@ -39,7 +39,7 @@ export const DirectPayment: React.FC<DirectPaymentProps> = ({
     })
 
   return (
-    <Card className="space-y-4 border border-border/60 bg-background/80 p-6">
+    <Card className="space-y-4 rounded-md border border-border/60 bg-background/80 shadow-none p-6">
       <div className="space-y-1">
         <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           <Wallet className="h-4 w-4" /> Pay with connected wallet

@@ -35,7 +35,7 @@ export const QRCodePayment: React.FC<QRCodePaymentProps> = ({
   }
 
   return (
-    <Card className="space-y-4 border border-border/60 bg-background/80 p-6">
+    <Card className="space-y-4 border border-border/60 bg-background/80 p-6 shadow-none rounded-md">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-semibold text-foreground">Scan with Solana Pay</p>
