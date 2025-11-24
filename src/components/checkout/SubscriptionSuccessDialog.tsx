@@ -1,5 +1,11 @@
 import React from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '../../ui/dialog'
 import { Button } from '../../ui/button'
 import { CheckCircle } from 'lucide-react'
 
@@ -22,19 +28,25 @@ export const SubscriptionSuccessDialog: React.FC<SubscriptionSuccessDialogProps>
     <Dialog open={open} onOpenChange={(value) => {
       if (!value) onClose()
     }}>
-      <DialogContent className="max-w-sm text-center">
-        <DialogHeader>
-          <DialogTitle className="flex flex-col items-center gap-3 text-foreground">
+      <DialogContent className="w-full max-w-md overflow-hidden border border-border/70 bg-background/95 p-0 shadow-2xl">
+        <div className="bg-gradient-to-b from-primary/25 via-primary/10 to-background px-6 py-8 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-background/60">
             <CheckCircle className="h-10 w-10 text-primary" />
-            Subscription activated
-          </DialogTitle>
-          <DialogDescription className="text-base text-muted-foreground">
-            You now have access to {planName}. Billing: {amountLabel} / {billingPeriodLabel}.
-          </DialogDescription>
-        </DialogHeader>
-        <Button className="mt-6 w-full" onClick={onClose}>
-          Continue
-        </Button>
+          </div>
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-semibold text-foreground">
+              Subscription activated
+            </DialogTitle>
+            <DialogDescription className="text-base text-muted-foreground">
+              You now have access to {planName}. Billing: {amountLabel} / {billingPeriodLabel}.
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+        <div className="px-6 py-6">
+          <Button className="w-full" onClick={onClose}>
+            Continue exploring
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   )

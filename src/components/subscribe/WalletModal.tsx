@@ -1,6 +1,13 @@
 import { useState } from 'react'
-import { Dialog, DialogContent } from '../../ui/dialog'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../../ui/dialog'
+import { ChevronDown, ChevronUp, Wallet } from 'lucide-react'
+import { Button } from '../../ui/button'
 
 interface WalletDefinition {
   id: string
@@ -31,19 +38,32 @@ export const WalletModal: React.FC<WalletModalProps> = ({ open, onOpenChange }) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md border border-border bg-background">
-        <div className="space-y-4">
+      <DialogContent className="w-full max-w-lg overflow-hidden border border-border/70 bg-background/95 p-0 shadow-2xl">
+        <DialogHeader className="border-b border-border/40 bg-gradient-to-r from-primary/10 via-background to-background px-6 py-5 text-left">
+          <DialogTitle className="flex items-center gap-2 text-foreground">
+            <Wallet className="h-5 w-5 text-primary" /> Connect a Solana wallet
+          </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            Pick a supported wallet to link with Doujins. Verified wallets unlock Solana payments and withdrawals.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="max-h-[70vh] overflow-y-auto p-6 space-y-4">
           {wallets.map((wallet) => (
-            <div key={wallet.id} className="rounded-lg border border-border/80">
+            <div
+              key={wallet.id}
+              className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm"
+            >
               <button
-                className="flex w-full items-center justify-between px-4 py-3"
-                onClick={() => setExpandedWallet((prev) => (prev === wallet.id ? null : wallet.id))}
+                className="flex w-full items-center justify-between"
+                onClick={() =>
+                  setExpandedWallet((prev) => (prev === wallet.id ? null : wallet.id))
+                }
               >
                 <div className="flex items-center gap-3 text-left">
-                  <img src={wallet.icon} alt={wallet.name} className="h-8 w-8 rounded-full" />
+                  <img src={wallet.icon} alt={wallet.name} className="h-10 w-10 rounded-full" />
                   <div>
-                    <p className="font-semibold">{wallet.name}</p>
-                    <p className="text-sm text-muted-foreground">Connect via browser extension</p>
+                    <p className="text-base font-semibold text-foreground">{wallet.name}</p>
+                    <p className="text-sm text-muted-foreground">Browser extension or mobile app</p>
                   </div>
                 </div>
                 {expandedWallet === wallet.id ? (
@@ -53,12 +73,20 @@ export const WalletModal: React.FC<WalletModalProps> = ({ open, onOpenChange }) 
                 )}
               </button>
               {expandedWallet === wallet.id && (
-                <div className="border-t border-border/60 px-4 py-3 text-sm text-muted-foreground">
-                  Follow the prompts in your {wallet.name} wallet to approve access.
+                <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+                  <p>
+                    Open the {wallet.name} wallet, approve the connection request, and confirm the signature prompt to finish linking.
+                  </p>
+                  <Button className="w-full" variant="outline" disabled>
+                    Connect with {wallet.name} (coming soon)
+                  </Button>
                 </div>
               )}
             </div>
           ))}
+          <div className="rounded-2xl border border-border/60 bg-muted/10 p-4 text-xs text-muted-foreground">
+            Don’t see your wallet? Additional providers will be added soon. Contact support if you need manual verification.
+          </div>
         </div>
       </DialogContent>
     </Dialog>

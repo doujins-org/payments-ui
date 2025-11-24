@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react'
 import { Dialog, DialogContent } from '../../ui/dialog'
 import { Button } from '../../ui/button'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, ShieldCheck } from 'lucide-react'
 import { PaymentExperience } from '../PaymentExperience'
 import { SubscriptionSuccessDialog } from './SubscriptionSuccessDialog'
 import { useSubscriptionActions } from '../../hooks/useSubscriptionActions'
@@ -86,9 +86,15 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
   const summary = useMemo(() => {
     if (!planName && !amountLabel) return null
     return (
-      <div className="rounded-xl border border-border/60 bg-muted/10 p-3 text-sm text-muted-foreground">
-        <p className="font-medium text-foreground">{planName ?? 'Selected plan'}</p>
-        <p>{amountLabel ?? `$${usdAmount.toFixed(2)}`} {billingPeriodLabel ? `/ ${billingPeriodLabel}` : ''}</p>
+      <div className="rounded-2xl border border-border/60 bg-background/90 p-4 shadow-sm">
+        <p className="text-sm text-muted-foreground">Current plan</p>
+        <p className="text-2xl font-semibold text-foreground">
+          {planName ?? 'Selected plan'}
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {amountLabel ?? `$${usdAmount.toFixed(2)}`}
+          {billingPeriodLabel ? ` / ${billingPeriodLabel}` : ''}
+        </p>
       </div>
     )
   }, [planName, amountLabel, billingPeriodLabel, usdAmount])
@@ -96,9 +102,25 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-3xl">
+        <DialogContent className="w-full max-w-3xl space-y-6 border border-border/70 bg-background p-6 shadow-2xl">
+          <header className="space-y-3">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Checkout</p>
+            <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-muted/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Plan</p>
+                <p className="text-xl font-semibold text-foreground">{planName ?? 'Selected plan'}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Amount</p>
+                <p className="text-xl font-semibold text-foreground">
+                  {amountLabel ?? `$${usdAmount.toFixed(2)}`}
+                  {billingPeriodLabel ? ` / ${billingPeriodLabel}` : ''}
+                </p>
+              </div>
+            </div>
+          </header>
           {!priceId && (
-            <div className="mb-4 flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               <AlertCircle className="h-4 w-4" /> Select a subscription plan to continue.
             </div>
           )}
