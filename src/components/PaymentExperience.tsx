@@ -5,8 +5,8 @@ import { CardDetailsForm } from './CardDetailsForm'
 import { StoredPaymentMethods } from './StoredPaymentMethods'
 import { Button } from '../ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
-import { usePaymentDialogs } from '../context/PaymentsDialogContext'
 import { usePaymentNotifications } from '../hooks/usePaymentNotifications'
+import { SolanaPaymentView } from './SolanaPaymentView'
 
 type AsyncStatus = 'idle' | 'processing' | 'success' | 'error'
 
@@ -43,17 +43,23 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   const showStored = enableStoredMethods && Boolean(onSavedMethodPayment)
   const defaultTab = showStored ? 'saved' : 'new'
   const [activeTab, setActiveTab] = useState<'saved' | 'new'>(defaultTab)
+  const [mode, setMode] = useState<'cards' | 'solana'>('cards')
   const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null)
   const [savedStatus, setSavedStatus] = useState<AsyncStatus>('idle')
   const [savedError, setSavedError] = useState<string | null>(null)
   const [newCardStatus, setNewCardStatus] = useState<AsyncStatus>('idle')
   const [newCardError, setNewCardError] = useState<string | null>(null)
-  const dialogs = usePaymentDialogs()
   const { notifyStatus, notifySuccess, notifyError } = usePaymentNotifications()
 
   useEffect(() => {
     setActiveTab(showStored ? 'saved' : 'new')
   }, [showStored])
+
+  useEffect(() => {
+    if (!enableSolanaPay) {
+      setMode('cards')
+    }
+  }, [enableSolanaPay])
 
   const handleMethodSelect = useCallback((method: PaymentMethod) => {
     setSelectedMethodId(method.id)
@@ -107,19 +113,29 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
     [notifyError, notifyStatus, onNewCardPayment]
   )
 
-  const openSolanaPay = useCallback(() => {
+  const showSolanaView = useCallback(() => {
     if (!enableSolanaPay) return
-    dialogs.solana.open({
-      priceId,
-      usdAmount,
-      onSuccess: (result) => {
-        onSolanaSuccess?.(result)
-      },
-      onError: (error) => {
-        onSolanaError?.(error)
-      },
-    })
-  }, [dialogs.solana, enableSolanaPay, onSolanaError, onSolanaSuccess, priceId, usdAmount])
+    setMode('solana')
+  }, [enableSolanaPay])
+
+  const exitSolanaView = useCallback(() => {
+    setMode('cards')
+  }, [])
+
+  const handleSolanaSuccess = useCallback(
+    (result: SubmitPaymentResponse | string) => {
+      onSolanaSuccess?.(result)
+      exitSolanaView()
+    },
+    [exitSolanaView, onSolanaSuccess]
+  )
+
+  const handleSolanaError = useCallback(
+    (error: string) => {
+      onSolanaError?.(error)
+    },
+    [onSolanaError]
+  )
 
   const renderSavedTab = () => {
     if (!showStored) {
@@ -172,8 +188,8 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
     )
   }
 
-  return (
-    <div className="space-y-6 pt-4">
+  const renderCardExperience = () => (
+    <>
       <Tabs
         value={activeTab}
         onValueChange={(value) => setActiveTab(value as 'saved' | 'new')}
@@ -196,9 +212,24 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
       </Tabs>
 
       {enableSolanaPay && (
-        <Button className="w-full" variant="secondary" onClick={openSolanaPay}>
+        <Button className="w-full" variant="secondary" onClick={showSolanaView}>
           <Sparkles className="mr-2 h-4 w-4" /> Pay with Solana
         </Button>
+      )}
+    </>
+  )
+
+  return (
+    <div className="space-y-6 pt-4">
+      {mode === 'cards' && renderCardExperience()}
+      {mode === 'solana' && enableSolanaPay && (
+        <SolanaPaymentView
+          priceId={priceId}
+          usdAmount={usdAmount}
+          onSuccess={handleSolanaSuccess}
+          onError={handleSolanaError}
+          onClose={exitSolanaView}
+        />
       )}
     </div>
   )
