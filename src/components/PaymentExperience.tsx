@@ -133,11 +133,13 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
     return (
       <div className="space-y-4">
         <StoredPaymentMethods
+          heading="Saved cards"
           selectedMethodId={selectedMethodId}
           onMethodSelect={handleMethodSelect}
-          heading="Saved cards"
           description="Select one of your stored payment methods."
+          showAddButton={false}
         />
+
         <Button
           className="w-full"
           disabled={!selectedMethodId || savedStatus === 'processing'}

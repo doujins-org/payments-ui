@@ -13,7 +13,6 @@ import {
 } from '../ui/dialog'
 import { Badge } from '../ui/badge'
 import { ScrollArea } from '../ui/scroll-area'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card'
 import { cn } from '../lib/utils'
 
 const formatCardLabel = (method: PaymentMethod): string => {
@@ -58,23 +57,20 @@ export const StoredPaymentMethods: React.FC<StoredPaymentMethodsProps> = ({
   }
 
   return (
-    <Card className="border-border/60 bg-card/95">
-      <CardHeader className="flex flex-row items-start justify-between space-y-0">
-        <div className="space-y-1">
-          <CardTitle className="text-base font-semibold text-foreground">
-            <span className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <WalletCards className="h-4 w-4" /> {heading}
-            </span>
-          </CardTitle>
-          <CardDescription>{description}</CardDescription>
+    <div className="space-y-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <WalletCards className="h-4 w-4" /> {heading}
+          </p>
+          <p className="text-xs text-muted-foreground">{description}</p>
         </div>
         {showAddButton && (
-          <Button size="sm" onClick={() => setIsModalOpen(true)}>
+          <Button size="sm" variant="outline" onClick={() => setIsModalOpen(true)}>
             <CreditCard className="mr-2 h-4 w-4" /> Add card
           </Button>
         )}
-      </CardHeader>
-      <CardContent>
+      </div>
         {listQuery.isLoading ? (
           <div className="flex items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/10 py-8 text-sm text-muted-foreground">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading cards…
@@ -152,10 +148,8 @@ export const StoredPaymentMethods: React.FC<StoredPaymentMethodsProps> = ({
             </div>
           </ScrollArea>
         )}
-      </CardContent>
-
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add a new card</DialogTitle>
             <DialogDescription>
@@ -172,6 +166,6 @@ export const StoredPaymentMethods: React.FC<StoredPaymentMethodsProps> = ({
           />
         </DialogContent>
       </Dialog>
-    </Card>
+    </div>
   )
 }

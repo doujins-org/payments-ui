@@ -310,7 +310,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
             <SelectTrigger>
               <SelectValue placeholder="Select a country" />
             </SelectTrigger>
-            <SelectContent className="max-h-64">
+            <SelectContent className="max-h-64 w-full">
               {countries.map((option) => (
                 <SelectItem key={option.code} value={option.code}>
                   {option.name}
