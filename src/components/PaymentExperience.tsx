@@ -1,14 +1,13 @@
-import React from 'react'
+import React, { useCallback, useState } from 'react'
 import { CreditCard, Sparkles } from 'lucide-react'
 import type { BillingDetails, PaymentMethod, SubmitPaymentResponse } from '../types'
 import { CardDetailsForm } from './CardDetailsForm'
 import { StoredPaymentMethods } from './StoredPaymentMethods'
-import { SolanaPaymentSelector } from './SolanaPaymentSelector'
-import { usePaymentStore } from '../hooks/usePaymentStore'
-import { selectCheckoutFlow } from '../state/selectors'
 import { Button } from '../ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card'
-import { Separator } from '../ui/separator'
+import { usePaymentDialogs } from '../context/PaymentsDialogContext'
+
+type AsyncStatus = 'idle' | 'processing' | 'success' | 'error'
 
 export interface PaymentExperienceProps {
   priceId: string
@@ -43,59 +42,68 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
 }) => {
   const showNewCard = enableNewCard && Boolean(onNewCardPayment)
   const showStored = enableStoredMethods
+  const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null)
+  const [savedStatus, setSavedStatus] = useState<AsyncStatus>('idle')
+  const [savedError, setSavedError] = useState<string | null>(null)
+  const [newCardStatus, setNewCardStatus] = useState<AsyncStatus>('idle')
+  const [newCardError, setNewCardError] = useState<string | null>(null)
+  const dialogs = usePaymentDialogs()
 
-  const {
-    selectedMethodId,
-    savedStatus,
-    savedError,
-    newCardStatus,
-    newCardError,
-    solanaModalOpen,
-    setSelectedMethod,
-    setSolanaModalOpen,
-    startSavedPayment,
-    completeSavedPayment,
-    failSavedPayment,
-    startNewCardPayment,
-    completeNewCardPayment,
-    failNewCardPayment,
-    resetSavedPayment,
-  } = usePaymentStore(selectCheckoutFlow)
+  const handleMethodSelect = useCallback((method: PaymentMethod) => {
+    setSelectedMethodId(method.id)
+    setSavedStatus('idle')
+    setSavedError(null)
+  }, [])
 
-  const handleMethodSelect = (method: PaymentMethod) => {
-    setSelectedMethod(method.id)
-    resetSavedPayment()
-  }
-
-  const handleNewCardTokenize = async (token: string, billing: BillingDetails) => {
-    if (!onNewCardPayment) return
-    try {
-      startNewCardPayment()
-      await onNewCardPayment({ token, billing })
-      completeNewCardPayment()
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to complete payment'
-      failNewCardPayment(message)
-    }
-  }
-
-  const handleSavedPayment = async () => {
+  const handleSavedPayment = useCallback(async () => {
     if (!onSavedMethodPayment || !selectedMethodId) return
     try {
-      startSavedPayment()
+      setSavedStatus('processing')
+      setSavedError(null)
       await onSavedMethodPayment({
         paymentMethodId: selectedMethodId,
         amount: usdAmount,
       })
-      completeSavedPayment()
+      setSavedStatus('success')
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
           : 'Unable to complete payment with saved card'
-      failSavedPayment(message)
+      setSavedStatus('error')
+      setSavedError(message)
     }
-  }
+  }, [onSavedMethodPayment, selectedMethodId, usdAmount])
+
+  const handleNewCardTokenize = useCallback(
+    async (token: string, billing: BillingDetails) => {
+      if (!onNewCardPayment) return
+      try {
+        setNewCardStatus('processing')
+        setNewCardError(null)
+        await onNewCardPayment({ token, billing })
+        setNewCardStatus('success')
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'Unable to complete payment'
+        setNewCardStatus('error')
+        setNewCardError(message)
+      }
+    },
+    [onNewCardPayment]
+  )
+
+  const openSolanaPay = useCallback(() => {
+    if (!enableSolanaPay) return
+    dialogs.solana.open({
+      priceId,
+      usdAmount,
+      onSuccess: (result) => {
+        onSolanaSuccess?.(result)
+      },
+      onError: onSolanaError,
+    })
+  }, [dialogs.solana, enableSolanaPay, onSolanaError, onSolanaSuccess, priceId, usdAmount])
 
   return (
     <div className="space-y-8">
@@ -125,7 +133,9 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
                     disabled={!selectedMethodId || savedStatus === 'processing'}
                     onClick={handleSavedPayment}
                   >
-                    {savedStatus === 'processing' ? 'Processing…' : 'Pay with selected card'}
+                    {savedStatus === 'processing'
+                      ? 'Processing…'
+                      : 'Pay with selected card'}
                   </Button>
                 )}
                 {savedError && (
@@ -166,25 +176,13 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
               <p className="flex items-center gap-2 text-base font-semibold text-primary">
                 <Sparkles className="h-4 w-4" /> Prefer Solana Pay?
               </p>
-              <p className="text-sm text-primary/80">Use a Solana wallet or QR code for instant settlement.</p>
+              <p className="text-sm text-primary/80">
+                Use a Solana wallet or QR code for instant settlement.
+              </p>
             </div>
-            <Button onClick={() => setSolanaModalOpen(true)}>Open Solana Pay</Button>
+            <Button onClick={openSolanaPay}>Open Solana Pay</Button>
           </CardContent>
         </Card>
-      )}
-
-      {enableSolanaPay && (
-        <SolanaPaymentSelector
-          isOpen={solanaModalOpen}
-          onClose={() => setSolanaModalOpen(false)}
-          priceId={priceId}
-          usdAmount={usdAmount}
-          onSuccess={(result) => {
-            setSolanaModalOpen(false)
-            onSolanaSuccess?.(result)
-          }}
-          onError={onSolanaError}
-        />
       )}
     </div>
   )

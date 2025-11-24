@@ -26,7 +26,7 @@ import {
 } from '../ui/select'
 import { cn } from '../lib/utils'
 
-interface SolanaPaymentSelectorProps {
+export interface SolanaPaymentSelectorProps {
   isOpen: boolean
   priceId: string
   usdAmount: number
@@ -226,7 +226,7 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
                 <SelectValue placeholder="Select token" />
               </SelectTrigger>
               <SelectContent className="max-h-64">
-                {tokens.map((token) => (
+                {tokens?.map((token) => (
                   <SelectItem key={token.symbol} value={token.symbol}>
                     {token.name} ({token.symbol})
                   </SelectItem>
