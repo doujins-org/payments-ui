@@ -289,7 +289,7 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(value) => (value ? undefined : handleClose())}>
-      <DialogContent className="w-full max-w-2xl overflow-hidden border border-border/70 bg-background/95 p-0 shadow-2xl">
+      <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-border/70 bg-background/95 p-0 shadow-2xl [&::-webkit-scrollbar]:hidden">
         <div className="bg-gradient-to-r from-primary/15 via-background/60 to-background px-6 py-5">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Solana Pay checkout</p>
           <p className="text-2xl font-semibold text-foreground">Pay with Solana</p>
@@ -297,7 +297,7 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
             Choose a supported token and send the payment with your wallet or a QR code.
           </p>
         </div>
-        <div className="max-h-[75vh] overflow-y-auto p-6">
+        <div className="p-6">
           {renderBody()}
         </div>
       </DialogContent>

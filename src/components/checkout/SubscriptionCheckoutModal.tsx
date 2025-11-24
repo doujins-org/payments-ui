@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react'
 import { Dialog, DialogContent } from '../../ui/dialog'
 import { Button } from '../../ui/button'
-import { AlertCircle, ShieldCheck } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import { PaymentExperience } from '../PaymentExperience'
 import { SubscriptionSuccessDialog } from './SubscriptionSuccessDialog'
 import { useSubscriptionActions } from '../../hooks/useSubscriptionActions'
@@ -86,13 +86,10 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
   const summary = useMemo(() => {
     if (!planName && !amountLabel) return null
     return (
-      <div className="rounded-2xl border border-border/60 bg-background/90 p-4 shadow-sm">
-        <p className="text-sm text-muted-foreground">Current plan</p>
-        <p className="text-2xl font-semibold text-foreground">
-          {planName ?? 'Selected plan'}
-        </p>
-        
-        <p className="mt-1 text-sm text-muted-foreground">
+      <div className="rounded-2xl border border-border/60 bg-muted/5 p-4">
+        <p className="text-sm text-muted-foreground">Plan</p>
+        <p className="text-xl font-semibold text-foreground">{planName ?? 'Selected plan'}</p>
+        <p className="text-sm text-muted-foreground">
           {amountLabel ?? `$${usdAmount.toFixed(2)}`}
           {billingPeriodLabel ? ` / ${billingPeriodLabel}` : ''}
         </p>
@@ -103,24 +100,24 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="w-full max-w-3xl space-y-6 rounded-md">
-          {!priceId && (
-            <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4" /> Select a subscription plan to continue.
-            </div>
-          )}
-
+        <DialogContent className="w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-border/60 bg-background p-0 [&::-webkit-scrollbar]:hidden">
+          <div className="p-6 space-y-6">
+            {!priceId && (
+              <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <AlertCircle className="h-4 w-4" /> Select a subscription plan to continue.
+              </div>
+            )}
           <PaymentExperience
             usdAmount={usdAmount}
             priceId={priceId ?? ''}
-            checkoutSummary={summary}
             onSolanaSuccess={solanaSuccess}
             enableNewCard={Boolean(priceId)}
             enableStoredMethods={Boolean(priceId)}
-            enableSolanaPay={enableSolanaPay && Boolean(priceId)}
-            onNewCardPayment={priceId ? handleNewCardPayment : undefined}
-            onSavedMethodPayment={priceId ? handleSavedMethodPayment : undefined}
-          />
+              enableSolanaPay={enableSolanaPay && Boolean(priceId)}
+              onNewCardPayment={priceId ? handleNewCardPayment : undefined}
+              onSavedMethodPayment={priceId ? handleSavedMethodPayment : undefined}
+            />
+          </div>
         </DialogContent>
       </Dialog>
       <SubscriptionSuccessDialog

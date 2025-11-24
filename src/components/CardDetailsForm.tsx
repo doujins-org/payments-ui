@@ -33,7 +33,6 @@ const defaultBilling: BillingDetails = {
   firstName: '',
   lastName: '',
   address1: '',
-  address2: '',
   city: '',
   stateRegion: '',
   postalCode: '',
@@ -71,7 +70,6 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
   const [firstName, setFirstName] = useState(mergedDefaults.firstName)
   const [lastName, setLastName] = useState(mergedDefaults.lastName)
   const [address1, setAddress1] = useState(mergedDefaults.address1)
-  const [address2, setAddress2] = useState(mergedDefaults.address2 ?? '')
   const [city, setCity] = useState(mergedDefaults.city)
   const [stateRegion, setStateRegion] = useState(mergedDefaults.stateRegion ?? '')
   const [postalCode, setPostalCode] = useState(mergedDefaults.postalCode)
@@ -92,7 +90,6 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
     setFirstName(mergedDefaults.firstName)
     setLastName(mergedDefaults.lastName)
     setAddress1(mergedDefaults.address1)
-    setAddress2(mergedDefaults.address2 ?? '')
     setCity(mergedDefaults.city)
     setStateRegion(mergedDefaults.stateRegion ?? '')
     setPostalCode(mergedDefaults.postalCode)
@@ -106,7 +103,6 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
       firstName,
       lastName,
       address1,
-      address2,
       city,
       stateRegion,
       postalCode,
@@ -118,7 +114,6 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
     firstName,
     lastName,
     address1,
-    address2,
     city,
     stateRegion,
     postalCode,
@@ -145,7 +140,6 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
         firstName,
         lastName,
         address1,
-        address2,
         city,
         stateRegion,
         postalCode,
@@ -178,7 +172,6 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
     firstName,
     lastName,
     address1,
-    address2,
     city,
     stateRegion,
     postalCode,
@@ -219,11 +212,11 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
 
   const errorMessage = localError ?? externalError
   const collectFieldClass =
-    'flex h-11 w-full items-center rounded-md border border-dashed border-muted-foreground/40 bg-muted/20 px-3 text-sm text-muted-foreground'
+    'flex h-11 w-full items-center rounded-md border border-border/60 bg-background px-3 text-sm text-muted-foreground'
 
   return (
     <form
-      className={cn(className)}
+      className={cn('space-y-5', className)}
       onSubmit={handleSubmit}
       noValidate
     >
@@ -233,7 +226,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-5 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="payments-first" className="flex items-center gap-2 text-muted-foreground">
             <User className="h-4 w-4" /> First name
@@ -270,7 +263,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="payments-address1">Address line 1</Label>
+        <Label htmlFor="payments-address1">Address</Label>
         <Input
           id="payments-address1"
           value={address1}
@@ -279,16 +272,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="payments-address2">Address line 2 (optional)</Label>
-        <Input
-          id="payments-address2"
-          value={address2}
-          onChange={(e) => setAddress2(e.target.value)}
-        />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-5 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="payments-city">City</Label>
           <Input
@@ -308,7 +292,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-5 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="payments-postal" className="flex items-center gap-2 text-muted-foreground">
             <MapPin className="h-4 w-4" /> Postal code

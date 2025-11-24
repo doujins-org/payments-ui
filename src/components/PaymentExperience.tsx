@@ -1,10 +1,10 @@
-import React, { useCallback, useState } from 'react'
-import { CreditCard, Sparkles } from 'lucide-react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { Sparkles } from 'lucide-react'
 import type { BillingDetails, PaymentMethod, SubmitPaymentResponse } from '../types'
 import { CardDetailsForm } from './CardDetailsForm'
 import { StoredPaymentMethods } from './StoredPaymentMethods'
 import { Button } from '../ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { usePaymentDialogs } from '../context/PaymentsDialogContext'
 import { usePaymentNotifications } from '../hooks/usePaymentNotifications'
 
@@ -24,7 +24,6 @@ export interface PaymentExperienceProps {
   enableNewCard?: boolean
   enableStoredMethods?: boolean
   enableSolanaPay?: boolean
-  checkoutSummary?: React.ReactNode
   onSolanaSuccess?: (result: SubmitPaymentResponse | string) => void
   onSolanaError?: (error: string) => void
 }
@@ -37,12 +36,13 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   enableNewCard = true,
   enableStoredMethods = true,
   enableSolanaPay = true,
-  checkoutSummary,
   onSolanaSuccess,
   onSolanaError,
 }) => {
   const showNewCard = enableNewCard && Boolean(onNewCardPayment)
-  const showStored = enableStoredMethods
+  const showStored = enableStoredMethods && Boolean(onSavedMethodPayment)
+  const defaultTab = showStored ? 'saved' : 'new'
+  const [activeTab, setActiveTab] = useState<'saved' | 'new'>(defaultTab)
   const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null)
   const [savedStatus, setSavedStatus] = useState<AsyncStatus>('idle')
   const [savedError, setSavedError] = useState<string | null>(null)
@@ -50,6 +50,10 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   const [newCardError, setNewCardError] = useState<string | null>(null)
   const dialogs = usePaymentDialogs()
   const { notifyStatus, notifySuccess, notifyError } = usePaymentNotifications()
+
+  useEffect(() => {
+    setActiveTab(showStored ? 'saved' : 'new')
+  }, [showStored])
 
   const handleMethodSelect = useCallback((method: PaymentMethod) => {
     setSelectedMethodId(method.id)
@@ -117,64 +121,87 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
     })
   }, [dialogs.solana, enableSolanaPay, onSolanaError, onSolanaSuccess, priceId, usdAmount])
 
-  return (
-    <div className="space-y-8">
+  const renderSavedTab = () => {
+    if (!showStored) {
+      return (
+        <p className="text-sm text-muted-foreground">
+          Saved payment methods are unavailable right now. Add a new card to get started.
+        </p>
+      )
+    }
 
-      <div>
-        {/* {showStored && (
-              <div className="space-y-4">
-                <StoredPaymentMethods
-                  selectedMethodId={selectedMethodId}
-                  onMethodSelect={handleMethodSelect}
-                  heading="Saved cards"
-                  description="Use or manage your saved payment methods."
-                />
-                {onSavedMethodPayment && (
-                  <Button
-                    className="w-full"
-                    disabled={!selectedMethodId || savedStatus === 'processing'}
-                    onClick={handleSavedPayment}
-                  >
-                    {savedStatus === 'processing'
-                      ? 'Processing…'
-                      : 'Pay with selected card'}
-                  </Button>
-                )}
-                {savedError && (
-                  <p className="text-sm text-destructive">{savedError}</p>
-                )}
-              </div>
-            )} */}
-
-        {showNewCard && (
-          <div className="space-y-4">
-            <CardDetailsForm
-              visible
-              submitLabel="Pay now"
-              externalError={newCardError}
-              onTokenize={handleNewCardTokenize}
-              submitting={newCardStatus === 'processing'}
-            />
-          </div>
-        )}
+    return (
+      <div className="space-y-4">
+        <StoredPaymentMethods
+          selectedMethodId={selectedMethodId}
+          onMethodSelect={handleMethodSelect}
+          heading="Saved cards"
+          description="Select one of your stored payment methods."
+        />
+        <Button
+          className="w-full"
+          disabled={!selectedMethodId || savedStatus === 'processing'}
+          onClick={handleSavedPayment}
+        >
+          {savedStatus === 'processing' ? 'Processing…' : 'Pay with selected card'}
+        </Button>
+        {savedError && <p className="text-sm text-destructive">{savedError}</p>}
       </div>
+    )
+  }
 
-      {/* {enableSolanaPay && (
-        <Card className="border border-primary/40 bg-primary/5">
-          <CardContent className="flex flex-col gap-4 text-sm text-primary md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="flex items-center gap-2 text-base font-semibold text-primary">
-                <Sparkles className="h-4 w-4" /> Prefer Solana Pay?
-              </p>
+  const renderNewTab = () => {
+    if (!showNewCard) {
+      return (
+        <p className="text-sm text-muted-foreground">
+          Select a subscription plan to add a new card.
+        </p>
+      )
+    }
 
-              <p className="text-sm text-primary/80">
-                Use a Solana wallet or QR code for instant settlement.
-              </p>
-            </div>
-            <Button onClick={openSolanaPay}>Open Solana Pay</Button>
-          </CardContent>
-        </Card>
-      )} */}
+    return (
+      <CardDetailsForm
+        visible
+        submitLabel="Pay now"
+        externalError={newCardError}
+        onTokenize={handleNewCardTokenize}
+        submitting={newCardStatus === 'processing'}
+      />
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as 'saved' | 'new')}
+        className="space-y-4"
+      >
+        <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-muted/10 p-1">
+          <TabsTrigger value="saved" disabled={!showStored}>
+            Use saved card
+          </TabsTrigger>
+          <TabsTrigger value="new" disabled={!showNewCard}>
+            Add new card
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="saved" className="rounded-2xl border border-border/60 bg-muted/5 p-4">
+          {renderSavedTab()}
+        </TabsContent>
+        <TabsContent value="new" className="rounded-2xl border border-border/60 bg-muted/5 p-4">
+          {renderNewTab()}
+        </TabsContent>
+      </Tabs>
+
+      {enableSolanaPay && (
+        <Button
+          variant="outline"
+          className="w-full border-primary/50 text-primary hover:bg-primary/10"
+          onClick={openSolanaPay}
+        >
+          <Sparkles className="mr-2 h-4 w-4" /> Pay with Solana
+        </Button>
+      )}
     </div>
   )
 }
