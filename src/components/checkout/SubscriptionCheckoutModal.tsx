@@ -91,6 +91,7 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
         <p className="text-2xl font-semibold text-foreground">
           {planName ?? 'Selected plan'}
         </p>
+        
         <p className="mt-1 text-sm text-muted-foreground">
           {amountLabel ?? `$${usdAmount.toFixed(2)}`}
           {billingPeriodLabel ? ` / ${billingPeriodLabel}` : ''}
@@ -102,7 +103,7 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="w-full max-w-3xl space-y-6">
+        <DialogContent className="w-full max-w-3xl space-y-6 rounded-md">
           {!priceId && (
             <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               <AlertCircle className="h-4 w-4" /> Select a subscription plan to continue.

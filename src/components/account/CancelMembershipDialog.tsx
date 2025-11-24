@@ -100,7 +100,7 @@ export const CancelMembershipDialog: React.FC<CancelMembershipDialogProps> = ({
         </Button>
       </AlertDialogTrigger>
 
-      <AlertDialogContent className="max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-background">
+      <AlertDialogContent className="max-h-[90vh] overflow-y-auto rounded-md border border-border bg-background">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-lg font-semibold">
             <TriangleAlert className="h-5 w-5 text-destructive" /> Confirm Membership Cancellation

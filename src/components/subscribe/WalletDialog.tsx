@@ -148,7 +148,7 @@ export const WalletDialog: React.FC<WalletDialogProps> = ({ open, onOpenChange }
             </div>
           </div>
 
-          <div className="flex items-start gap-3 rounded-xl border border-border/70 bg-muted/10 p-4">
+          <div className="flex items-start gap-3 rounded-md border border-border/70 bg-muted/10 p-4">
             <Checkbox id="terms-agree" checked={form.termsAccepted} onCheckedChange={(checked) => updateField('termsAccepted', Boolean(checked))} />
             <Label htmlFor="terms-agree" className="text-sm text-muted-foreground">
               By completing this order, I confirm that I am 18 years or older and agree to your privacy policy and terms.

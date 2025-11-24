@@ -7,7 +7,6 @@ import { QRCodePayment } from './QRCodePayment'
 import { PaymentStatus } from './PaymentStatus'
 import { useSupportedTokens } from '../hooks/useSupportedTokens'
 import { Dialog, DialogContent } from '../ui/dialog'
-import { Button } from '../ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import {
   Select,
@@ -16,7 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select'
-import { cn } from '../lib/utils'
 import { usePaymentNotifications } from '../hooks/usePaymentNotifications'
 
 type SolanaFlowState = 'selecting' | 'processing' | 'confirming' | 'success' | 'error'
@@ -190,7 +188,7 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
 
     if (tokensLoading) {
       return (
-        <div className="flex items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/10 py-10 text-sm text-muted-foreground">
+        <div className="flex items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/10 py-10 text-sm text-muted-foreground">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading supported tokens…
         </div>
       )
@@ -198,7 +196,7 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
 
     if (tokensError) {
       return (
-        <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {tokensError}
         </div>
       )
@@ -206,7 +204,7 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
 
     if (!tokens.length) {
       return (
-        <div className="rounded-xl border border-dashed border-border/60 bg-muted/10 px-4 py-6 text-sm text-muted-foreground">
+        <div className="rounded-md border border-dashed border-border/60 bg-muted/10 px-4 py-6 text-sm text-muted-foreground">
           No payment tokens available.
         </div>
       )
@@ -268,7 +266,7 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
                 />
               )}
               {!connected && (
-                <div className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100">
+                <div className="mt-4 rounded-md border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100">
                   Connect your Solana wallet to continue or switch to QR mode.
                 </div>
               )}

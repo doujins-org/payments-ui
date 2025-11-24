@@ -28,7 +28,7 @@ export const QRCodePayment: React.FC<QRCodePaymentProps> = ({
 
   if (!selectedToken) {
     return (
-      <div className="rounded-xl border border-dashed border-border/60 bg-muted/10 px-4 py-6 text-center text-sm text-muted-foreground">
+      <div className="rounded-md border border-dashed border-border/60 bg-muted/10 px-4 py-6 text-center text-sm text-muted-foreground">
         Select a token to continue.
       </div>
     )
