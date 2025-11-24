@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { Dialog, DialogContent } from '../../ui/dialog'
 import { Button } from '../../ui/button'
 import { AlertCircle } from 'lucide-react'
@@ -82,20 +82,6 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
     notifySuccess(result)
     onOpenChange(false)
   }
-
-  const summary = useMemo(() => {
-    if (!planName && !amountLabel) return null
-    return (
-      <div className="rounded-2xl border border-border/60 bg-muted/5 p-4">
-        <p className="text-sm text-muted-foreground">Plan</p>
-        <p className="text-xl font-semibold text-foreground">{planName ?? 'Selected plan'}</p>
-        <p className="text-sm text-muted-foreground">
-          {amountLabel ?? `$${usdAmount.toFixed(2)}`}
-          {billingPeriodLabel ? ` / ${billingPeriodLabel}` : ''}
-        </p>
-      </div>
-    )
-  }, [planName, amountLabel, billingPeriodLabel, usdAmount])
 
   return (
     <>

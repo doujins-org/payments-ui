@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import type { BillingDetails, PaymentMethod, SubmitPaymentResponse } from '../types'
 import { CardDetailsForm } from './CardDetailsForm'
@@ -175,9 +175,9 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
       <Tabs
         value={activeTab}
         onValueChange={(value) => setActiveTab(value as 'saved' | 'new')}
-        className="space-y-4"
+        className="space-y-3"
       >
-        <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-muted/10 p-1">
+        <TabsList className="grid w-full grid-cols-2 border border-border/60">
           <TabsTrigger value="saved" disabled={!showStored}>
             Use saved card
           </TabsTrigger>
@@ -185,20 +185,16 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
             Add new card
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="saved" className="rounded-2xl border border-border/60 bg-muted/5 p-4">
+        <TabsContent value="saved" className="space-y-4">
           {renderSavedTab()}
         </TabsContent>
-        <TabsContent value="new" className="rounded-2xl border border-border/60 bg-muted/5 p-4">
+        <TabsContent value="new" className="space-y-4">
           {renderNewTab()}
         </TabsContent>
       </Tabs>
 
       {enableSolanaPay && (
-        <Button
-          variant="outline"
-          className="w-full border-primary/50 text-primary hover:bg-primary/10"
-          onClick={openSolanaPay}
-        >
+        <Button className="w-full" variant="secondary" onClick={openSolanaPay}>
           <Sparkles className="mr-2 h-4 w-4" /> Pay with Solana
         </Button>
       )}
