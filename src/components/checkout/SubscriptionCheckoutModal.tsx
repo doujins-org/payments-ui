@@ -19,6 +19,9 @@ export interface SubscriptionCheckoutModalProps {
   provider?: string
   onSuccess?: () => void
   enableSolanaPay?: boolean
+  onSolanaSuccess?: (result: SubmitPaymentResponse | string) => void
+  onSolanaError?: (error: string) => void
+  initialMode?: 'cards' | 'solana'
 }
 
 export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps> = ({
@@ -33,6 +36,9 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
   provider = 'mobius',
   onSuccess,
   enableSolanaPay = true,
+  onSolanaSuccess,
+  onSolanaError,
+  initialMode = 'cards',
 }) => {
   const [showSuccess, setShowSuccess] = useState(false)
   const { subscribeWithCard, subscribeWithSavedMethod } = useSubscriptionActions()
@@ -80,7 +86,12 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
 
   const solanaSuccess = (result: SubmitPaymentResponse | string) => {
     notifySuccess(result)
+    onSolanaSuccess?.(result)
     onOpenChange(false)
+  }
+
+  const solanaError = (error: string) => {
+    onSolanaError?.(error)
   }
 
   return (
@@ -93,15 +104,17 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
                 <AlertCircle className="h-4 w-4" /> Select a subscription plan to continue.
               </div>
             )}
-          <PaymentExperience
-            usdAmount={usdAmount}
-            priceId={priceId ?? ''}
-            onSolanaSuccess={solanaSuccess}
-            enableNewCard={Boolean(priceId)}
-            enableStoredMethods={Boolean(priceId)}
+            <PaymentExperience
+              usdAmount={usdAmount}
+              priceId={priceId ?? ''}
+              onSolanaSuccess={solanaSuccess}
+              onSolanaError={solanaError}
+              enableNewCard={Boolean(priceId)}
+              enableStoredMethods={Boolean(priceId)}
               enableSolanaPay={enableSolanaPay && Boolean(priceId)}
               onNewCardPayment={priceId ? handleNewCardPayment : undefined}
               onSavedMethodPayment={priceId ? handleSavedMethodPayment : undefined}
+              initialMode={initialMode}
             />
           </div>
         </DialogContent>

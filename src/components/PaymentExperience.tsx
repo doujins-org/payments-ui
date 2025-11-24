@@ -26,6 +26,7 @@ export interface PaymentExperienceProps {
   enableSolanaPay?: boolean
   onSolanaSuccess?: (result: SubmitPaymentResponse | string) => void
   onSolanaError?: (error: string) => void
+  initialMode?: 'cards' | 'solana'
 }
 
 export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
@@ -38,12 +39,15 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   enableSolanaPay = true,
   onSolanaSuccess,
   onSolanaError,
+  initialMode = 'cards',
 }) => {
   const showNewCard = enableNewCard && Boolean(onNewCardPayment)
   const showStored = enableStoredMethods && Boolean(onSavedMethodPayment)
   const defaultTab = showStored ? 'saved' : 'new'
   const [activeTab, setActiveTab] = useState<'saved' | 'new'>(defaultTab)
-  const [mode, setMode] = useState<'cards' | 'solana'>('cards')
+  const [mode, setMode] = useState<'cards' | 'solana'>(() =>
+    initialMode === 'solana' && enableSolanaPay ? 'solana' : 'cards'
+  )
   const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null)
   const [savedStatus, setSavedStatus] = useState<AsyncStatus>('idle')
   const [savedError, setSavedError] = useState<string | null>(null)
@@ -58,8 +62,15 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   useEffect(() => {
     if (!enableSolanaPay) {
       setMode('cards')
+      return
     }
-  }, [enableSolanaPay])
+
+    if (initialMode === 'solana') {
+      setMode('solana')
+    } else {
+      setMode('cards')
+    }
+  }, [enableSolanaPay, initialMode])
 
   const handleMethodSelect = useCallback((method: PaymentMethod) => {
     setSelectedMethodId(method.id)

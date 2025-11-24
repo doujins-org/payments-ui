@@ -3,10 +3,7 @@ import {
   SubscriptionCheckoutModal,
   type SubscriptionCheckoutModalProps,
 } from '../components/checkout/SubscriptionCheckoutModal'
-import {
-  SolanaPaymentSelector,
-  type SolanaPaymentSelectorProps,
-} from '../components/SolanaPaymentSelector'
+import type { SolanaPaymentSelectorProps } from '../components/SolanaPaymentSelector'
 import {
   WalletModal,
   type WalletModalProps,
@@ -53,32 +50,36 @@ export const PaymentsDialogProvider: React.FC<React.PropsWithChildren> = ({
   const [checkoutState, setCheckoutState] = useState<DialogState<CheckoutOptions>>(
     () => createDialogState<CheckoutOptions>()
   )
-  const [solanaState, setSolanaState] = useState<DialogState<SolanaOptions>>(
-    () => createDialogState<SolanaOptions>()
-  )
   const [walletState, setWalletState] = useState<DialogState<WalletOptions>>(
     () => createDialogState<WalletOptions>()
   )
 
   const contextValue = useMemo<PaymentsDialogContextValue>(() => {
+    const openCheckout = (options: CheckoutOptions) =>
+      setCheckoutState({
+        isOpen: true,
+        props: options,
+      })
+
     return {
       checkout: {
         isOpen: checkoutState.isOpen,
-        open: (options) =>
-          setCheckoutState({
-            isOpen: true,
-            props: options,
-          }),
+        open: openCheckout,
         close: () => setCheckoutState(createDialogState<CheckoutOptions>()),
       },
       solana: {
-        isOpen: solanaState.isOpen,
+        isOpen:
+          checkoutState.isOpen && checkoutState.props?.initialMode === 'solana',
         open: (options) =>
-          setSolanaState({
-            isOpen: true,
-            props: options,
+          openCheckout({
+            priceId: options.priceId,
+            usdAmount: options.usdAmount,
+            enableSolanaPay: true,
+            initialMode: 'solana',
+            onSolanaSuccess: options.onSuccess,
+            onSolanaError: options.onError,
           }),
-        close: () => setSolanaState(createDialogState<SolanaOptions>()),
+        close: () => setCheckoutState(createDialogState<CheckoutOptions>()),
       },
       wallet: {
         isOpen: walletState.isOpen,
@@ -90,7 +91,7 @@ export const PaymentsDialogProvider: React.FC<React.PropsWithChildren> = ({
         close: () => setWalletState(createDialogState<WalletOptions>()),
       },
     }
-  }, [checkoutState.isOpen, solanaState.isOpen, walletState.isOpen])
+  }, [checkoutState, walletState.isOpen])
 
   return (
     <PaymentsDialogContext.Provider value={contextValue}>
@@ -107,13 +108,6 @@ export const PaymentsDialogProvider: React.FC<React.PropsWithChildren> = ({
         />
       )}
 
-      {solanaState.props && (
-        <SolanaPaymentSelector
-          isOpen={solanaState.isOpen}
-          onClose={() => setSolanaState(createDialogState<SolanaOptions>())}
-          {...solanaState.props}
-        />
-      )}
       <WalletModal
         open={walletState.isOpen}
         onOpenChange={(open) =>
