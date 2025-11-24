@@ -7,7 +7,7 @@ import { SubscriptionSuccessDialog } from './SubscriptionSuccessDialog'
 import { useSubscriptionActions } from '../../hooks/useSubscriptionActions'
 import type { BillingDetails, SubmitPaymentResponse } from '../../types'
 
-interface SubscriptionCheckoutModalProps {
+export interface SubscriptionCheckoutModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   priceId?: string | null
@@ -40,17 +40,13 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
   const handleClose = useCallback(
     (nextOpen: boolean) => {
       onOpenChange(nextOpen)
-      if (!nextOpen) {
-        setShowSuccess(false)
-      }
+      if (!nextOpen) setShowSuccess(false)
     },
     [onOpenChange]
   )
 
   const ensurePrice = () => {
-    if (!priceId) {
-      throw new Error('Select a plan before subscribing.')
-    }
+    if (!priceId) throw new Error('Select a plan before subscribing.')
     return priceId
   }
 
@@ -107,15 +103,15 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
             </div>
           )}
           <PaymentExperience
-            priceId={priceId ?? ''}
             usdAmount={usdAmount}
+            priceId={priceId ?? ''}
             checkoutSummary={summary}
-            onNewCardPayment={priceId ? handleNewCardPayment : undefined}
-            onSavedMethodPayment={priceId ? handleSavedMethodPayment : undefined}
+            onSolanaSuccess={solanaSuccess}
             enableNewCard={Boolean(priceId)}
             enableStoredMethods={Boolean(priceId)}
             enableSolanaPay={enableSolanaPay && Boolean(priceId)}
-            onSolanaSuccess={solanaSuccess}
+            onNewCardPayment={priceId ? handleNewCardPayment : undefined}
+            onSavedMethodPayment={priceId ? handleSavedMethodPayment : undefined}
           />
         </DialogContent>
       </Dialog>

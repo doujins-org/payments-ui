@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { CreditCard, Loader2, Wallet } from 'lucide-react'
 import type { SubmitPaymentResponse, TokenInfo } from '../types'
@@ -6,8 +6,6 @@ import { DirectPayment } from './DirectPayment'
 import { QRCodePayment } from './QRCodePayment'
 import { PaymentStatus } from './PaymentStatus'
 import { useSupportedTokens } from '../hooks/useSupportedTokens'
-import { usePaymentStore } from '../hooks/usePaymentStore'
-import { selectSolanaFlow } from '../state/selectors'
 import {
   Dialog,
   DialogContent,
@@ -25,6 +23,9 @@ import {
   SelectValue,
 } from '../ui/select'
 import { cn } from '../lib/utils'
+import { usePaymentNotifications } from '../hooks/usePaymentNotifications'
+
+type SolanaFlowState = 'selecting' | 'processing' | 'confirming' | 'success' | 'error'
 
 export interface SolanaPaymentSelectorProps {
   isOpen: boolean
@@ -44,23 +45,13 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
   onError,
 }) => {
   const { connected } = useWallet()
-  const {
-    tab: activeTab,
-    status: paymentState,
-    error: errorMessage,
-    transactionId,
-    tokenAmount,
-    selectedTokenSymbol,
-    setTab,
-    setTokenAmount,
-    setTransactionId,
-    setSelectedTokenSymbol,
-    startSolanaPayment,
-    confirmSolanaPayment,
-    completeSolanaPayment,
-    failSolanaPayment,
-    resetSolanaPayment,
-  } = usePaymentStore(selectSolanaFlow)
+  const { notifyStatus, notifyError, notifySuccess } = usePaymentNotifications()
+  const [activeTab, setActiveTab] = useState<'wallet' | 'qr'>('wallet')
+  const [paymentState, setPaymentState] = useState<SolanaFlowState>('selecting')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [transactionId, setTransactionId] = useState<string | null>(null)
+  const [tokenAmount, setTokenAmount] = useState(0)
+  const [selectedTokenSymbol, setSelectedTokenSymbol] = useState<string | null>(null)
 
   const {
     tokens,
@@ -83,18 +74,23 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
   }, [tokens, selectedTokenSymbol, setSelectedTokenSymbol])
 
   const handlePaymentStart = useCallback(() => {
-    startSolanaPayment()
-  }, [startSolanaPayment])
+    setPaymentState('processing')
+    setErrorMessage(null)
+    notifyStatus('processing', { source: 'solana' })
+  }, [notifyStatus])
 
   const handlePaymentConfirming = useCallback(() => {
-    confirmSolanaPayment()
-  }, [confirmSolanaPayment])
+    setPaymentState('confirming')
+  }, [])
 
   const handlePaymentSuccess = useCallback(
     (result: SubmitPaymentResponse | string, txId?: string) => {
       const resolvedTx = txId || (typeof result === 'string' ? result : result.transaction_id)
       setTransactionId(resolvedTx)
-      completeSolanaPayment(
+      setPaymentState('success')
+      setErrorMessage(null)
+
+      const payload =
         typeof result === 'string'
           ? {
               transactionId: resolvedTx,
@@ -111,37 +107,44 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
                 currency: result.currency,
               },
             }
-      )
+
+      notifyStatus('success', { source: 'solana' })
+      notifySuccess(payload)
 
       setTimeout(() => {
         onSuccess(result)
       }, 1500)
     },
-    [completeSolanaPayment, onSuccess, setTransactionId]
+    [notifyStatus, notifySuccess, onSuccess]
   )
 
   const handlePaymentError = useCallback(
     (error: string) => {
-      failSolanaPayment(error)
+      setPaymentState('error')
+      setErrorMessage(error)
+      notifyStatus('error', { source: 'solana' })
+      notifyError(error)
       onError?.(error)
     },
-    [failSolanaPayment, onError]
+    [notifyError, notifyStatus, onError]
   )
 
   const handleRetry = useCallback(() => {
-    resetSolanaPayment()
+    setPaymentState('selecting')
+    setErrorMessage(null)
     setTransactionId(null)
-  }, [resetSolanaPayment, setTransactionId])
+  }, [])
 
   const handleClose = useCallback(() => {
     if (paymentState === 'processing' || paymentState === 'confirming') {
       return
     }
 
-    resetSolanaPayment()
+    setPaymentState('selecting')
+    setErrorMessage(null)
     setTransactionId(null)
     onClose()
-  }, [paymentState, resetSolanaPayment, setTransactionId, onClose])
+  }, [paymentState, onClose])
 
   useEffect(() => {
     if (!isOpen || !selectedToken || usdAmount === 0) {
@@ -158,26 +161,23 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
     setTokenAmount(usdAmount / price)
   }, [isOpen, usdAmount, selectedToken, setTokenAmount])
 
-  const handleTokenChange = useCallback(
-    (value: string) => {
-      setSelectedTokenSymbol(value)
-    },
-    [setSelectedTokenSymbol]
-  )
+  const handleTokenChange = useCallback((value: string) => {
+    setSelectedTokenSymbol(value)
+  }, [])
 
   const wasConnectedRef = useRef(connected)
 
   useEffect(() => {
     if (connected && !wasConnectedRef.current) {
-      setTab('wallet')
+      setActiveTab('wallet')
     }
 
     if (!connected && wasConnectedRef.current) {
-      setTab('qr')
+      setActiveTab('qr')
     }
 
     wasConnectedRef.current = connected
-  }, [connected, setTab])
+  }, [connected])
 
   const renderBody = () => {
     if (paymentState !== 'selecting') {
@@ -226,7 +226,7 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
                 <SelectValue placeholder="Select token" />
               </SelectTrigger>
               <SelectContent className="max-h-64">
-                {tokens?.map((token) => (
+                {tokens.map((token) => (
                   <SelectItem key={token.symbol} value={token.symbol}>
                     {token.name} ({token.symbol})
                   </SelectItem>
@@ -236,7 +236,7 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
 
             <Tabs
               value={activeTab}
-              onValueChange={(value) => setTab(value as 'wallet' | 'qr')}
+              onValueChange={(value) => setActiveTab(value as 'wallet' | 'qr')}
               className="w-full"
             >
               <TabsList className="grid w-full grid-cols-2 bg-muted/20">

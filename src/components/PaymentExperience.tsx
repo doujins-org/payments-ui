@@ -6,6 +6,7 @@ import { StoredPaymentMethods } from './StoredPaymentMethods'
 import { Button } from '../ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card'
 import { usePaymentDialogs } from '../context/PaymentsDialogContext'
+import { usePaymentNotifications } from '../hooks/usePaymentNotifications'
 
 type AsyncStatus = 'idle' | 'processing' | 'success' | 'error'
 
@@ -48,6 +49,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   const [newCardStatus, setNewCardStatus] = useState<AsyncStatus>('idle')
   const [newCardError, setNewCardError] = useState<string | null>(null)
   const dialogs = usePaymentDialogs()
+  const { notifyStatus, notifySuccess, notifyError } = usePaymentNotifications()
 
   const handleMethodSelect = useCallback((method: PaymentMethod) => {
     setSelectedMethodId(method.id)
@@ -60,11 +62,13 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
     try {
       setSavedStatus('processing')
       setSavedError(null)
+      notifyStatus('processing', { source: 'saved-payment' })
       await onSavedMethodPayment({
         paymentMethodId: selectedMethodId,
         amount: usdAmount,
       })
       setSavedStatus('success')
+      notifyStatus('success', { source: 'saved-payment' })
     } catch (error) {
       const message =
         error instanceof Error
@@ -72,8 +76,10 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
           : 'Unable to complete payment with saved card'
       setSavedStatus('error')
       setSavedError(message)
+      notifyStatus('error', { source: 'saved-payment' })
+      notifyError(message)
     }
-  }, [onSavedMethodPayment, selectedMethodId, usdAmount])
+  }, [notifyError, notifyStatus, onSavedMethodPayment, selectedMethodId, usdAmount])
 
   const handleNewCardTokenize = useCallback(
     async (token: string, billing: BillingDetails) => {
@@ -81,16 +87,20 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
       try {
         setNewCardStatus('processing')
         setNewCardError(null)
+        notifyStatus('processing', { source: 'new-card' })
         await onNewCardPayment({ token, billing })
         setNewCardStatus('success')
+        notifyStatus('success', { source: 'new-card' })
       } catch (error) {
         const message =
           error instanceof Error ? error.message : 'Unable to complete payment'
         setNewCardStatus('error')
         setNewCardError(message)
+        notifyStatus('error', { source: 'new-card' })
+        notifyError(message)
       }
     },
-    [onNewCardPayment]
+    [notifyError, notifyStatus, onNewCardPayment]
   )
 
   const openSolanaPay = useCallback(() => {
@@ -101,7 +111,9 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
       onSuccess: (result) => {
         onSolanaSuccess?.(result)
       },
-      onError: onSolanaError,
+      onError: (error) => {
+        onSolanaError?.(error)
+      },
     })
   }, [dialogs.solana, enableSolanaPay, onSolanaError, onSolanaSuccess, priceId, usdAmount])
 

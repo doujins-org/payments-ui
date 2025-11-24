@@ -151,8 +151,7 @@ export const fetchSupportedTokenBalances = async (
 
   const tokenMetaByMint = new Map(
     supportedTokens
-      .filter((token) => !(token.is_native || token.symbol === 'SOL'))
-      .map((token) => [token.mint, token])
+      .filter((token) => !(token.is_native || token.symbol === 'SOL')).map((token) => [token.mint, token])
   )
 
   for (const [mint, tokenMeta] of tokenMetaByMint.entries()) {

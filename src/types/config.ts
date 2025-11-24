@@ -29,6 +29,13 @@ export interface PaymentFeatureFlags {
   enableDirectWallet?: boolean
 }
 
+export interface PaymentSolanaConfig {
+  endpoint?: string
+  network?: import('@solana/wallet-adapter-base').WalletAdapterNetwork
+  autoConnect?: boolean
+  wallets?: import('@solana/wallet-adapter-base').WalletAdapter[]
+}
+
 export interface PaymentCallbacks {
   onStatusChange?: (payload: PaymentStatusPayload) => void
   onSuccess?: (payload: PaymentSuccessPayload) => void
@@ -62,6 +69,7 @@ export interface PaymentConfig {
   callbacks?: PaymentCallbacks
   collectJsKey?: string
   solanaRpcUrl?: string
+  solana?: PaymentSolanaConfig
 }
 
 export type NotificationStatus = 'default' | 'success' | 'info' | 'destructive'
