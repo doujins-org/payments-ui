@@ -102,28 +102,13 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="w-full max-w-3xl space-y-6 border border-border/70 bg-background p-6 shadow-2xl">
-          <header className="space-y-3">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Checkout</p>
-            <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-muted/5 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Plan</p>
-                <p className="text-xl font-semibold text-foreground">{planName ?? 'Selected plan'}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Amount</p>
-                <p className="text-xl font-semibold text-foreground">
-                  {amountLabel ?? `$${usdAmount.toFixed(2)}`}
-                  {billingPeriodLabel ? ` / ${billingPeriodLabel}` : ''}
-                </p>
-              </div>
-            </div>
-          </header>
+        <DialogContent className="w-full max-w-3xl space-y-6">
           {!priceId && (
             <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               <AlertCircle className="h-4 w-4" /> Select a subscription plan to continue.
             </div>
           )}
+
           <PaymentExperience
             usdAmount={usdAmount}
             priceId={priceId ?? ''}

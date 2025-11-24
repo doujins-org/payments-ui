@@ -223,10 +223,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
 
   return (
     <form
-      className={cn(
-        'space-y-6 rounded-2xl border border-border/60 bg-card/90 p-6 shadow-lg',
-        className
-      )}
+      className={cn(className)}
       onSubmit={handleSubmit}
       noValidate
     >
