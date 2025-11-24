@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { CreditCard, Loader2, Wallet, X } from 'lucide-react'
+import { ArrowLeft, CreditCard, Loader2, Wallet } from 'lucide-react'
 import type { SubmitPaymentResponse, TokenInfo } from '../types'
 import { DirectPayment } from './DirectPayment'
 import { QRCodePayment } from './QRCodePayment'
@@ -283,7 +283,8 @@ export const SolanaPaymentView: React.FC<SolanaPaymentViewProps> = ({
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Pay with Solana</p>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Solana Pay checkout</p>
+          <p className="text-2xl font-semibold text-foreground">Pay with Solana</p>
           <p className="text-sm text-muted-foreground">
             Choose a supported token and send the payment with your wallet or a QR code.
           </p>
@@ -291,13 +292,13 @@ export const SolanaPaymentView: React.FC<SolanaPaymentViewProps> = ({
         {onClose && (
           <Button
             type="button"
-            size="icon"
+            size="sm"
             variant="ghost"
             onClick={handleClose}
             disabled={paymentState === 'processing' || paymentState === 'confirming'}
-            className="h-8 w-8"
+            className="h-8 px-2 text-sm"
           >
-            <X className="h-4 w-4" />
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
         )}
       </div>
