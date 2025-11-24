@@ -173,7 +173,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-4">
       <Tabs
         value={activeTab}
         onValueChange={(value) => setActiveTab(value as 'saved' | 'new')}

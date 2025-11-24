@@ -38,7 +38,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({ open, onOpenChange }) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-lg max-h-[90vh] overflow-y-auto border border-border/70 bg-background/95 p-0 shadow-2xl [&::-webkit-scrollbar]:hidden">
+      <DialogContent className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-md border border-border/70 bg-background/95 p-0 shadow-2xl [&::-webkit-scrollbar]:hidden">
         <DialogHeader className="border-b border-border/40 bg-gradient-to-r from-primary/10 via-background to-background px-6 py-5 text-left">
           <DialogTitle className="flex items-center gap-2 text-foreground">
             <Wallet className="h-5 w-5 text-primary" /> Connect a Solana wallet
