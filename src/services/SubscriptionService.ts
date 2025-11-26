@@ -28,7 +28,7 @@ export class SubscriptionService {
   async generateFlexFormUrl(
     payload: GenerateFlexFormURLBodyParams
   ): Promise<FlexFormResponse> {
-    return this.api.post('/subscriptions/flexform', {
+    return this.api.post(`/subscriptions/ccbill/flexform-url`, {
       body: { ...payload } as Record<string, unknown>,
     })
   }
