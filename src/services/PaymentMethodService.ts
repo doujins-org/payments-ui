@@ -22,15 +22,21 @@ export class PaymentMethodService {
     })
   }
 
-  async create(payload: CreatePaymentMethodPayload): Promise<PaymentMethod> {
-    return this.api.post('/payment-methods', {
-      body: { ...payload } as Record<string, unknown>,
-    })
-  }
+	async create(payload: CreatePaymentMethodPayload): Promise<PaymentMethod> {
+		return this.api.post('/payment-methods', {
+			body: { ...payload } as Record<string, unknown>,
+		})
+	}
 
-  async remove(id: string): Promise<void> {
-    await this.api.delete(`/payment-methods/${id}`)
-  }
+	async update(id: string, payload: CreatePaymentMethodPayload): Promise<PaymentMethod> {
+		return this.api.put(`/payment-methods/${id}`, {
+			body: { ...payload } as Record<string, unknown>,
+		})
+	}
+
+	async remove(id: string): Promise<void> {
+		await this.api.delete(`/payment-methods/${id}`)
+	}
 
   async activate(id: string): Promise<void> {
     await this.api.put(`/payment-methods/${id}/activate`)

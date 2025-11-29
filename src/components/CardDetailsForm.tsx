@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '../ui/select'
 import { cn } from '../lib/utils'
+import { defaultBillingDetails } from '../constants/billing'
 
 export interface CardDetailsFormProps {
   visible: boolean
@@ -27,18 +28,6 @@ export interface CardDetailsFormProps {
   className?: string
   onBillingChange?: (billing: BillingDetails) => void
   submitDisabled?: boolean
-}
-
-const defaultBilling: BillingDetails = {
-  firstName: '',
-  lastName: '',
-  address1: '',
-  city: '',
-  stateRegion: '',
-  postalCode: '',
-  country: 'US',
-  email: '',
-  provider: 'mobius',
 }
 
 const buildSelector = (prefix: string, field: string) => `#${prefix}-${field}`
@@ -58,14 +47,15 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
   const { config } = usePaymentContext()
   const defaultValuesKey = useMemo(() => JSON.stringify(defaultValues ?? {}), [defaultValues])
 
-  const mergedDefaults: BillingDetails = useMemo(
-    () => ({
-      ...defaultBilling,
-      ...defaultValues,
-      email: defaultValues?.email ?? config.defaultUser?.email ?? defaultBilling.email,
-    }),
-    [defaultValuesKey, config.defaultUser?.email]
-  )
+	const mergedDefaults: BillingDetails = useMemo(
+		() => ({
+			...defaultBillingDetails,
+			...defaultValues,
+			email:
+				defaultValues?.email ?? config.defaultUser?.email ?? defaultBillingDetails.email,
+		}),
+		[defaultValuesKey, config.defaultUser?.email]
+	)
 
   const [firstName, setFirstName] = useState(mergedDefaults.firstName)
   const [lastName, setLastName] = useState(mergedDefaults.lastName)
