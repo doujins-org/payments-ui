@@ -169,11 +169,11 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
   }
 
   return (
-    <Card className="border-0 bg-background/5 shadow-lg">
+    <Card>
       <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <WalletCards className="h-5 w-5 text-primary" /> Payment Methods
+          <CardTitle className="flex items-center gap-2">
+            <WalletCards className="h-5 w-5 text-emerald-400" /> Payment Methods
           </CardTitle>
           <CardDescription>Manage your saved billing cards</CardDescription>
         </div>
@@ -183,11 +183,11 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
       </CardHeader>
       <CardContent className="space-y-4">
         {loading ? (
-          <div className="flex items-center justify-center py-10 text-muted-foreground">
+          <div className="flex items-center justify-center py-10 text-white/60">
             <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading cards...
           </div>
         ) : payments.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border/60 bg-muted/10 p-6 text-sm text-muted-foreground">
+          <div className="rounded-lg border border-dashed border-white/20 bg-white/5 p-6 text-sm text-white/60">
             No saved payment methods yet.
           </div>
         ) : (
@@ -195,14 +195,14 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
             {payments.map((method) => (
               <div
                 key={method.id}
-                className="rounded-lg border border-border/80 bg-background/40 p-4 shadow-sm"
+                className="rounded-lg border border-white/10 bg-white/5 p-4 shadow-sm"
               >
                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <h4 className="text-base font-medium text-foreground">
+                    <h4 className="text-base font-medium text-white">
                       {formatCardLabel(method)}
                     </h4>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-white/60">
                       Added on{' '}
                       {method.created_at
                         ? new Date(method.created_at).toLocaleDateString()
@@ -212,7 +212,6 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
                   <div className="flex gap-2">
                     <Badge
                       variant={method.is_active ? 'default' : 'secondary'}
-                      className={method.is_active ? 'bg-emerald-500/20 text-emerald-400' : ''}
                     >
                       {method.is_active ? 'Active' : 'Inactive'}
                     </Badge>
@@ -224,7 +223,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button
                     variant="ghost"
-                    className="text-primary"
+                    className="text-blue-400"
                     disabled={replaceMutation.isPending && methodBeingReplaced?.id === method.id}
                     onClick={() => setMethodBeingReplaced(method)}
                   >
@@ -247,7 +246,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
                   </Button>
                   <Button
                     variant="ghost"
-                    className="text-destructive hover:text-destructive"
+                    className="text-red-400 hover:text-red-300"
                     disabled={deletingId === method.id && deleteMutation.isPending}
                     onClick={() => deleteMutation.mutate(method.id)}
                   >
@@ -266,7 +265,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
       </CardContent>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-h-[95vh] overflow-y-auto border border-border bg-background">
+        <DialogContent className="max-h-[95vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add a new card</DialogTitle>
             <DialogDescription>
@@ -286,13 +285,13 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
             }}
             externalError={createMutation.error?.message ?? null}
             onTokenize={handleCardTokenize}
-            className="rounded-2xl border border-border bg-muted/20 p-6"
+            className="rounded-2xl border border-white/10 bg-white/5 p-6"
           />
         </DialogContent>
       </Dialog>
 
       <Dialog open={Boolean(methodBeingReplaced)} onOpenChange={(open) => !open && setMethodBeingReplaced(null)}>
-        <DialogContent className="max-h-[95vh] overflow-y-auto border border-border bg-background">
+        <DialogContent className="max-h-[95vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Replace card</DialogTitle>
             <DialogDescription>Update this card with new billing details.</DialogDescription>
@@ -311,7 +310,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
               }}
               externalError={replaceMutation.error?.message ?? null}
               onTokenize={handleReplaceTokenize}
-              className="rounded-2xl border border-border bg-muted/20 p-6"
+              className="rounded-2xl border border-white/10 bg-white/5 p-6"
             />
           )}
         </DialogContent>

@@ -194,14 +194,14 @@ export const SolanaWalletSection: React.FC<SolanaWalletSectionProps> = ({
 
   if (isLoading && wallets.length === 0) {
     return (
-      <Card className="border-0 bg-background/5">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Solana Wallets</CardTitle>
+          <CardTitle>Solana Wallets</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="mr-2 h-6 w-6 animate-spin text-muted-foreground" />
-            <span className="text-muted-foreground">Loading wallets...</span>
+            <Loader2 className="mr-2 h-6 w-6 animate-spin text-white/60" />
+            <span className="text-white/60">Loading wallets...</span>
           </div>
         </CardContent>
       </Card>
@@ -210,9 +210,9 @@ export const SolanaWalletSection: React.FC<SolanaWalletSectionProps> = ({
 
   return (
     <>
-      <Card className="border-0 bg-background/5">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Solana Wallets</CardTitle>
+          <CardTitle>Solana Wallets</CardTitle>
           <CardDescription>Connect and manage your Solana wallets for payments</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -222,7 +222,7 @@ export const SolanaWalletSection: React.FC<SolanaWalletSectionProps> = ({
             <>
               {primaryWallet && (
                 <div>
-                  <h3 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
+                  <h3 className="mb-3 text-sm font-medium uppercase tracking-wide text-white/60">
                     Primary Wallet
                   </h3>
                   <WalletCard
@@ -248,13 +248,13 @@ export const SolanaWalletSection: React.FC<SolanaWalletSectionProps> = ({
                     className="mb-3 flex w-full items-center justify-between text-left"
                     onClick={() => setShowOtherWallets((prev) => !prev)}
                   >
-                    <h3 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+                    <h3 className="text-sm font-medium uppercase tracking-wide text-white/60">
                       Other Wallets ({otherWallets.length})
                     </h3>
                     {showOtherWallets ? (
-                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                      <ChevronUp className="h-4 w-4 text-white/60" />
                     ) : (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      <ChevronDown className="h-4 w-4 text-white/60" />
                     )}
                   </button>
 
@@ -286,18 +286,18 @@ export const SolanaWalletSection: React.FC<SolanaWalletSectionProps> = ({
                 {connected && publicKey ? (
                   isWalletRegistered ? (
                     <div className="space-y-3">
-                      <div className="flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-200">
+                      <div className="flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-300">
                         <CheckCircle className="h-4 w-4" /> Connected wallet is verified and linked to your account.
                       </div>
-                      <WalletMultiButton className="w-full !bg-primary text-primary-foreground" />
+                      <WalletMultiButton className="w-full !bg-[#28a745] hover:!bg-[#16a34a] text-white" />
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
+                      <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-300">
                         Your connected wallet is not registered with your account.
                       </div>
                       <div className="flex gap-2">
-                        <Button onClick={registerWallet} disabled={isRegistering || walletConnection.isConnecting} className="flex-1 bg-primary text-primary-foreground">
+                        <Button onClick={registerWallet} disabled={isRegistering || walletConnection.isConnecting} className="flex-1">
                           {isRegistering ? (
                             <>
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Registering...
@@ -306,14 +306,14 @@ export const SolanaWalletSection: React.FC<SolanaWalletSectionProps> = ({
                             'Register This Wallet'
                           )}
                         </Button>
-                        <Button onClick={() => disconnect()} variant="outline" className="border-border">
+                        <Button onClick={() => disconnect()} variant="outline">
                           Disconnect
                         </Button>
                       </div>
                     </div>
                   )
                 ) : (
-                  <WalletMultiButton className="w-full !bg-primary text-primary-foreground" />
+                  <WalletMultiButton className="w-full !bg-[#28a745] hover:!bg-[#16a34a] text-white" />
                 )}
               </div>
             </>

@@ -1,6 +1,5 @@
 import React, { useCallback, useState } from 'react'
 import { Dialog, DialogContent } from '../../ui/dialog'
-import { Button } from '../../ui/button'
 import { AlertCircle } from 'lucide-react'
 import { PaymentExperience } from '../PaymentExperience'
 import { SubscriptionSuccessDialog } from './SubscriptionSuccessDialog'

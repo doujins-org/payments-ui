@@ -202,7 +202,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
 
   const errorMessage = localError ?? externalError
   const collectFieldClass =
-    'flex h-11 w-full items-center rounded-md border border-border/60 bg-background px-3 text-sm text-muted-foreground'
+    'flex h-11 w-full items-center rounded-md border border-white/10 bg-white/5 px-3 text-sm text-white'
 
   return (
     <form
@@ -211,14 +211,14 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
       noValidate
     >
       {errorMessage && (
-        <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm text-destructive">
+        <div className="rounded-md border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm text-red-400">
           {errorMessage}
         </div>
       )}
 
       <div className="grid gap-5 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="payments-first" className="flex items-center gap-2 text-muted-foreground">
+          <Label htmlFor="payments-first" className="flex items-center gap-2 text-white/70">
             <User className="h-4 w-4" /> First name
           </Label>
           <Input
@@ -229,7 +229,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="payments-last" className="flex items-center gap-2 text-muted-foreground">
+          <Label htmlFor="payments-last" className="flex items-center gap-2 text-white/70">
             <User className="h-4 w-4" /> Last name
           </Label>
           <Input
@@ -284,7 +284,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
 
       <div className="grid gap-5 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="payments-postal" className="flex items-center gap-2 text-muted-foreground">
+          <Label htmlFor="payments-postal" className="flex items-center gap-2 text-white/70">
             <MapPin className="h-4 w-4" /> Postal code
           </Label>
           <Input
@@ -343,7 +343,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
         )}
       </Button>
 
-      <p className="flex items-center gap-2 text-xs text-muted-foreground">
+      <p className="flex items-center gap-2 text-xs text-white/50">
         <CreditCard className="h-4 w-4" /> Your payment information is encrypted and processed securely.
       </p>
     </form>

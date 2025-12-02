@@ -1,5 +1,6 @@
 export * from './context/PaymentContext'
 export * from './context/PaymentsDialogContext'
+export * from './components/PaymentsUIRoot'
 export * from './components/CardDetailsForm'
 export * from './components/StoredPaymentMethods'
 export * from './components/PaymentExperience'
