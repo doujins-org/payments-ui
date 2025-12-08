@@ -2,20 +2,20 @@ import type { BillingDetails } from './billing'
 
 export type PaymentPlatform = 'nmi' | 'ccbill'
 
-export interface SubscriptionResponse {
-  success: boolean
+export type CheckoutStatus = 'success' | 'pending' | 'redirect_required' | 'blocked'
+
+export interface CheckoutResponse {
+  status: CheckoutStatus
   message?: string
   subscription_id?: string
-  status?: 'active' | 'inactive' | 'cancelled'
-  url?: string
+  payment_id?: string
+  transaction_id?: string
+  redirect_url?: string
+  delayed_start?: string
 }
 
 export interface FlexFormResponse {
-  iframe_url: string
-  width: string
-  height: string
-  success_url: string
-  decline_url: string
+  redirect_url: string
 }
 
 export interface GenerateFlexFormURLBodyParams {
@@ -27,6 +27,22 @@ export interface GenerateFlexFormURLBodyParams {
   state: string
   zip_code: string
   country: string
+}
+
+export interface CheckoutRequestPayload {
+  price_id: string
+  processor: string
+  payment_token?: string
+  payment_method_id?: string
+  provider?: string
+  email?: string
+  first_name?: string
+  last_name?: string
+  address1?: string
+  city?: string
+  state?: string
+  zip?: string
+  country?: string
 }
 
 export interface NmiSubscribePayload {

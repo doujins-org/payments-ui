@@ -13,8 +13,12 @@ export interface BillingDetails {
 
 export interface PaymentMethod {
   id: string
+  processor?: string
+  brand?: string
   card_type?: string
   last_four?: string
+  exp_month?: number
+  exp_year?: number
   is_active?: boolean
   failure_reason?: string | null
   created_at?: string
@@ -38,6 +42,8 @@ export interface PaginatedPaymentMethods {
   data: PaymentMethod[]
   total?: number
   next_page?: number | null
+  limit?: number
+  offset?: number
 }
 
 export interface Payment {

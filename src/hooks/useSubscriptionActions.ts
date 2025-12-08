@@ -2,11 +2,10 @@ import { useCallback } from 'react'
 import { usePaymentContext } from '../context/PaymentContext'
 import type { BillingDetails } from '../types/billing'
 import type {
-  CCBillSubscribePayload,
+  CheckoutRequestPayload,
+  CheckoutResponse,
   FlexFormResponse,
   GenerateFlexFormURLBodyParams,
-  NmiSubscribePayload,
-  SubscriptionResponse,
 } from '../types/subscription'
 
 export interface SubscribeWithCardParams {
@@ -63,22 +62,22 @@ export const useSubscriptionActions = () => {
       provider,
       paymentToken,
       billing,
-    }: SubscribeWithCardParams): Promise<SubscriptionResponse> => {
-      const payload: NmiSubscribePayload = {
-        priceId: ensurePrice(priceId),
-        paymentToken,
+    }: SubscribeWithCardParams): Promise<CheckoutResponse> => {
+      const payload: CheckoutRequestPayload = {
+        price_id: ensurePrice(priceId),
         processor,
         provider,
+        payment_token: paymentToken,
         email: billing.email,
-        firstName: billing.firstName,
-        lastName: billing.lastName,
+        first_name: billing.firstName,
+        last_name: billing.lastName,
         address1: billing.address1,
         city: billing.city,
         state: billing.stateRegion,
-        zipCode: billing.postalCode,
+        zip: billing.postalCode,
         country: billing.country,
       }
-      return services.subscriptions.subscribe('nmi', payload)
+      return services.subscriptions.checkout(payload)
     },
     [services]
   )
@@ -90,15 +89,15 @@ export const useSubscriptionActions = () => {
       provider,
       paymentMethodId,
       email,
-    }: SubscribeWithSavedMethodParams): Promise<SubscriptionResponse> => {
-      const payload: NmiSubscribePayload = {
-        priceId: ensurePrice(priceId),
-        paymentMethodId,
+    }: SubscribeWithSavedMethodParams): Promise<CheckoutResponse> => {
+      const payload: CheckoutRequestPayload = {
+        price_id: ensurePrice(priceId),
         processor,
         provider,
+        payment_method_id: paymentMethodId,
         email,
       }
-      return services.subscriptions.subscribe('nmi', payload)
+      return services.subscriptions.checkout(payload)
     },
     [services]
   )
@@ -112,17 +111,17 @@ export const useSubscriptionActions = () => {
       zipCode,
       country,
       processor = 'ccbill',
-    }: SubscribeWithCCBillParams): Promise<SubscriptionResponse> => {
-      const payload: CCBillSubscribePayload = {
-        priceId: ensurePrice(priceId),
-        email,
-        firstName,
-        lastName,
-        zipCode,
-        country,
+    }: SubscribeWithCCBillParams): Promise<CheckoutResponse> => {
+      const payload: CheckoutRequestPayload = {
+        price_id: ensurePrice(priceId),
         processor,
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        zip: zipCode,
+        country,
       }
-      return services.subscriptions.subscribe('ccbill', payload)
+      return services.subscriptions.checkout(payload)
     },
     [services]
   )

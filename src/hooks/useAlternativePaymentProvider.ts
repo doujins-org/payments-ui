@@ -25,7 +25,7 @@ export const useAlternativePaymentProvider = () => {
 			setError(null)
 			try {
 				const response = await generateFlexFormUrl(payload)
-				if (response?.iframe_url) {
+				if (response?.redirect_url) {
 					setFlexForm(response)
 				} else {
 					throw new Error('Unable to launch payment provider.')

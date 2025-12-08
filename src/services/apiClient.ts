@@ -45,18 +45,41 @@ const buildUrl = (
   return resolved
 }
 
+interface ApiClientOptions {
+  basePath?: string
+}
+
+const ensureLeadingSlash = (value: string): string => {
+  if (!value) return ''
+  return value.startsWith('/') ? value : `/${value}`
+}
+
+const applyBasePath = (path: string, basePath?: string): string => {
+  if (!basePath || /^https?:/i.test(path)) {
+    return path
+  }
+  const normalizedBase = ensureLeadingSlash(basePath).replace(/\/$/, '')
+  if (path.startsWith(normalizedBase + '/') || path === normalizedBase) {
+    return path
+  }
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  return `${normalizedBase}${normalizedPath}`
+}
+
 export const createApiClient = (
   paymentConfig: PaymentConfig,
   baseUrl: string,
   fetcher: PaymentFetcher,
-  resolveAuthToken: () => Promise<string | null>
+  resolveAuthToken: () => Promise<string | null>,
+  clientOptions?: ApiClientOptions
 ): ApiClient => {
   const request = async <T>(
     method: HttpMethod,
     path: string,
     options?: RequestOptions
   ): Promise<T> => {
-    const url = buildUrl(baseUrl, path, options ?? {})
+    const resolvedPath = applyBasePath(path, clientOptions?.basePath ?? '/v1')
+    const url = buildUrl(baseUrl, resolvedPath, options ?? {})
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(paymentConfig.defaultHeaders ?? {}),

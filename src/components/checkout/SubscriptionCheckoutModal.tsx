@@ -63,23 +63,34 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
     }
   }
 
+  const assertCheckoutSuccess = (status: string, message?: string) => {
+    if (status === 'blocked') {
+      throw new Error(message || 'This subscription cannot be completed right now.')
+    }
+    if (status === 'redirect_required') {
+      throw new Error(message || 'Additional action required in an alternate flow.')
+    }
+  }
+
   const handleNewCardPayment = async ({ token, billing }: { token: string; billing: BillingDetails }) => {
-    await subscribeWithCard({
+    const response = await subscribeWithCard({
       priceId: ensurePrice(),
       provider,
       paymentToken: token,
       billing,
     })
+    assertCheckoutSuccess(response.status, response.message)
     notifySuccess()
   }
 
   const handleSavedMethodPayment = async ({ paymentMethodId }: { paymentMethodId: string }) => {
-    await subscribeWithSavedMethod({
+    const response = await subscribeWithSavedMethod({
       priceId: ensurePrice(),
       provider,
       paymentMethodId,
       email: userEmail ?? '',
     })
+    assertCheckoutSuccess(response.status, response.message)
     notifySuccess()
   }
 

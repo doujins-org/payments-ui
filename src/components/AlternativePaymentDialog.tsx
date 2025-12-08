@@ -19,10 +19,10 @@ export const AlternativePaymentDialog: React.FC<AlternativePaymentDialogProps> =
         {form ? (
           <div className="space-y-4">
             <iframe
-              title="CCBill FlexForm"
-              src={form.iframe_url}
+              title="CCBill Hosted Checkout"
+              src={form.redirect_url}
               className="w-full border border-border"
-              style={{ width: form.width || '100%', height: form.height || '600px' }}
+              style={{ width: '100%', height: '600px' }}
             />
             <div className="text-right">
               <Button variant="ghost" onClick={onClose}>

@@ -61,7 +61,8 @@ export class PaymentApp {
       this.config,
       this.config.endpoints.billingBaseUrl,
       this.fetcher,
-      this.resolveAuthToken
+      this.resolveAuthToken,
+      { basePath: this.config.endpoints.billingBasePath ?? '/v1' }
     )
 
     const accountBaseUrl =
@@ -70,7 +71,13 @@ export class PaymentApp {
       this.config,
       accountBaseUrl,
       this.fetcher,
-      this.resolveAuthToken
+      this.resolveAuthToken,
+      {
+        basePath:
+          this.config.endpoints.accountBasePath ??
+          this.config.endpoints.billingBasePath ??
+          '/v1',
+      }
     )
 
     const solanaPayments = new SolanaPaymentService(billingApi)

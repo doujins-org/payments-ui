@@ -20,6 +20,8 @@ export interface PaymentUserDetails {
 export interface PaymentEndpoints {
   billingBaseUrl: string
   accountBaseUrl?: string
+  billingBasePath?: string
+  accountBasePath?: string
 }
 
 export interface PaymentFeatureFlags {
