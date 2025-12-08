@@ -36,7 +36,7 @@ export const useSupportedTokens = () => {
 
     try {
       console.log('payments-ui: fetching supported Solana tokens')
-      const tokens = await solanaService.getSupportedTokens()
+      const tokens = await solanaService.fetchSupportedTokens()
 
       // Sort tokens by symbol for consistent ordering
       const sortedTokens = [...tokens].sort((a, b) =>

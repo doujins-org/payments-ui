@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import QRCode from 'qrcode'
-import type { TokenInfo, SubmitPaymentResponse } from '../types'
+import type { TokenInfo } from '../types'
 import type {
   SolanaPayQRCodeIntent,
   SolanaPayStatusResponse,
@@ -10,7 +10,7 @@ import { useSolanaService } from './useSolanaService'
 interface UseSolanaQrPaymentOptions {
   priceId: string
   selectedToken: TokenInfo | null
-  onSuccess: (result: SubmitPaymentResponse | string, txId: string) => void
+  onSuccess: (paymentId: string | undefined, txId: string | undefined) => void
   onError: (error: string) => void
 }
 
@@ -98,7 +98,9 @@ export const useSolanaQrPayment = (
         paymentId: status.payment_id,
         intentId: status.intent_id,
       })
-      onSuccessRef.current?.(status.payment_id, status.transaction || '')
+      const paymentId = status.payment_id ?? undefined
+      const txId = status.transaction ?? undefined
+      onSuccessRef.current?.(paymentId, txId)
     },
     [clearTimers, resetState]
   )
@@ -106,7 +108,7 @@ export const useSolanaQrPayment = (
   const pollStatus = useCallback(
     async (reference: string) => {
       try {
-        const status = await solanaService.checkPaymentStatus(reference)
+        const status = await solanaService.getPayStatus(reference)
 
         if (status.status === 'confirmed') {
           handleSuccess(status)
@@ -193,8 +195,14 @@ export const useSolanaQrPayment = (
         console.log('[payments-ui] Solana Pay QR ready', {
           reference: nextIntent.reference,
         })
-        startCountdown(nextIntent.expires_at, nextIntent.reference)
-        pollStatus(nextIntent.reference)
+
+        const reference = nextIntent.reference
+        if (typeof reference === 'string' && reference.length > 0) {
+          startCountdown(nextIntent.expires_at, reference)
+          pollStatus(reference)
+        } else {
+          handleError('Payment reference missing from intent', true)
+        }
       } catch (err) {
         if (cancelled) return
         console.error('Failed to generate Solana Pay QR intent:', err)

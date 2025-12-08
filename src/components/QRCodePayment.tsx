@@ -9,7 +9,7 @@ interface QRCodePaymentProps {
   priceId: string
   selectedToken: TokenInfo | null
   onPaymentError: (error: string) => void
-  onPaymentSuccess: (result: SubmitPaymentResponse | string, txId: string) => void
+  onPaymentSuccess: (result: SubmitPaymentResponse | string, txId?: string) => void
 }
 
 export const QRCodePayment: React.FC<QRCodePaymentProps> = ({
@@ -18,12 +18,25 @@ export const QRCodePayment: React.FC<QRCodePaymentProps> = ({
   onPaymentError,
   onPaymentSuccess,
 }) => {
+  const handleQrSuccess = React.useCallback(
+    (paymentId?: string, txId?: string) => {
+      if (!paymentId && !txId) {
+        onPaymentError('Missing payment confirmation details')
+        return
+      }
+
+      const resolvedResult = paymentId ?? txId ?? ''
+      onPaymentSuccess(resolvedResult, txId)
+    },
+    [onPaymentError, onPaymentSuccess]
+  )
+
   const { intent, qrDataUri, isLoading, error, timeRemaining, refresh } =
     useSolanaQrPayment({
       priceId,
       selectedToken,
       onError: onPaymentError,
-      onSuccess: onPaymentSuccess,
+      onSuccess: handleQrSuccess,
     })
 
   if (!selectedToken) {

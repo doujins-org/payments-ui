@@ -8,7 +8,6 @@ import {
 } from '@solana/web3.js'
 import type { SubmitPaymentResponse, TokenInfo } from '../types'
 import { usePaymentContext } from '../context/PaymentContext'
-import { useSolanaService } from './useSolanaService'
 import {
   fetchSupportedTokenBalances,
   hasSufficientBalance,
@@ -44,7 +43,6 @@ export const useSolanaDirectPayment = (
   const { priceId, tokenAmount, selectedToken, supportedTokens, onStart, onConfirming, onSuccess, onError } = options
   const { connected, publicKey, wallet, signTransaction } = useWallet()
   const { config } = usePaymentContext()
-  const solanaService = useSolanaService()
 
   const [tokenBalance, setTokenBalance] = useState<TokenBalanceState | null>(null)
   const [isBalanceLoading, setIsBalanceLoading] = useState(false)
@@ -157,97 +155,8 @@ export const useSolanaDirectPayment = (
   )
 
   const pay = useCallback(async () => {
-    if (!connected || !publicKey) {
-      onError('Wallet not connected')
-      return
-    }
-
-    if (!selectedToken) {
-      onError('No payment token selected')
-      return
-    }
-
-    if (!tokenBalance?.hasBalance) {
-      console.warn('payments-ui: insufficient balance for Solana direct payment', {
-        token: selectedToken.symbol,
-      })
-      onError('Insufficient balance for this token')
-      return
-    }
-
-    try {
-      setIsProcessing(true)
-      onStart()
-      console.log('payments-ui: initiating Solana direct payment', {
-        priceId,
-        token: selectedToken.symbol,
-      })
-
-      const paymentData = await solanaService.generatePayment(
-        priceId,
-        selectedToken.symbol,
-        publicKey.toBase58()
-      )
-      console.log('payments-ui: Solana payment intent created', {
-        intentId: paymentData.intent_id,
-      })
-
-      const transactionToSign = decodeTransaction(paymentData.transaction)
-      console.log('payments-ui: requesting Solana wallet signature')
-      const signedTx = await signWithWallet(transactionToSign)
-      const signedSerialized = Buffer.from(signedTx.serialize()).toString('base64')
-
-      onConfirming()
-      console.log('payments-ui: submitting signed Solana transaction')
-
-      const result = await solanaService.submitPayment(
-        signedSerialized,
-        priceId,
-        paymentData.intent_id,
-        `Payment for subscription - ${selectedToken.symbol}`
-      )
-
-      console.log('payments-ui: Solana direct payment confirmed', {
-        transactionId: result.transaction_id,
-      })
-      onSuccess(result, result.transaction_id)
-    } catch (err) {
-      console.error('Solana direct payment failed:', {
-        priceId,
-        token: selectedToken.symbol,
-        error: err,
-      })
-
-      let errorMessage = 'Payment failed. Please try again.'
-      const message =
-        err instanceof Error ? err.message : typeof err === 'string' ? err : ''
-
-      if (message.includes('User rejected')) {
-        errorMessage = 'Payment cancelled by user'
-      } else if (/insufficient\s+funds/i.test(message)) {
-        errorMessage = 'Insufficient balance for this token'
-      } else if (message) {
-        errorMessage = message
-      }
-
-      onError(errorMessage)
-    } finally {
-      setIsProcessing(false)
-    }
-  }, [
-    connected,
-    publicKey,
-    selectedToken,
-    tokenBalance?.hasBalance,
-    onError,
-    onStart,
-    solanaService,
-    priceId,
-    decodeTransaction,
-    signWithWallet,
-    onConfirming,
-    onSuccess,
-  ])
+    onError('Direct wallet payments are no longer supported. Please use Solana Pay QR.')
+  }, [onError])
 
   const balanceLabel = tokenBalance
     ? `${tokenBalance.balance.toFixed(4)} ${selectedToken?.symbol ?? ''}`
@@ -257,9 +166,7 @@ export const useSolanaDirectPayment = (
     isBalanceLoading,
     isProcessing,
     balanceLabel,
-    canPay: Boolean(
-      connected && tokenBalance?.hasBalance && !isProcessing
-    ),
+    canPay: false,
     pay,
   }
 }
