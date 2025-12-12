@@ -1,8 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useWallet } from '@solana/wallet-adapter-react'
-import { ArrowLeft, CreditCard, Loader2, Wallet } from 'lucide-react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { ArrowLeft, Loader2 } from 'lucide-react'
 import type { SubmitPaymentResponse, TokenInfo } from '../types'
-import { DirectPayment } from './DirectPayment'
 import { QRCodePayment } from './QRCodePayment'
 import { PaymentStatus } from './PaymentStatus'
 import { useSupportedTokens } from '../hooks/useSupportedTokens'
@@ -13,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { Button } from '../ui/button'
 import { usePaymentNotifications } from '../hooks/usePaymentNotifications'
 
@@ -34,9 +31,7 @@ export const SolanaPaymentView: React.FC<SolanaPaymentViewProps> = ({
   onError,
   onClose,
 }) => {
-  const { connected } = useWallet()
   const { notifyStatus, notifyError, notifySuccess } = usePaymentNotifications()
-  const [activeTab, setActiveTab] = useState<'wallet' | 'qr'>('wallet')
   const [paymentState, setPaymentState] = useState<SolanaFlowState>('selecting')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [transactionId, setTransactionId] = useState<string | null>(null)
@@ -62,16 +57,6 @@ export const SolanaPaymentView: React.FC<SolanaPaymentViewProps> = ({
       setSelectedTokenSymbol(defaultToken.symbol)
     }
   }, [tokens, selectedTokenSymbol])
-
-  const handlePaymentStart = useCallback(() => {
-    setPaymentState('processing')
-    setErrorMessage(null)
-    notifyStatus('processing', { source: 'solana' })
-  }, [notifyStatus])
-
-  const handlePaymentConfirming = useCallback(() => {
-    setPaymentState('confirming')
-  }, [])
 
   const handlePaymentSuccess = useCallback(
     (result: SubmitPaymentResponse | string, txId?: string) => {
@@ -157,20 +142,6 @@ export const SolanaPaymentView: React.FC<SolanaPaymentViewProps> = ({
     setSelectedTokenSymbol(value)
   }, [])
 
-  const wasConnectedRef = useRef(connected)
-
-  useEffect(() => {
-    if (connected && !wasConnectedRef.current) {
-      setActiveTab('wallet')
-    }
-
-    if (!connected && wasConnectedRef.current) {
-      setActiveTab('qr')
-    }
-
-    wasConnectedRef.current = connected
-  }, [connected])
-
   const renderBody = () => {
     if (paymentState !== 'selecting') {
       return (
@@ -230,51 +201,12 @@ export const SolanaPaymentView: React.FC<SolanaPaymentViewProps> = ({
           </Select>
         </div>
 
-        <div className="space-y-3">
-          <Tabs
-            value={activeTab}
-            onValueChange={(value) => setActiveTab(value as 'wallet' | 'qr')}
-            className="w-full space-y-3"
-          >
-            <TabsList className="grid w-full grid-cols-2 bg-muted/10">
-              <TabsTrigger value="wallet" disabled={!connected}>
-                <Wallet className="mr-2 h-4 w-4" /> Wallet
-              </TabsTrigger>
-              <TabsTrigger value="qr">
-                <CreditCard className="mr-2 h-4 w-4" /> QR Code
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="wallet" className="space-y-4">
-              {activeTab === 'wallet' && (
-                <DirectPayment
-                  priceId={priceId}
-                  tokenAmount={tokenAmount}
-                  selectedToken={selectedToken}
-                  supportedTokens={tokens}
-                  onPaymentStart={handlePaymentStart}
-                  onPaymentConfirming={handlePaymentConfirming}
-                  onPaymentSuccess={handlePaymentSuccess}
-                  onPaymentError={handlePaymentError}
-                />
-              )}
-              {!connected && (
-                <div className="text-sm text-amber-100">
-                  Connect your Solana wallet to continue or switch to QR mode.
-                </div>
-              )}
-            </TabsContent>
-            <TabsContent value="qr">
-              {activeTab === 'qr' && (
-                <QRCodePayment
-                  priceId={priceId}
-                  selectedToken={selectedToken}
-                  onPaymentError={handlePaymentError}
-                  onPaymentSuccess={handlePaymentSuccess}
-                />
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
+        <QRCodePayment
+          priceId={priceId}
+          selectedToken={selectedToken}
+          onPaymentError={handlePaymentError}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
       </div>
     )
   }
@@ -286,7 +218,7 @@ export const SolanaPaymentView: React.FC<SolanaPaymentViewProps> = ({
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Solana Pay checkout</p>
           <p className="text-2xl font-semibold text-foreground">Pay with Solana</p>
           <p className="text-sm text-muted-foreground">
-            Choose a supported token and send the payment with your wallet or a QR code.
+            Choose a supported token and send the payment via Solana Pay QR code.
           </p>
         </div>
         {onClose && (

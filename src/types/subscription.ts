@@ -14,21 +14,6 @@ export interface CheckoutResponse {
   delayed_start?: string
 }
 
-export interface FlexFormResponse {
-  redirect_url: string
-}
-
-export interface GenerateFlexFormURLBodyParams {
-  price_id: string
-  first_name: string
-  last_name: string
-  address1: string
-  city: string
-  state: string
-  zip_code: string
-  country: string
-}
-
 export interface CheckoutRequestPayload {
   price_id: string
   processor: string

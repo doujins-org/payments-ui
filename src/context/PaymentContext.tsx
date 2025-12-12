@@ -26,7 +26,7 @@ export interface PaymentContextValue {
   queryClient: QueryClient
 }
 
-const PaymentContext = createContext<PaymentContextValue | undefined>(undefined)
+export const PaymentContext = createContext<PaymentContextValue | undefined>(undefined)
 
 export interface PaymentProviderProps {
   config: PaymentConfig
