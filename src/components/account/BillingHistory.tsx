@@ -16,11 +16,26 @@ import { usePaymentContext } from '../../context/PaymentContext'
 import type { NotificationHandler, NotificationPayload, PaginatedPayments } from '../../types'
 import { CancelMembershipDialog } from './CancelMembershipDialog'
 
+export interface BillingHistoryTranslations {
+  title?: string
+  description?: string
+  reviewActivity?: string
+  loading?: string
+  error?: string
+  loadingMore?: string
+  reference?: string
+  date?: string
+  amount?: string
+  processor?: string
+  status?: string
+}
+
 export interface BillingHistoryProps {
   pageSize?: number
   initialPage?: number
   enableCancel?: boolean
   onNotify?: NotificationHandler
+  translations?: BillingHistoryTranslations
 }
 
 const notifyDefault = (payload: NotificationPayload) => {
@@ -28,14 +43,30 @@ const notifyDefault = (payload: NotificationPayload) => {
   console[level === 'error' ? 'error' : 'log']('[payments-ui] billing', payload)
 }
 
+const defaultTranslations: Required<BillingHistoryTranslations> = {
+  title: 'Transaction History',
+  description: 'Record of billing history',
+  reviewActivity: 'Review your account activity below',
+  loading: 'Loading...',
+  error: 'Error loading billing history.',
+  loadingMore: 'Loading more...',
+  reference: 'Reference',
+  date: 'Date',
+  amount: 'Amount',
+  processor: 'Processor',
+  status: 'Status',
+}
+
 export const BillingHistory: React.FC<BillingHistoryProps> = ({
   pageSize = 10,
   initialPage = 1,
   enableCancel = true,
   onNotify,
+  translations: customTranslations,
 }) => {
   const { client } = usePaymentContext()
   const notify = onNotify ?? notifyDefault
+  const t = { ...defaultTranslations, ...customTranslations }
   const [isExpanded, setIsExpanded] = useState(false)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
@@ -115,8 +146,8 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
       <div className="p-4 sm:p-6">
         <div className="flex cursor-pointer items-center justify-between" onClick={() => setIsExpanded((prev) => !prev)}>
           <div>
-            <CardTitle className="text-xl font-semibold">Transaction History</CardTitle>
-            <CardDescription>Record of billing history</CardDescription>
+            <CardTitle className="text-xl font-semibold">{t.title}</CardTitle>
+            <CardDescription>{t.description}</CardDescription>
           </div>
           <ChevronDown className={cn('h-5 w-5 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
         </div>
@@ -130,25 +161,25 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
           <CardContent className="p-0 pt-4">
             <div className="space-y-4">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <p className="text-sm text-muted-foreground">Review your account activity below</p>
+                <p className="text-sm text-muted-foreground">{t.reviewActivity}</p>
                 {enableCancel && <CancelMembershipDialog onNotify={notify} />}
               </div>
 
               <div className="max-h-[300px] overflow-y-auto rounded-lg border border-border/70">
                 <div className="overflow-x-auto">
                   {historyQuery.isLoading ? (
-                    <p className="p-4 text-center text-sm text-muted-foreground">Loading...</p>
+                    <p className="p-4 text-center text-sm text-muted-foreground">{t.loading}</p>
                   ) : historyQuery.isError ? (
-                    <p className="p-4 text-center text-sm text-destructive">Error loading billing history.</p>
+                    <p className="p-4 text-center text-sm text-destructive">{t.error}</p>
                   ) : (
                     <Table>
                       <TableHeader>
                         <TableRow className="border-border/60">
-                          <TableHead>Reference</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Processor</TableHead>
-                          <TableHead>Status</TableHead>
+                          <TableHead>{t.reference}</TableHead>
+                          <TableHead>{t.date}</TableHead>
+                          <TableHead>{t.amount}</TableHead>
+                          <TableHead>{t.processor}</TableHead>
+                          <TableHead>{t.status}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -177,7 +208,7 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
 
               <div ref={loadMoreRef} className="h-10 w-full">
                 {historyQuery.isFetchingNextPage && (
-                  <p className="text-center text-sm text-muted-foreground">Loading more...</p>
+                  <p className="text-center text-sm text-muted-foreground">{t.loadingMore}</p>
                 )}
               </div>
             </div>
