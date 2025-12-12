@@ -4,8 +4,6 @@ import type { BillingDetails } from '../types/billing'
 import type {
   CheckoutRequestPayload,
   CheckoutResponse,
-  FlexFormResponse,
-  GenerateFlexFormURLBodyParams,
 } from '../types/subscription'
 
 export interface SubscribeWithCardParams {
@@ -34,19 +32,8 @@ export interface SubscribeWithCCBillParams {
   processor?: string
 }
 
-export interface GenerateFlexFormParams {
-  priceId?: string | null
-  firstName: string
-  lastName: string
-  address1: string
-  city: string
-  state: string
-  zipCode: string
-  country: string
-}
-
 export const useSubscriptionActions = () => {
-  const { services } = usePaymentContext()
+  const { client } = usePaymentContext()
 
   const ensurePrice = (priceId?: string | null) => {
     if (!priceId) {
@@ -77,9 +64,9 @@ export const useSubscriptionActions = () => {
         zip: billing.postalCode,
         country: billing.country,
       }
-      return services.subscriptions.checkout(payload)
+      return client.checkout(payload)
     },
-    [services]
+    [client]
   )
 
   const subscribeWithSavedMethod = useCallback(
@@ -97,9 +84,9 @@ export const useSubscriptionActions = () => {
         payment_method_id: paymentMethodId,
         email,
       }
-      return services.subscriptions.checkout(payload)
+      return client.checkout(payload)
     },
-    [services]
+    [client]
   )
 
   const subscribeWithCCBill = useCallback(
@@ -121,41 +108,14 @@ export const useSubscriptionActions = () => {
         zip: zipCode,
         country,
       }
-      return services.subscriptions.checkout(payload)
+      return client.checkout(payload)
     },
-    [services]
-  )
-
-  const generateFlexFormUrl = useCallback(
-    async ({
-      priceId,
-      firstName,
-      lastName,
-      address1,
-      city,
-      state,
-      zipCode,
-      country,
-    }: GenerateFlexFormParams): Promise<FlexFormResponse> => {
-      const payload: GenerateFlexFormURLBodyParams = {
-        price_id: ensurePrice(priceId),
-        first_name: firstName,
-        last_name: lastName,
-        address1,
-        city,
-        state,
-        zip_code: zipCode,
-        country,
-      }
-      return services.subscriptions.generateFlexFormUrl(payload)
-    },
-    [services]
+    [client]
   )
 
   return {
     subscribeWithCard,
     subscribeWithSavedMethod,
     subscribeWithCCBill,
-    generateFlexFormUrl,
   }
 }

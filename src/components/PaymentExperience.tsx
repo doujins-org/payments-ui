@@ -7,9 +7,6 @@ import { Button } from '../ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { usePaymentNotifications } from '../hooks/usePaymentNotifications'
 import { SolanaPaymentView } from './SolanaPaymentView'
-import { useAlternativePaymentProvider } from '../hooks/useAlternativePaymentProvider'
-import { BillingAddressForm } from './BillingAddressForm'
-import { AlternativePaymentDialog } from './AlternativePaymentDialog'
 
 type AsyncStatus = 'idle' | 'processing' | 'success' | 'error'
 
@@ -27,7 +24,6 @@ export interface PaymentExperienceProps {
   enableNewCard?: boolean
   enableStoredMethods?: boolean
   enableSolanaPay?: boolean
-  enableAlternativePayments?: boolean
   onSolanaSuccess?: (result: SubmitPaymentResponse | string) => void
   onSolanaError?: (error: string) => void
   initialMode?: 'cards' | 'solana'
@@ -41,7 +37,6 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   enableNewCard = true,
   enableStoredMethods = true,
   enableSolanaPay = true,
-  enableAlternativePayments = true,
   onSolanaSuccess,
   onSolanaError,
   initialMode = 'cards',
@@ -58,16 +53,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   const [savedError, setSavedError] = useState<string | null>(null)
   const [newCardStatus, setNewCardStatus] = useState<AsyncStatus>('idle')
   const [newCardError, setNewCardError] = useState<string | null>(null)
-  const [billingDetails, setBillingDetails] = useState<BillingDetails | null>(null)
-  const [alternativePaymentError, setAlternativePaymentError] = useState<string | null>(null)
   const { notifyStatus, notifySuccess, notifyError } = usePaymentNotifications()
-	const {
-		openFlexForm,
-		isLoading: flexFormLoading,
-		error: flexFormError,
-		flexForm,
-		closeFlexForm,
-	} = useAlternativePaymentProvider()
 
   useEffect(() => {
     setActiveTab(showStored ? 'saved' : 'new')
@@ -162,49 +148,6 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
     [onSolanaError]
   )
 
-  const handleAlternativePayment = useCallback(() => {
-    if (!enableAlternativePayments || !priceId) {
-      return
-    }
-    if (!billingDetails) {
-      setAlternativePaymentError('Enter your billing details first.')
-      return
-    }
-    const requiredFields: Array<keyof BillingDetails> = [
-      'firstName',
-      'lastName',
-      'address1',
-      'city',
-      'stateRegion',
-      'postalCode',
-      'country',
-    ]
-    const missingField = requiredFields.find((field) => {
-      const value = billingDetails[field]
-      return typeof value !== 'string' || value.trim().length === 0
-    })
-    if (missingField) {
-      setAlternativePaymentError('Please complete your billing address before continuing.')
-      return
-    }
-    setAlternativePaymentError(null)
-    openFlexForm({
-      priceId,
-      firstName: billingDetails.firstName,
-      lastName: billingDetails.lastName,
-      address1: billingDetails.address1,
-      city: billingDetails.city,
-      state: billingDetails.stateRegion ?? '',
-      zipCode: billingDetails.postalCode,
-      country: billingDetails.country,
-    })
-  }, [
-    billingDetails,
-    enableAlternativePayments,
-    openFlexForm,
-    priceId,
-  ])
-
   const renderSavedTab = () => {
     if (!showStored) {
       return (
@@ -252,7 +195,6 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
         externalError={newCardError}
         onTokenize={handleNewCardTokenize}
         submitting={newCardStatus === 'processing'}
-        onBillingChange={setBillingDetails}
       />
     )
   }
@@ -289,40 +231,17 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   )
 
 	return (
-		<>
-			<div className="space-y-6 pt-4">
-				{mode === 'cards' && renderCardExperience()}
-				{mode === 'cards' && enableAlternativePayments && (
-					<div className="space-y-4">
-						<BillingAddressForm value={billingDetails} onChange={setBillingDetails} />
-						<div className="space-y-2 text-center text-sm text-muted-foreground">
-							<button
-								type="button"
-								className="text-primary underline-offset-4 hover:underline disabled:opacity-60"
-								onClick={handleAlternativePayment}
-								disabled={flexFormLoading || !priceId}
-							>
-								{flexFormLoading ? 'Preparing alternative checkout…' : 'Prefer a different processor? Pay with CCBill'}
-							</button>
-							{(alternativePaymentError || flexFormError) && (
-								<p className="text-xs text-destructive">
-									{alternativePaymentError || flexFormError}
-								</p>
-							)}
-						</div>
-					</div>
-				)}
-				{mode === 'solana' && enableSolanaPay && (
-					<SolanaPaymentView
-						priceId={priceId}
-						usdAmount={usdAmount}
-						onSuccess={handleSolanaSuccess}
-						onError={handleSolanaError}
-						onClose={exitSolanaView}
-					/>
-				)}
-			</div>
-			<AlternativePaymentDialog form={flexForm} onClose={closeFlexForm} />
-		</>
+		<div className="space-y-6 pt-4">
+			{mode === 'cards' && renderCardExperience()}
+			{mode === 'solana' && enableSolanaPay && (
+				<SolanaPaymentView
+					priceId={priceId}
+					usdAmount={usdAmount}
+					onSuccess={handleSolanaSuccess}
+					onError={handleSolanaError}
+					onClose={exitSolanaView}
+				/>
+			)}
+		</div>
 	)
 }

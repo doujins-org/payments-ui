@@ -26,7 +26,7 @@ import type {
   PaginatedPaymentMethods,
   PaymentMethod,
 } from '../../types'
-import { usePaymentMethodService } from '../../hooks/usePaymentMethodService'
+import { usePaymentContext } from '../../context/PaymentContext'
 
 export interface PaymentMethodsSectionProps {
   isAuthenticated?: boolean
@@ -56,7 +56,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
   collectPrefix = 'account-card',
   onNotify,
 }) => {
-	const paymentMethods = usePaymentMethodService()
+	const { client } = usePaymentContext()
 	const queryClient = useQueryClient()
 	const [isModalOpen, setIsModalOpen] = useState(false)
 	const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -67,13 +67,25 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
 
   const paymentQuery = useQuery<PaginatedPaymentMethods>({
     queryKey,
-    queryFn: () => paymentMethods.list({ pageSize: 50 }),
+    queryFn: async () => {
+      const response = await client.listPaymentMethods({ limit: 50 })
+      return {
+        data: response.data,
+        total_items: response.total,
+        limit: response.limit,
+        offset: response.offset,
+        page: response.limit > 0 ? Math.floor(response.offset / response.limit) + 1 : 1,
+        page_size: response.limit,
+        total_pages:
+          response.limit > 0 ? Math.ceil(response.total / response.limit) : undefined,
+      }
+    },
     enabled: isAuthenticated,
     staleTime: 30_000,
   })
 
   const createMutation = useMutation<PaymentMethod, Error, CreatePaymentMethodPayload>({
-    mutationFn: (payload) => paymentMethods.create(payload),
+		mutationFn: (payload) => client.createPaymentMethod(payload),
     onSuccess: () => {
       notify({ title: 'Card added successfully', status: 'success' })
       setIsModalOpen(false)
@@ -89,7 +101,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
   })
 
 	const deleteMutation = useMutation<void, Error, string>({
-		mutationFn: (id) => paymentMethods.remove(id),
+		mutationFn: (id) => client.deletePaymentMethod(id),
 		onMutate: (id) => setDeletingId(id),
 		onSuccess: () => {
 			notify({ title: 'Card removed', status: 'success' })
@@ -106,7 +118,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
 	})
 
 	const replaceMutation = useMutation<PaymentMethod, Error, { id: string; payload: CreatePaymentMethodPayload }>({
-		mutationFn: ({ id, payload }) => paymentMethods.update(id, payload),
+		mutationFn: ({ id, payload }) => client.updatePaymentMethod(id, payload),
 		onSuccess: () => {
 			notify({ title: 'Card updated', status: 'success' })
 			setMethodBeingReplaced(null)
@@ -122,7 +134,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
 	})
 
 	const activateMutation = useMutation<void, Error, string>({
-		mutationFn: (id) => paymentMethods.activate(id),
+		mutationFn: (id) => client.activatePaymentMethod(id),
 		onSuccess: () => {
 			notify({ title: 'Default payment method updated', status: 'success' })
 			void queryClient.invalidateQueries({ queryKey })

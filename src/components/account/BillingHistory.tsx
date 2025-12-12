@@ -34,7 +34,7 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
   enableCancel = true,
   onNotify,
 }) => {
-  const { services } = usePaymentContext()
+  const { client } = usePaymentContext()
   const notify = onNotify ?? notifyDefault
   const [isExpanded, setIsExpanded] = useState(false)
   const observerRef = useRef<IntersectionObserver | null>(null)
@@ -44,7 +44,18 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
     queryKey: ['payments-ui', 'billing-history', pageSize],
     queryFn: async ({ pageParam = initialPage }) => {
       const offset = (pageParam - 1) * pageSize
-      return services.subscriptions.getPaymentHistory({ limit: pageSize, offset })
+      return client.getPaymentHistory({ limit: pageSize, offset, type: undefined }).then(
+        (response) => ({
+          data: response.data,
+          total_items: response.total,
+          limit: response.limit,
+          offset: response.offset,
+          page: response.limit > 0 ? Math.floor(response.offset / response.limit) + 1 : 1,
+          page_size: response.limit,
+          total_pages:
+            response.limit > 0 ? Math.ceil(response.total / response.limit) : undefined,
+        })
+      )
     },
     initialPageParam: initialPage,
     getNextPageParam: (lastPage) => {

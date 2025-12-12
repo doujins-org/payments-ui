@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useEffect, useMemo } from 'react'
-import { QueryClientProvider } from '@tanstack/react-query'
-import type { PaymentConfig, PaymentFetcher } from '../types/config'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import type { PaymentConfig } from '../types/config'
 import { loadCollectJs } from '../utils/collect'
-import { PaymentsRuntime, createPaymentsRuntime } from '../runtime'
-import { PaymentApp, type PaymentServices } from '../core'
+import { createClient, type Client } from '../lib/client'
 import {
   ConnectionProvider,
   WalletProvider,
@@ -23,11 +22,8 @@ import { PaymentsDialogProvider } from './PaymentsDialogContext'
 
 export interface PaymentContextValue {
   config: PaymentConfig
-  fetcher: PaymentFetcher
-  resolveAuthToken: () => Promise<string | null>
-  app: PaymentApp
-  services: PaymentServices
-  queryClient: PaymentsRuntime['queryClient']
+  client: Client
+  queryClient: QueryClient
 }
 
 const PaymentContext = createContext<PaymentContextValue | undefined>(undefined)
@@ -35,18 +31,61 @@ const PaymentContext = createContext<PaymentContextValue | undefined>(undefined)
 export interface PaymentProviderProps {
   config: PaymentConfig
   children: React.ReactNode
-  runtime?: PaymentsRuntime
 }
 
 export const PaymentProvider: React.FC<PaymentProviderProps> = ({
   config,
-  runtime: runtimeProp,
   children,
 }) => {
-  const runtime = useMemo(
-    () => runtimeProp ?? createPaymentsRuntime(config),
-    [runtimeProp, config]
-  )
+  const queryClient = useMemo(() => {
+    return new QueryClient({
+      defaultOptions: {
+        queries: {
+          staleTime: 30_000,
+          gcTime: 5 * 60_000,
+          refetchOnWindowFocus: false,
+          retry: 1,
+        },
+        mutations: {
+          retry: 1,
+        },
+      },
+    })
+  }, [])
+
+  const client = useMemo(() => {
+    const authProvider = config.getAuthToken
+      ? async () => {
+          try {
+            const result = config.getAuthToken?.()
+            if (result instanceof Promise) {
+              return (await result) ?? null
+            }
+            return result ?? null
+          } catch (error) {
+            console.warn('payments-ui: failed to resolve auth token', error)
+            return null
+          }
+        }
+      : undefined
+
+    const wrappedFetch = config.fetcher
+      ? ((input: RequestInfo | URL, init?: RequestInit) => {
+          const normalizedInput = input instanceof URL ? input.toString() : input
+          return config.fetcher!(normalizedInput as RequestInfo, init)
+        })
+      : undefined
+
+    return createClient({
+      billingBaseUrl: config.endpoints.billingBaseUrl,
+      billingBasePath: config.endpoints.billingBasePath,
+      accountBaseUrl: config.endpoints.accountBaseUrl,
+      accountBasePath: config.endpoints.accountBasePath,
+      getAuthToken: authProvider,
+      defaultHeaders: config.defaultHeaders,
+      fetch: wrappedFetch,
+    })
+  }, [config])
 
   const solanaEndpoint = useMemo(() => {
     if (config.solana?.endpoint) return config.solana.endpoint
@@ -71,14 +110,11 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
 
   const value = useMemo<PaymentContextValue>(() => {
     return {
-      config: runtime.config,
-      fetcher: runtime.app.getFetcher(),
-      resolveAuthToken: runtime.app.resolveAuthToken,
-      app: runtime.app,
-      services: runtime.services,
-      queryClient: runtime.queryClient,
+      config,
+      client,
+      queryClient,
     }
-  }, [runtime])
+  }, [client, config, queryClient])
 
   useEffect(() => {
     if (!config.collectJsKey) return
@@ -87,7 +123,7 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
 
   return (
     <PaymentContext.Provider value={value}>
-      <QueryClientProvider client={runtime.queryClient}>
+      <QueryClientProvider client={queryClient}>
         <ConnectionProvider endpoint={solanaEndpoint} config={{ commitment: 'confirmed' }}>
           <WalletProvider wallets={walletAdapters} autoConnect={autoConnect}>
             <WalletModalProvider>

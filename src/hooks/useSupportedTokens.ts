@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { TokenInfo } from '../types'
-import { useSolanaService } from './useSolanaService'
+import { usePaymentContext } from '../context/PaymentContext'
 
 export const useSupportedTokens = () => {
-  const solanaService = useSolanaService()
+  const { client } = usePaymentContext()
   const [tokens, setTokens] = useState<TokenInfo[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -36,7 +36,7 @@ export const useSupportedTokens = () => {
 
     try {
       console.log('payments-ui: fetching supported Solana tokens')
-      const tokens = await solanaService.fetchSupportedTokens()
+      const tokens = await client.getSolanaTokens()
 
       // Sort tokens by symbol for consistent ordering
       const sortedTokens = [...tokens].sort((a, b) =>
@@ -62,7 +62,7 @@ export const useSupportedTokens = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [solanaService])
+  }, [client])
 
   // Auto-fetch on mount
   useEffect(() => {

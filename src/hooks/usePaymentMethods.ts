@@ -1,21 +1,33 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { usePaymentMethodService } from './usePaymentMethodService'
 import type {
   BillingDetails,
   CreatePaymentMethodPayload,
   PaymentMethod,
   PaginatedPaymentMethods,
 } from '../types'
+import { usePaymentContext } from '../context/PaymentContext'
 
 const PAYMENT_METHODS_KEY = ['payments-ui', 'payment-methods']
 
 export const usePaymentMethods = () => {
-  const service = usePaymentMethodService()
+  const { client } = usePaymentContext()
   const queryClient = useQueryClient()
 
   const listQuery = useQuery<PaginatedPaymentMethods>({
     queryKey: PAYMENT_METHODS_KEY,
-    queryFn: () => service.list({ pageSize: 50 }),
+    queryFn: async () => {
+      const response = await client.listPaymentMethods({ limit: 50 })
+      return {
+        data: response.data,
+        total_items: response.total,
+        limit: response.limit,
+        offset: response.offset,
+        page: response.limit > 0 ? Math.floor(response.offset / response.limit) + 1 : 1,
+        page_size: response.limit,
+        total_pages:
+          response.limit > 0 ? Math.ceil(response.total / response.limit) : undefined,
+      }
+    },
   })
 
   const createMutation = useMutation<
@@ -37,7 +49,7 @@ export const usePaymentMethods = () => {
         email: billing.email,
         provider: billing.provider,
       }
-      return service.create(payload)
+      return client.createPaymentMethod(payload)
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: PAYMENT_METHODS_KEY })
@@ -45,7 +57,7 @@ export const usePaymentMethods = () => {
   })
 
   const deleteMutation = useMutation<void, Error, { id: string }>({
-    mutationFn: ({ id }) => service.remove(id),
+    mutationFn: ({ id }) => client.deletePaymentMethod(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: PAYMENT_METHODS_KEY })
     },

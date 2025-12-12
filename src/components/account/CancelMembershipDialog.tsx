@@ -15,8 +15,8 @@ import {
 import { Label } from '../../ui/label'
 import { Textarea } from '../../ui/textarea'
 import { cn } from '../../lib/utils'
-import { usePaymentContext } from '../../context/PaymentContext'
 import type { NotificationHandler, NotificationPayload } from '../../types'
+import { usePaymentContext } from '../../context/PaymentContext'
 
 export interface CancelMembershipDialogProps {
   minReasonLength?: number
@@ -34,7 +34,7 @@ export const CancelMembershipDialog: React.FC<CancelMembershipDialogProps> = ({
   onCancelled,
   onNotify,
 }) => {
-  const { services } = usePaymentContext()
+  const { client } = usePaymentContext()
   const notify = onNotify ?? notifyDefault
 
   const [cancelReason, setCancelReason] = useState('')
@@ -73,7 +73,7 @@ export const CancelMembershipDialog: React.FC<CancelMembershipDialogProps> = ({
 
     setIsSubmitting(true)
     try {
-      await services.subscriptions.cancelSubscription(cancelReason.trim())
+      await client.cancelSubscription(cancelReason.trim())
       notify({
         title: 'Membership cancelled',
         description: 'Your subscription has been cancelled successfully.',

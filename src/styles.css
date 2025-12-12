@@ -4,8 +4,7 @@
 
 
 @layer base {
-  :root,
-  .payments-ui-portal {
+  :where(.payments-ui-root, .payments-ui-portal, [data-payments-ui]) {
     /* Dark theme - matches doujins app */
     --background: 220 17% 7%;
     --foreground: 0 0% 100%;
@@ -40,7 +39,6 @@
 }
 
 /* Ensure all payments-ui components use dark theme by default */
-.payments-ui-root,
-[data-payments-ui] {
+:where(.payments-ui-root, .payments-ui-portal, [data-payments-ui]) {
   color-scheme: dark;
 }

@@ -14,8 +14,7 @@ interface PaymentStatusHookOptions {
 
 export const usePaymentStatus = (options: PaymentStatusHookOptions = {}) => {
   const { connection } = useConnection()
-  const { services } = usePaymentContext()
-  const billingApi = services.billingApi
+  const { client } = usePaymentContext()
   const {
     transactionId,
     purchaseId,
@@ -107,14 +106,8 @@ export const usePaymentStatus = (options: PaymentStatusHookOptions = {}) => {
   const checkPaymentStatus = useCallback(
     async (id: string): Promise<PaymentStatusResponse | null> => {
       try {
-        const data = await billingApi.get<PaymentStatusResponse>(
-          `/payment/status/${id}`
-        )
-        return data
-      } catch (error: any) {
-        if (error?.status === 404) {
-          return null // Payment not found
-        }
+        return await client.getPaymentStatus(id)
+      } catch (error) {
         console.error('Failed to check payment status:', {
           purchaseId: id,
           error,
@@ -122,7 +115,7 @@ export const usePaymentStatus = (options: PaymentStatusHookOptions = {}) => {
         return null
       }
     },
-    [billingApi]
+    [client]
   )
 
   // Monitor transaction until confirmed or failed

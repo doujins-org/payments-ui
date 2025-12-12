@@ -5,7 +5,7 @@ import type {
   SolanaPayQRCodeIntent,
   SolanaPayStatusResponse,
 } from '../types/solana-pay'
-import { useSolanaService } from './useSolanaService'
+import { usePaymentContext } from '../context/PaymentContext'
 
 interface UseSolanaQrPaymentOptions {
   priceId: string
@@ -27,7 +27,7 @@ export const useSolanaQrPayment = (
   options: UseSolanaQrPaymentOptions
 ): UseSolanaQrPaymentState => {
   const { priceId, selectedToken, onSuccess, onError } = options
-  const solanaService = useSolanaService()
+  const { client } = usePaymentContext()
   const tokenSymbol = selectedToken?.symbol ?? null
   const onSuccessRef = useRef(onSuccess)
   const onErrorRef = useRef(onError)
@@ -108,7 +108,7 @@ export const useSolanaQrPayment = (
   const pollStatus = useCallback(
     async (reference: string) => {
       try {
-        const status = await solanaService.getPayStatus(reference)
+        const status = await client.getSolanaPayStatus(reference)
 
         if (status.status === 'confirmed') {
           handleSuccess(status)
@@ -124,7 +124,7 @@ export const useSolanaQrPayment = (
         console.error('Failed to poll Solana Pay status:', err)
       }
     },
-    [handleError, handleSuccess, solanaService]
+    [handleError, handleSuccess, client]
   )
 
   const startCountdown = useCallback(
@@ -182,10 +182,10 @@ export const useSolanaQrPayment = (
           priceId,
           token: tokenSymbol,
         })
-        const nextIntent = await solanaService.generateQRCode(
+        const nextIntent = await client.createSolanaPayIntent({
           priceId,
-          tokenSymbol
-        )
+          token: tokenSymbol,
+        })
         if (cancelled) return
         setIntent(nextIntent)
         setTimeRemaining(
@@ -231,7 +231,7 @@ export const useSolanaQrPayment = (
     priceId,
     renderQr,
     resetState,
-    solanaService,
+    client,
     startCountdown,
     tokenSymbol,
     refreshNonce,
