@@ -1,7 +1,7 @@
 import React from 'react'
 import { cn } from '../lib/utils'
 
-export interface PaymentsUIRootProps {
+export interface BillingThemeProviderProps {
   children: React.ReactNode
   className?: string
   /**
@@ -12,18 +12,18 @@ export interface PaymentsUIRootProps {
 }
 
 /**
- * Root wrapper component that provides scoped CSS variables for payments-ui.
- * Use this to wrap any payments-ui components to ensure styles don't conflict
+ * Scopes the Payments UI theme variables so host app styles are left intact.
+ * Use this to wrap any Payments UI components to ensure styles don't conflict
  * with the consuming application.
  * 
  * @example
  * ```tsx
- * <PaymentsUIRoot>
+ * <BillingThemeProvider>
  *   <SubscriptionCheckoutModal ... />
- * </PaymentsUIRoot>
+ * </BillingThemeProvider>
  * ```
  */
-export const PaymentsUIRoot: React.FC<PaymentsUIRootProps> = ({
+export const BillingThemeProvider: React.FC<BillingThemeProviderProps> = ({
   children,
   className,
   dark = false,
@@ -44,7 +44,7 @@ export const PaymentsUIRoot: React.FC<PaymentsUIRootProps> = ({
 /**
 prevent conflicts with client app styles
  */
-export const PaymentsUIPortalRoot: React.FC<PaymentsUIRootProps> = ({
+export const BillingThemePortal: React.FC<BillingThemeProviderProps> = ({
   children,
   className,
   dark = false,
