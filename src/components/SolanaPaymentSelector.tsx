@@ -1,5 +1,5 @@
 import React from 'react'
-import { Dialog, DialogContent } from '../ui/dialog'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import type { SolanaPaymentViewProps } from './SolanaPaymentView'
 import { SolanaPaymentView } from './SolanaPaymentView'
 

@@ -2,8 +2,8 @@ import React from 'react'
 import { Loader2, RefreshCw } from 'lucide-react'
 import type { SubmitPaymentResponse, TokenInfo } from '../types'
 import { useSolanaQrPayment } from '../hooks/useSolanaQrPayment'
-import { Button } from '../ui/button'
-import { Card } from '../ui/card'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 
 interface QRCodePaymentProps {
   priceId: string

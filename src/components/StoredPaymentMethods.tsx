@@ -3,16 +3,16 @@ import { CreditCard, Loader2, Trash2, WalletCards } from 'lucide-react'
 import { CardDetailsForm } from './CardDetailsForm'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
 import type { BillingDetails, PaymentMethod } from '../types'
-import { Button } from '../ui/button'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '../ui/dialog'
-import { Badge } from '../ui/badge'
-import { ScrollArea } from '../ui/scroll-area'
+} from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '../lib/utils'
 
 const formatCardLabel = (method: PaymentMethod): string => {

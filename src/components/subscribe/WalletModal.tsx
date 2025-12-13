@@ -5,9 +5,9 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '../../ui/dialog'
+} from '@/components/ui/dialog'
 import { ChevronDown, ChevronUp, Wallet } from 'lucide-react'
-import { Button } from '../../ui/button'
+import { Button } from '@/components/ui/button'
 
 interface WalletDefinition {
   id: string

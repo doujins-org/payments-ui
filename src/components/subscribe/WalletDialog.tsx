@@ -6,11 +6,11 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '../../ui/alert-dialog'
-import { Button } from '../../ui/button'
-import { Input } from '../../ui/input'
-import { Checkbox } from '../../ui/checkbox'
-import { Label } from '../../ui/label'
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import { Shield, CreditCard, Calendar, KeyRound, UserRound } from 'lucide-react'
 
 export interface WalletDialogProps {

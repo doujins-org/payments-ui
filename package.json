@@ -1,6 +1,6 @@
 {
   "name": "@doujins/payments-ui",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Payments UI",
   "type": "module",
   "main": "dist/index.cjs",
@@ -65,6 +65,7 @@
     "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-separator": "^1.1.8",
+    "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tabs": "^1.1.13",
     "@solana/wallet-adapter-coinbase": "^0.1.23",
     "@solana/wallet-adapter-phantom": "^0.9.28",

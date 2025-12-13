@@ -1,22 +1,22 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CreditCard, Loader2, Trash2, WalletCards } from 'lucide-react'
-import { Button } from '../../ui/button'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../ui/card'
+} from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '../../ui/dialog'
-import { Badge } from '../../ui/badge'
+} from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
 import { CardDetailsForm } from '../CardDetailsForm'
 import type {
   BillingDetails,

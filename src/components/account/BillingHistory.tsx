@@ -8,9 +8,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../ui/table'
-import { Card, CardContent, CardDescription, CardTitle } from '../../ui/card'
-import { Badge } from '../../ui/badge'
+} from '@/components/ui/table'
+import { Card, CardContent, CardDescription, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { cn } from '../../lib/utils'
 import { usePaymentContext } from '../../context/PaymentContext'
 import type { NotificationHandler, NotificationPayload, PaginatedPayments } from '../../types'

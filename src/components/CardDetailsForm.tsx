@@ -4,16 +4,16 @@ import type { BillingDetails } from '../types'
 import type { CollectJSResponse } from '../types/collect'
 import { usePaymentContext } from '../context/PaymentContext'
 import { countries } from '../data/countries'
-import { Button } from '../ui/button'
-import { Input } from '../ui/input'
-import { Label } from '../ui/label'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select'
+} from '@/components/ui/select'
 import { cn } from '../lib/utils'
 import { defaultBillingDetails } from '../constants/billing'
 

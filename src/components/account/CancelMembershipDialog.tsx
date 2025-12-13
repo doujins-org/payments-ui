@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Ban, TriangleAlert } from 'lucide-react'
-import { Button } from '../../ui/button'
+import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,9 +11,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '../../ui/alert-dialog'
-import { Label } from '../../ui/label'
-import { Textarea } from '../../ui/textarea'
+} from '@/components/ui/alert-dialog'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { cn } from '../../lib/utils'
 import type { NotificationHandler, NotificationPayload } from '../../types'
 import { usePaymentContext } from '../../context/PaymentContext'
