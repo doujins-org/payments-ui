@@ -1,6 +1,6 @@
 import React from 'react'
 import { CheckCircle, Loader2, RotateCcw, XCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '../components/ui/button'
 
 interface PaymentStatusProps {
   state: 'selecting' | 'processing' | 'confirming' | 'success' | 'error'

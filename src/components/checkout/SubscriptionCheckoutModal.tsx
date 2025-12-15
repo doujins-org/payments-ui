@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent } from '../../components/ui/dialog'
 import { AlertCircle } from 'lucide-react'
 import { PaymentExperience } from '../PaymentExperience'
 import { SubscriptionSuccessDialog } from './SubscriptionSuccessDialog'
@@ -83,12 +83,13 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
 
   const handleNewCardPayment = async ({ token, billing }: { token: string; billing: BillingDetails }) => {
     const response = await subscribeWithCard({
-      priceId: ensurePrice(),
-      provider,
-      paymentToken: token,
       billing,
+      provider,
       idempotencyKey,
+      paymentToken: token,
+      priceId: ensurePrice(),
     })
+
     assertCheckoutSuccess(response.status, response.message)
     notifySuccess()
   }
@@ -127,21 +128,23 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
                 <AlertCircle className="h-4 w-4" /> Select a subscription plan to continue.
               </div>
             )}
+            
             <PaymentExperience
               usdAmount={usdAmount}
               priceId={priceId ?? ''}
-              onSolanaSuccess={solanaSuccess}
+              initialMode={initialMode}
               onSolanaError={solanaError}
+              onSolanaSuccess={solanaSuccess}
               enableNewCard={Boolean(priceId)}
               enableStoredMethods={Boolean(priceId)}
               enableSolanaPay={enableSolanaPay && Boolean(priceId)}
               onNewCardPayment={priceId ? handleNewCardPayment : undefined}
               onSavedMethodPayment={priceId ? handleSavedMethodPayment : undefined}
-              initialMode={initialMode}
             />
           </div>
         </DialogContent>
       </Dialog>
+
       <SubscriptionSuccessDialog
         open={showSuccess}
         onClose={() => setShowSuccess(false)}

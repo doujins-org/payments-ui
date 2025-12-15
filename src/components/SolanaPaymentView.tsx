@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import type { SubmitPaymentResponse, TokenInfo } from '../types'
 import { QRCodePayment } from './QRCodePayment'
 import { PaymentStatus } from './PaymentStatus'
@@ -10,8 +10,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
+} from '../components/ui/select'
+import { Button } from '../components/ui/button'
 import { usePaymentNotifications } from '../hooks/usePaymentNotifications'
 
 type SolanaFlowState = 'selecting' | 'processing' | 'confirming' | 'success' | 'error'
@@ -188,7 +188,7 @@ export const SolanaPaymentView: React.FC<SolanaPaymentViewProps> = ({
         <div className="space-y-2">
           <p className="text-sm font-medium text-foreground">Select token</p>
           <Select value={selectedToken?.symbol ?? ''} onValueChange={handleTokenChange}>
-            <SelectTrigger>
+            <SelectTrigger className="border border-border/60 bg-transparent">
               <SelectValue placeholder="Select token" />
             </SelectTrigger>
             <SelectContent className="max-h-64">
@@ -228,9 +228,9 @@ export const SolanaPaymentView: React.FC<SolanaPaymentViewProps> = ({
             variant="ghost"
             onClick={handleClose}
             disabled={paymentState === 'processing' || paymentState === 'confirming'}
-            className="h-8 px-2 text-sm"
+            className="h-8 px-3 text-sm"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back
+            Back
           </Button>
         )}
       </div>

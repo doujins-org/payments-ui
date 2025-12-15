@@ -1,19 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { CreditCard, Loader2, MapPin, User } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import type { BillingDetails } from '../types'
 import type { CollectJSResponse } from '../types/collect'
 import { usePaymentContext } from '../context/PaymentContext'
 import { countries } from '../data/countries'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Label } from '../components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '../components/ui/select'
 import { cn } from '../lib/utils'
 import { defaultBillingDetails } from '../constants/billing'
 
@@ -216,11 +216,9 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
         </div>
       )}
 
-      <div className="grid gap-5 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="payments-first" className="flex items-center gap-2 text-white/70">
-            <User className="h-4 w-4" /> First name
-          </Label>
+      <div className="flex flex-col gap-4 md:flex-row">
+        <div className="flex-1 space-y-2">
+          <Label htmlFor="payments-first">First name</Label>
           <Input
             id="payments-first"
             value={firstName}
@@ -228,10 +226,8 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
             required
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="payments-last" className="flex items-center gap-2 text-white/70">
-            <User className="h-4 w-4" /> Last name
-          </Label>
+        <div className="flex-1 space-y-2">
+          <Label htmlFor="payments-last">Last name</Label>
           <Input
             id="payments-last"
             value={lastName}
@@ -284,9 +280,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
 
       <div className="grid gap-5 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="payments-postal" className="flex items-center gap-2 text-white/70">
-            <MapPin className="h-4 w-4" /> Postal code
-          </Label>
+          <Label htmlFor="payments-postal">Postal code</Label>
           <Input
             id="payments-postal"
             value={postalCode}
@@ -337,14 +331,12 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
             <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing…
           </>
         ) : (
-          <>
-            <CreditCard className="mr-2 h-4 w-4" /> {submitLabel}
-          </>
+          submitLabel
         )}
       </Button>
 
-      <p className="flex items-center gap-2 text-xs text-white/50">
-        <CreditCard className="h-4 w-4" /> Your payment information is encrypted and processed securely.
+      <p className="text-xs text-white/60">
+        Your payment information is encrypted and processed securely.
       </p>
     </form>
   )

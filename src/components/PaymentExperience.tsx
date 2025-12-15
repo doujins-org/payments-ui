@@ -3,8 +3,8 @@ import { Sparkles } from 'lucide-react'
 import type { BillingDetails, PaymentMethod, SubmitPaymentResponse } from '../types'
 import { CardDetailsForm } from './CardDetailsForm'
 import { StoredPaymentMethods } from './StoredPaymentMethods'
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '../components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { usePaymentNotifications } from '../hooks/usePaymentNotifications'
 import { SolanaPaymentView } from './SolanaPaymentView'
 
@@ -160,11 +160,9 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
     return (
       <div className="space-y-4">
         <StoredPaymentMethods
-          heading="Saved cards"
+          showAddButton={false}
           selectedMethodId={selectedMethodId}
           onMethodSelect={handleMethodSelect}
-          description="Select one of your stored payment methods."
-          showAddButton={false}
         />
 
         <Button
@@ -172,7 +170,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
           disabled={!selectedMethodId || savedStatus === 'processing'}
           onClick={handleSavedPayment}
         >
-          {savedStatus === 'processing' ? 'Processing…' : 'Pay with selected card'}
+          {savedStatus === 'processing' ? 'Processing...' : 'Pay with selected card'}
         </Button>
         {savedError && <p className="text-sm text-destructive">{savedError}</p>}
       </div>
@@ -214,10 +212,11 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
             Add new card
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="saved" className="space-y-4">
+
+        <TabsContent value="saved">
           {renderSavedTab()}
         </TabsContent>
-        <TabsContent value="new" className="space-y-4">
+        <TabsContent value="new">
           {renderNewTab()}
         </TabsContent>
       </Tabs>

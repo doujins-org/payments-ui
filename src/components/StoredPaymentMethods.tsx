@@ -1,18 +1,18 @@
 import React, { useMemo, useState } from 'react'
-import { CreditCard, Loader2, Trash2, WalletCards } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { CardDetailsForm } from './CardDetailsForm'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
 import type { BillingDetails, PaymentMethod } from '../types'
-import { Button } from '@/components/ui/button'
+import { Button } from '../components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
+} from '../components/ui/dialog'
+import { Badge } from '../components/ui/badge'
+import { ScrollArea } from '../components/ui/scroll-area'
 import { cn } from '../lib/utils'
 
 const formatCardLabel = (method: PaymentMethod): string => {
@@ -33,8 +33,6 @@ export const StoredPaymentMethods: React.FC<StoredPaymentMethodsProps> = ({
   selectedMethodId,
   onMethodSelect,
   showAddButton = true,
-  heading = 'Payment Methods',
-  description = 'Manage your saved cards',
 }) => {
   const { listQuery, createMutation, deleteMutation } = usePaymentMethods()
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -58,54 +56,50 @@ export const StoredPaymentMethods: React.FC<StoredPaymentMethodsProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <WalletCards className="h-4 w-4" /> {heading}
-          </p>
-          <p className="text-xs text-muted-foreground">{description}</p>
-        </div>
+      <div className="flex items-start justify-between gap-4">
         {showAddButton && (
-          <Button size="sm" variant="outline" onClick={() => setIsModalOpen(true)}>
-            <CreditCard className="mr-2 h-4 w-4" /> Add card
+          <Button size="sm" variant="ghost" onClick={() => setIsModalOpen(true)}>
+            Add card
           </Button>
         )}
       </div>
-        {listQuery.isLoading ? (
-          <div className="flex items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/10 py-8 text-sm text-muted-foreground">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading cards…
-          </div>
-        ) : payments.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border/60 bg-muted/10 px-4 py-6 text-sm text-muted-foreground">
-            No saved payment methods yet.
-          </div>
-        ) : (
-          <ScrollArea className="max-h-[320px] pr-2">
-            <div className="space-y-3">
-              {payments.map((method) => {
-                const isSelected = selectedMethodId === method.id
-                return (
-                  <div
-                    key={method.id}
-                    className={cn(
-                      'flex flex-col gap-3 rounded-lg border px-4 py-3 transition-colors md:flex-row md:items-center md:justify-between',
-                      isSelected
-                        ? 'border-primary/60 bg-primary/5'
-                        : 'border-border/60 bg-background'
-                    )}
-                  >
-                    <div className="space-y-1">
-                      <p className="text-sm font-semibold text-foreground">
-                        {formatCardLabel(method)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Added on{' '}
-                        {method.created_at
-                          ? new Date(method.created_at).toLocaleDateString()
-                          : 'unknown'}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
+
+      {listQuery.isLoading ? (
+        <div className="flex items-center justify-center py-4 text-sm text-muted-foreground">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading cards...
+        </div>
+      ) : payments.length === 0 ? (
+        <div className="p-4 text-center text-sm text-muted-foreground">
+          No saved payment methods yet.
+        </div>
+      ) : (
+        <ScrollArea className="max-h-[320px] pr-2">
+          <div className="space-y-3">
+            {payments.map((method) => {
+              const isSelected = selectedMethodId === method.id
+
+              return (
+                <div
+                  key={method.id}
+                  className={cn(
+                    'flex flex-col gap-3 rounded-md px-4 py-3 transition-colors md:flex-row md:items-center md:justify-between',
+                    isSelected
+                      ? 'ring-1 ring-primary/70 bg-primary/5'
+                      : 'ring-1 ring-border/40 bg-transparent'
+                  )}
+                >
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-foreground">
+                      {formatCardLabel(method)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Added on{' '}
+                      {method.created_at
+                        ? new Date(method.created_at).toLocaleDateString()
+                        : 'unknown'}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
                       <Badge
                         variant={method.is_active ? 'default' : 'secondary'}
                         className={cn(
@@ -122,24 +116,23 @@ export const StoredPaymentMethods: React.FC<StoredPaymentMethodsProps> = ({
                       {onMethodSelect && (
                         <Button
                           size="sm"
-                          variant={isSelected ? 'default' : 'outline'}
+                          variant="ghost"
+                          className="px-3"
                           onClick={() => onMethodSelect(method)}
                         >
                           {isSelected ? 'Selected' : 'Use card'}
                         </Button>
                       )}
                       <Button
-                        size="icon"
-                        variant="outline"
-                        className="text-destructive"
+                        size="sm"
+                        variant="ghost"
+                        className="px-3 text-destructive"
                         onClick={() => handleDelete(method)}
                         disabled={deletingId === method.id && deleteMutation.isPending}
                       >
-                        {deletingId === method.id && deleteMutation.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
+                        {deletingId === method.id && deleteMutation.isPending
+                          ? 'Removing…'
+                          : 'Remove'}
                       </Button>
                     </div>
                   </div>
@@ -147,7 +140,7 @@ export const StoredPaymentMethods: React.FC<StoredPaymentMethodsProps> = ({
               })}
             </div>
           </ScrollArea>
-        )}
+      )}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader>

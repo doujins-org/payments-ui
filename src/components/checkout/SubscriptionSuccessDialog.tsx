@@ -5,8 +5,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+} from '../../components/ui/dialog'
+import { Button } from '../../components/ui/button'
 import { CheckCircle } from 'lucide-react'
 
 interface SubscriptionSuccessDialogProps {

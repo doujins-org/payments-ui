@@ -259,7 +259,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
             <Loader2 className="mr-2 h-5 w-5 animate-spin" /> {t.loadingCards}
           </div>
         ) : payments.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-white/20 bg-white/5 p-6 text-sm text-white/60">
+          <div className="p-6 text-sm text-center">
             {t.noPaymentMethods}
           </div>
         ) : (
