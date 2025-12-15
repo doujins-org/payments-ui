@@ -251,9 +251,13 @@ export const createClient = (config: ClientConfig) => {
       })
     },
 
-    checkout(payload: CheckoutRequestPayload): Promise<CheckoutResponse> {
+    checkout(payload: CheckoutRequestPayload, idempotencyKey?: string): Promise<CheckoutResponse> {
+      const key = idempotencyKey ?? crypto.randomUUID()
       return request('POST', '/me/checkout', {
         body: payload,
+        headers: {
+          'Idempotency-Key': key,
+        },
       })
     },
 

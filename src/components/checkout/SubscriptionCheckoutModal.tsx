@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { AlertCircle } from 'lucide-react'
 import { PaymentExperience } from '../PaymentExperience'
@@ -40,7 +40,16 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
   initialMode = 'cards',
 }) => {
   const [showSuccess, setShowSuccess] = useState(false)
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID())
   const { subscribeWithCard, subscribeWithSavedMethod } = useSubscriptionActions()
+
+  // Generate a new idempotency key when the modal opens or priceId changes
+  // This ensures retries use the same key, but new checkout attempts get fresh keys
+  useEffect(() => {
+    if (open) {
+      setIdempotencyKey(crypto.randomUUID())
+    }
+  }, [open, priceId])
 
   const handleClose = useCallback(
     (nextOpen: boolean) => {
@@ -78,6 +87,7 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
       provider,
       paymentToken: token,
       billing,
+      idempotencyKey,
     })
     assertCheckoutSuccess(response.status, response.message)
     notifySuccess()
@@ -89,6 +99,7 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
       provider,
       paymentMethodId,
       email: userEmail ?? '',
+      idempotencyKey,
     })
     assertCheckoutSuccess(response.status, response.message)
     notifySuccess()

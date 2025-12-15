@@ -12,6 +12,7 @@ export interface SubscribeWithCardParams {
   provider?: string
   paymentToken: string
   billing: BillingDetails
+  idempotencyKey?: string
 }
 
 export interface SubscribeWithSavedMethodParams {
@@ -20,6 +21,7 @@ export interface SubscribeWithSavedMethodParams {
   provider?: string
   paymentMethodId: string
   email?: string
+  idempotencyKey?: string
 }
 
 export interface SubscribeWithCCBillParams {
@@ -30,6 +32,7 @@ export interface SubscribeWithCCBillParams {
   zipCode: string
   country: string
   processor?: string
+  idempotencyKey?: string
 }
 
 export const useSubscriptionActions = () => {
@@ -49,6 +52,7 @@ export const useSubscriptionActions = () => {
       provider,
       paymentToken,
       billing,
+      idempotencyKey,
     }: SubscribeWithCardParams): Promise<CheckoutResponse> => {
       const payload: CheckoutRequestPayload = {
         price_id: ensurePrice(priceId),
@@ -64,7 +68,7 @@ export const useSubscriptionActions = () => {
         zip: billing.postalCode,
         country: billing.country,
       }
-      return client.checkout(payload)
+      return client.checkout(payload, idempotencyKey)
     },
     [client]
   )
@@ -76,6 +80,7 @@ export const useSubscriptionActions = () => {
       provider,
       paymentMethodId,
       email,
+      idempotencyKey,
     }: SubscribeWithSavedMethodParams): Promise<CheckoutResponse> => {
       const payload: CheckoutRequestPayload = {
         price_id: ensurePrice(priceId),
@@ -84,7 +89,7 @@ export const useSubscriptionActions = () => {
         payment_method_id: paymentMethodId,
         email,
       }
-      return client.checkout(payload)
+      return client.checkout(payload, idempotencyKey)
     },
     [client]
   )
@@ -98,6 +103,7 @@ export const useSubscriptionActions = () => {
       zipCode,
       country,
       processor = 'ccbill',
+      idempotencyKey,
     }: SubscribeWithCCBillParams): Promise<CheckoutResponse> => {
       const payload: CheckoutRequestPayload = {
         price_id: ensurePrice(priceId),
@@ -108,7 +114,7 @@ export const useSubscriptionActions = () => {
         zip: zipCode,
         country,
       }
-      return client.checkout(payload)
+      return client.checkout(payload, idempotencyKey)
     },
     [client]
   )
