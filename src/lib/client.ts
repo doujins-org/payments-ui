@@ -106,18 +106,22 @@ export const createClient = (config: ClientConfig) => {
 
   const buildUrl = (
     path: string,
-    query: Record<string, string | number | boolean | undefined> | undefined,
+    query: Record<string, string | number | boolean | undefined> | undefined
   ): string => {
-    path = path.replace(/^\/+|\/+$/g, '')
-    const baseUrl = config.baseUrl.replace(/^\/+|\/+$/g, '')
-    
-    const url = new URL(`${baseUrl}${path.endsWith("v1") ? "/" : "/v1/"}${path}`)
+    const sanitizedPath = path.replace(/^\/+/, '')
+    const baseUrl = config.baseUrl.trim().replace(/\/+$/, '')
+    const versionedBaseUrl = baseUrl.endsWith('/v1')
+      ? baseUrl
+      : `${baseUrl}/v1`
+
+    const url = new URL(sanitizedPath, `${versionedBaseUrl.replace(/\/+$/, '')}/`)
     if (query) {
-      Object.entries(query).forEach(([key, value]) => {
-        if (value === undefined || value === null) return
+      for (const [key, value] of Object.entries(query)) {
+        if (value === undefined || value === null) continue
         url.searchParams.append(key, String(value))
-      })
+      }
     }
+
     return url.toString()
   }
 
