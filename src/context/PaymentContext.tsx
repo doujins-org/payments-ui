@@ -77,13 +77,10 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
       : undefined
 
     return createClient({
-      billingBaseUrl: config.endpoints.billingBaseUrl,
-      billingBasePath: config.endpoints.billingBasePath,
-      accountBaseUrl: config.endpoints.accountBaseUrl,
-      accountBasePath: config.endpoints.accountBasePath,
-      getAuthToken: authProvider,
-      defaultHeaders: config.defaultHeaders,
       fetch: wrappedFetch,
+      getAuthToken: authProvider,
+      baseUrl: config.baseUrl,
+      defaultHeaders: config.defaultHeaders,
     })
   }, [config])
 

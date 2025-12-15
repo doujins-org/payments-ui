@@ -4,7 +4,7 @@
  * Usage:
  * ```ts
  * const client = createClient({
- *   billingBaseUrl: 'https://billing.example.com',
+ *   baseUrl: 'https://billing.example.com',
  *   getAuthToken: () => authStore.token,
  * })
  *
@@ -31,20 +31,16 @@ import type {
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
 export interface ClientConfig {
-  billingBaseUrl: string
-  billingBasePath?: string
-  accountBaseUrl?: string
-  accountBasePath?: string
+  baseUrl: string
   getAuthToken?: () => string | null | Promise<string | null>
   defaultHeaders?: Record<string, string>
   fetch?: typeof fetch
 }
 
 export interface RequestOptions {
-  query?: Record<string, string | number | boolean | undefined>
   body?: unknown
   headers?: Record<string, string>
-  target?: 'billing' | 'account'
+  query?: Record<string, string | number | boolean | undefined>
 }
 
 export interface PaginatedResponse<T> {
@@ -84,32 +80,19 @@ interface ListResponse<T> {
   has_more?: boolean
 }
 
-const ensureFetch = (fetchImpl?: typeof fetch): typeof fetch => {
+const getFetchFn = (fetchImpl?: typeof fetch): typeof fetch => {
   if (fetchImpl) return fetchImpl
   if (typeof globalThis.fetch === 'function') {
     return globalThis.fetch.bind(globalThis)
   }
+
   throw new Error('payments-ui: global fetch is not available')
 }
 
 export const createClient = (config: ClientConfig) => {
-  const fetchImpl = ensureFetch(config.fetch)
-  const normalizeBase = (value: string) => value.replace(/\/$/, '')
-  const normalizePath = (value?: string, fallback = '/v1') => {
-    if (!value) return fallback
-    return value.startsWith('/') ? value : `/${value}`
-  }
+  const fetchImpl = getFetchFn(config.fetch)
 
-  const billingBaseUrl = normalizeBase(config.billingBaseUrl)
-  const accountBaseUrl = normalizeBase(
-    config.accountBaseUrl ?? config.billingBaseUrl
-  )
-  const billingBasePath = normalizePath(config.billingBasePath ?? '/v1')
-  const accountBasePath = normalizePath(
-    config.accountBasePath ?? config.billingBasePath ?? '/v1'
-  )
   const defaultHeaders = config.defaultHeaders ?? {}
-
   const resolveAuthToken = async (): Promise<string | null> => {
     if (!config.getAuthToken) return null
     try {
@@ -124,14 +107,9 @@ export const createClient = (config: ClientConfig) => {
   const buildUrl = (
     path: string,
     query: Record<string, string | number | boolean | undefined> | undefined,
-    target: 'billing' | 'account'
   ): string => {
-    const normalizedPath = path.startsWith('/') ? path : `/${path}`
-    const basePath = target === 'account' ? accountBasePath : billingBasePath
-    const baseUrl = target === 'account' ? accountBaseUrl : billingBaseUrl
-    const needsBasePrefix = !normalizedPath.startsWith(basePath)
-    const finalPath = needsBasePrefix ? `${basePath}${normalizedPath}` : normalizedPath
-    const url = new URL(`${baseUrl}${finalPath}`)
+    path = path.replace(/^\/+/, '')
+    const url = new URL(`${config.baseUrl.replace(/^\/+/, '')}${path.endsWith("v1") ? "" : "/v1"}${path}`)
     if (query) {
       Object.entries(query).forEach(([key, value]) => {
         if (value === undefined || value === null) return
@@ -146,8 +124,7 @@ export const createClient = (config: ClientConfig) => {
     path: string,
     options?: RequestOptions
   ): Promise<T> => {
-    const target = options?.target ?? 'billing'
-    const url = buildUrl(path, options?.query, target)
+    const url = buildUrl(path, options?.query)
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...defaultHeaders,
@@ -216,7 +193,7 @@ export const createClient = (config: ClientConfig) => {
             offset: params?.offset,
             include_inactive: params?.includeInactive,
           },
-          target: 'account',
+
         }
       )
       return normalizeList(result)
@@ -225,7 +202,7 @@ export const createClient = (config: ClientConfig) => {
     createPaymentMethod(payload: CreatePaymentMethodPayload): Promise<PaymentMethod> {
       return request('POST', '/me/payment-methods', {
         body: payload,
-        target: 'account',
+
       })
     },
 
@@ -235,19 +212,19 @@ export const createClient = (config: ClientConfig) => {
     ): Promise<PaymentMethod> {
       return request('PUT', `/me/payment-methods/${id}`, {
         body: payload,
-        target: 'account',
+
       })
     },
 
     deletePaymentMethod(id: string): Promise<void> {
       return request<void>('DELETE', `/me/payment-methods/${id}`, {
-        target: 'account',
+
       })
     },
 
     activatePaymentMethod(id: string): Promise<void> {
       return request<void>('PUT', `/me/payment-methods/${id}/activate`, {
-        target: 'account',
+
       })
     },
 

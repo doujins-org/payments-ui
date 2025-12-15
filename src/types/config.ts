@@ -17,13 +17,6 @@ export interface PaymentUserDetails {
   country?: string
 }
 
-export interface PaymentEndpoints {
-  billingBaseUrl: string
-  accountBaseUrl?: string
-  billingBasePath?: string
-  accountBasePath?: string
-}
-
 export interface PaymentFeatureFlags {
   enableCardPayments?: boolean
   enableStoredMethods?: boolean
@@ -62,7 +55,7 @@ export type PaymentFetcher = (
 ) => Promise<Response>
 
 export interface PaymentConfig {
-  endpoints: PaymentEndpoints
+  baseUrl: string
   getAuthToken?: AuthTokenProvider
   fetcher?: PaymentFetcher
   defaultHeaders?: Record<string, string>
