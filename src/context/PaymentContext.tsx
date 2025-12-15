@@ -78,8 +78,8 @@ export const PaymentProvider: React.FC<PaymentProviderProps> = ({
 
     return createClient({
       fetch: wrappedFetch,
-      getAuthToken: authProvider,
       baseUrl: config.baseUrl,
+      getAuthToken: authProvider,
       defaultHeaders: config.defaultHeaders,
     })
   }, [config])

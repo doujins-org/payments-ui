@@ -108,8 +108,10 @@ export const createClient = (config: ClientConfig) => {
     path: string,
     query: Record<string, string | number | boolean | undefined> | undefined,
   ): string => {
-    path = path.replace(/^\/+/, '')
-    const url = new URL(`${config.baseUrl.replace(/^\/+/, '')}${path.endsWith("v1") ? "" : "/v1"}${path}`)
+    path = path.replace(/^\/+|\/+$/g, '')
+    const baseUrl = config.baseUrl.replace(/^\/+|\/+$/g, '')
+    
+    const url = new URL(`${baseUrl}${path.endsWith("v1") ? "/" : "/v1/"}${path}`)
     if (query) {
       Object.entries(query).forEach(([key, value]) => {
         if (value === undefined || value === null) return
