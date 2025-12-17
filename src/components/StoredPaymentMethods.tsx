@@ -14,6 +14,7 @@ import {
 import { Badge } from '../components/ui/badge'
 import { ScrollArea } from '../components/ui/scroll-area'
 import { cn } from '../lib/utils'
+import clsx from 'clsx'
 
 const formatCardLabel = (method: PaymentMethod): string => {
   const brand = method.card_type ? method.card_type.toUpperCase() : 'CARD'
@@ -34,9 +35,9 @@ export const StoredPaymentMethods: React.FC<StoredPaymentMethodsProps> = ({
   onMethodSelect,
   showAddButton = true,
 }) => {
-  const { listQuery, createMutation, deleteMutation } = usePaymentMethods()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const { listQuery, createMutation, deleteMutation } = usePaymentMethods()
 
   const payments = useMemo(() => listQuery.data?.data ?? [], [listQuery.data])
 
@@ -82,65 +83,36 @@ export const StoredPaymentMethods: React.FC<StoredPaymentMethodsProps> = ({
                 <div
                   key={method.id}
                   className={cn(
-                    'flex flex-col gap-3 rounded-md px-4 py-3 transition-colors md:flex-row md:items-center md:justify-between',
-                    isSelected
-                      ? 'ring-1 ring-primary/70 bg-primary/5'
-                      : 'ring-1 ring-border/40 bg-transparent'
+                    'flex border border-border rounded-md px-4 py-3 flex-row items-center justify-between', {
+                    'bg-primary/5': isSelected
+                  }
                   )}
                 >
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold text-foreground">
-                      {formatCardLabel(method)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Added on{' '}
-                      {method.created_at
-                        ? new Date(method.created_at).toLocaleDateString()
-                        : 'unknown'}
-                    </p>
+                  <div className="text-sm font-semibold text-foreground">
+                    {formatCardLabel(method)}
                   </div>
+
                   <div className="flex flex-wrap items-center gap-2">
-                      <Badge
-                        variant={method.is_active ? 'default' : 'secondary'}
-                        className={cn(
-                          method.is_active
-                            ? 'bg-primary/20 text-primary'
-                            : 'bg-muted text-muted-foreground'
-                        )}
-                      >
-                        {method.is_active ? 'Active' : 'Inactive'}
-                      </Badge>
-                      {method.failure_reason && (
-                        <Badge variant="destructive">{method.failure_reason}</Badge>
-                      )}
-                      {onMethodSelect && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="px-3"
-                          onClick={() => onMethodSelect(method)}
-                        >
-                          {isSelected ? 'Selected' : 'Use card'}
-                        </Button>
-                      )}
+                    {method.failure_reason && (<Badge variant="destructive">{method.failure_reason}</Badge>)}
+
+                    {onMethodSelect && (
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="px-3 text-destructive"
-                        onClick={() => handleDelete(method)}
-                        disabled={deletingId === method.id && deleteMutation.isPending}
+                        onClick={() => onMethodSelect(method)}
+                        className={clsx('px-3', { 'bg-muted/90': !isSelected, 'bg-background': isSelected })}
                       >
-                        {deletingId === method.id && deleteMutation.isPending
-                          ? 'Removing…'
-                          : 'Remove'}
+                        {isSelected ? 'Selected' : 'Use card'}
                       </Button>
-                    </div>
+                    )}
                   </div>
-                )
-              })}
-            </div>
-          </ScrollArea>
+                </div>
+              )
+            })}
+          </div>
+        </ScrollArea>
       )}
+
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader>

@@ -53,7 +53,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   const [savedError, setSavedError] = useState<string | null>(null)
   const [newCardStatus, setNewCardStatus] = useState<AsyncStatus>('idle')
   const [newCardError, setNewCardError] = useState<string | null>(null)
-  const { notifyStatus, notifySuccess, notifyError } = usePaymentNotifications()
+  const { notifyStatus, notifyError } = usePaymentNotifications()
 
   useEffect(() => {
     setActiveTab(showStored ? 'saved' : 'new')

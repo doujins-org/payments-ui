@@ -120,11 +120,11 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
     <>
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent 
-          className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 [&::-webkit-scrollbar]:hidden"
+          className="max-w-3xl max-h-[90vh] overflow-y-auto border-none p-0 [&::-webkit-scrollbar]:hidden"
         >
           <div className="p-6 space-y-6">
             {!priceId && (
-              <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-destructive">
                 <AlertCircle className="h-4 w-4" /> Select a subscription plan to continue.
               </div>
             )}
