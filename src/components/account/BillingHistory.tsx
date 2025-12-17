@@ -165,7 +165,7 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
                 {enableCancel && <CancelMembershipDialog onNotify={notify} />}
               </div>
 
-              <div className="max-h-[300px] overflow-y-auto rounded-lg border border-border/70">
+              <div className="max-h-[300px] overflow-y-auto rounded-lg border ">
                 <div className="overflow-x-auto">
                   {historyQuery.isLoading ? (
                     <p className="p-4 text-center text-sm text-muted-foreground">{t.loading}</p>
@@ -174,7 +174,7 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
                   ) : (
                     <Table>
                       <TableHeader>
-                        <TableRow className="border-border/60">
+                        <TableRow className="">
                           <TableHead>{t.reference}</TableHead>
                           <TableHead>{t.date}</TableHead>
                           <TableHead>{t.amount}</TableHead>
@@ -185,7 +185,7 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
                       <TableBody>
                         {payments.map((page) =>
                           page.data.map((payment) => (
-                            <TableRow key={payment.id} className="border-border/40">
+                            <TableRow key={payment.id} className="">
                               <TableCell className="font-mono text-sm">
                                 {payment.id.slice(0, 7).toUpperCase()}
                               </TableCell>

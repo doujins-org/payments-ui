@@ -41,14 +41,14 @@ export const QRCodePayment: React.FC<QRCodePaymentProps> = ({
 
   if (!selectedToken) {
     return (
-      <div className="rounded-md border border-dashed border-border/60 bg-muted/10 px-4 py-6 text-center text-sm text-muted-foreground">
+      <div className="rounded-md border border-dashed bg-muted/10 px-4 py-6 text-center text-sm text-muted-foreground">
         Select a token to continue.
       </div>
     )
   }
 
   return (
-    <Card className="space-y-4 border border-border/60 bg-background/80 p-6 shadow-none rounded-md">
+    <Card className="space-y-4 border bg-background/80 p-6 shadow-none rounded-md">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-semibold text-foreground">Scan with Solana Pay</p>
@@ -77,9 +77,9 @@ export const QRCodePayment: React.FC<QRCodePaymentProps> = ({
         </div>
       )}
 
-      <div className="flex items-center justify-center rounded-2xl border border-dashed border-border/70 bg-muted/5 p-6">
+      <div className="flex items-center justify-center rounded-2xl border border-dashed bg-muted/5 p-6">
         {qrDataUri ? (
-          <img src={qrDataUri} alt="Solana Pay QR" className="h-72 w-72 rounded-lg border border-border/40 bg-card" />
+          <img src={qrDataUri} alt="Solana Pay QR" className="h-72 w-72 rounded-lg border bg-card" />
         ) : (
           <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
             {isLoading ? (

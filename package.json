@@ -11,14 +11,13 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    },
-    "./styles.css": "./dist/styles.css"
+    }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup --config tsup.config.ts && tailwindcss -i ./src/styles.css -o dist/styles.css --minify",
+    "build": "tsup --config tsup.config.ts",
     "dev": "tsup --config tsup.config.ts --watch",
     "prepublishOnly": "pnpm build",
     "typecheck": "tsc --noEmit"

@@ -198,49 +198,41 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   }
 
   const renderCardExperience = () => (
-    <>
-      <Tabs
-        value={activeTab}
-        onValueChange={(value) => setActiveTab(value as 'saved' | 'new')}
-        className="space-y-3"
-      >
-        <TabsList className="grid w-full grid-cols-2 border border-border/60">
-          <TabsTrigger value="saved" disabled={!showStored}>
-            Use saved card
-          </TabsTrigger>
-          <TabsTrigger value="new" disabled={!showNewCard}>
-            Add new card
-          </TabsTrigger>
-        </TabsList>
+    <Tabs
+      value={activeTab}
+      onValueChange={(value) => setActiveTab(value as 'saved' | 'new')}
+    >
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="saved" disabled={!showStored}>
+          Use saved card
+        </TabsTrigger>
 
-        <TabsContent value="saved">
-          {renderSavedTab()}
-        </TabsContent>
-        <TabsContent value="new">
-          {renderNewTab()}
-        </TabsContent>
-      </Tabs>
+        <TabsTrigger value="new" disabled={!showNewCard}>
+          Add new card
+        </TabsTrigger>
+      </TabsList>
 
-      {enableSolanaPay && (
-        <Button className="w-full" variant="secondary" onClick={showSolanaView}>
-          <Sparkles className="mr-2 h-4 w-4" /> Pay with Solana
-        </Button>
-      )}
-    </>
+      <TabsContent value="saved">
+        {renderSavedTab()}
+      </TabsContent>
+      <TabsContent value="new">
+        {renderNewTab()}
+      </TabsContent>
+    </Tabs>
   )
 
-	return (
-		<div className="space-y-6 pt-4">
-			{mode === 'cards' && renderCardExperience()}
-			{mode === 'solana' && enableSolanaPay && (
-				<SolanaPaymentView
-					priceId={priceId}
-					usdAmount={usdAmount}
-					onSuccess={handleSolanaSuccess}
-					onError={handleSolanaError}
-					onClose={exitSolanaView}
-				/>
-			)}
-		</div>
-	)
+  return (
+    <div className="space-y-6 pt-4">
+      {mode === 'cards' && renderCardExperience()}
+      {mode === 'solana' && enableSolanaPay && (
+        <SolanaPaymentView
+          priceId={priceId}
+          usdAmount={usdAmount}
+          onSuccess={handleSolanaSuccess}
+          onError={handleSolanaError}
+          onClose={exitSolanaView}
+        />
+      )}
+    </div>
+  )
 }

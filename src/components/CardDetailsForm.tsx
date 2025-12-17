@@ -202,7 +202,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
 
   const errorMessage = localError ?? externalError
   const collectFieldClass =
-    'flex h-11 w-full items-center rounded-md border border-white/10 bg-white/5 px-3 text-sm text-white'
+    'flex h-11 w-full items-center rounded-md border bg-white/5 px-3 text-sm text-white'
 
   return (
     <form

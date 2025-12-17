@@ -16,7 +16,7 @@ export const SolanaPaymentSelector: React.FC<SolanaPaymentSelectorProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={(value) => (value ? undefined : onClose())}>
-      <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-md border border-border/70 bg-background/95 p-0 shadow-2xl [&::-webkit-scrollbar]:hidden">
+      <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-md border bg-background/95 p-0 shadow-2xl [&::-webkit-scrollbar]:hidden">
         <SolanaPaymentView {...props} onClose={onClose} />
       </DialogContent>
     </Dialog>

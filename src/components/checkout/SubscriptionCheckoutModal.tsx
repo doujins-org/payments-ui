@@ -120,7 +120,7 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
     <>
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent 
-          className="max-w-3xl max-h-[90vh] overflow-y-auto border-none p-0 [&::-webkit-scrollbar]:hidden"
+          className="max-w-3xl max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden"
         >
           <div className="p-6 space-y-6">
             {!priceId && (

@@ -28,7 +28,7 @@ export const SubscriptionSuccessDialog: React.FC<SubscriptionSuccessDialogProps>
     <Dialog open={open} onOpenChange={(value) => {
       if (!value) onClose()
     }}>
-      <DialogContent className="w-full max-w-md overflow-hidden border border-border/70 bg-background/95 p-0 shadow-2xl">
+      <DialogContent className="w-full max-w-md overflow-hidden border bg-background/95 p-0 shadow-2xl">
         <div className="bg-gradient-to-b from-primary/25 via-primary/10 to-background px-6 py-8 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-background/60">
             <CheckCircle className="h-10 w-10 text-primary" />

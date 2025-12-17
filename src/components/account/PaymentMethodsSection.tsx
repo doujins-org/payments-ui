@@ -267,7 +267,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
             {payments.map((method) => (
               <div
                 key={method.id}
-                className="rounded-lg border border-white/10 bg-white/5 p-4 shadow-sm"
+                className="rounded-lg border bg-white/5 p-4 shadow-sm"
               >
                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                   <div>
@@ -357,7 +357,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
             }}
             externalError={createMutation.error?.message ?? null}
             onTokenize={handleCardTokenize}
-            className="rounded-2xl border border-white/10 bg-white/5 p-6"
+            className="rounded-2xl border bg-white/5 p-6"
           />
         </DialogContent>
       </Dialog>
@@ -382,7 +382,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
               }}
               externalError={replaceMutation.error?.message ?? null}
               onTokenize={handleReplaceTokenize}
-              className="rounded-2xl border border-white/10 bg-white/5 p-6"
+              className="rounded-2xl border bg-white/5 p-6"
             />
           )}
         </DialogContent>

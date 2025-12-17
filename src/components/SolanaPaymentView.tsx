@@ -188,7 +188,7 @@ export const SolanaPaymentView: React.FC<SolanaPaymentViewProps> = ({
         <div className="space-y-2">
           <p className="text-sm font-medium text-foreground">Select token</p>
           <Select value={selectedToken?.symbol ?? ''} onValueChange={handleTokenChange}>
-            <SelectTrigger className="border border-border/60 bg-transparent">
+            <SelectTrigger className="border bg-transparent">
               <SelectValue placeholder="Select token" />
             </SelectTrigger>
             <SelectContent className="max-h-64">

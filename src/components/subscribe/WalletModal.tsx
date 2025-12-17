@@ -38,8 +38,8 @@ export const WalletModal: React.FC<WalletModalProps> = ({ open, onOpenChange }) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-md border border-border/70 bg-background/95 p-0 shadow-2xl [&::-webkit-scrollbar]:hidden">
-        <DialogHeader className="border-b border-border/40 bg-gradient-to-r from-primary/10 via-background to-background px-6 py-5 text-left">
+      <DialogContent className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-md border bg-background/95 p-0 shadow-2xl [&::-webkit-scrollbar]:hidden">
+        <DialogHeader className="border-b bg-gradient-to-r from-primary/10 via-background to-background px-6 py-5 text-left">
           <DialogTitle className="flex items-center gap-2 text-foreground">
             <Wallet className="h-5 w-5 text-primary" /> Connect a Solana wallet
           </DialogTitle>
@@ -51,7 +51,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({ open, onOpenChange }) 
           {wallets.map((wallet) => (
             <div
               key={wallet.id}
-              className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm"
+              className="rounded-2xl border bg-background/80 p-4 shadow-sm"
             >
               <button
                 className="flex w-full items-center justify-between"
@@ -84,7 +84,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({ open, onOpenChange }) 
               )}
             </div>
           ))}
-          <div className="rounded-2xl border border-border/60 bg-muted/10 p-4 text-xs text-muted-foreground">
+          <div className="rounded-2xl border bg-muted/10 p-4 text-xs text-muted-foreground">
             Don’t see your wallet? Additional providers will be added soon. Contact support if you need manual verification.
           </div>
         </div>

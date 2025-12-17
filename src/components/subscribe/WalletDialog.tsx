@@ -88,7 +88,7 @@ export const WalletDialog: React.FC<WalletDialogProps> = ({ open, onOpenChange }
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="max-h-[95vh] max-w-lg overflow-y-auto rounded-2xl border border-border bg-background">
-        <AlertDialogHeader className="border-b border-border/60 pb-4">
+        <AlertDialogHeader className="border-b pb-4">
           <div className="flex items-center justify-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
             <AlertDialogTitle className="text-center text-base font-semibold uppercase tracking-wide">
@@ -148,7 +148,7 @@ export const WalletDialog: React.FC<WalletDialogProps> = ({ open, onOpenChange }
             </div>
           </div>
 
-          <div className="flex items-start gap-3 rounded-md border border-border/70 bg-muted/10 p-4">
+          <div className="flex items-start gap-3 rounded-md border bg-muted/10 p-4">
             <Checkbox id="terms-agree" checked={form.termsAccepted} onCheckedChange={(checked) => updateField('termsAccepted', Boolean(checked))} />
             <Label htmlFor="terms-agree" className="text-sm text-muted-foreground">
               By completing this order, I confirm that I am 18 years or older and agree to your privacy policy and terms.
