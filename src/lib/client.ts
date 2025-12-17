@@ -15,18 +15,14 @@
 import type {
   CheckoutRequestPayload,
   CheckoutResponse,
-} from '../types/subscription'
-import type {
   CreatePaymentMethodPayload,
   Payment,
   PaymentMethod,
-} from '../types/billing'
-import type {
   TokenInfo,
   PaymentStatusResponse,
   SolanaPayQRCodeIntent,
   SolanaPayStatusResponse,
-} from '../types/solana-pay'
+} from '../types'
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 

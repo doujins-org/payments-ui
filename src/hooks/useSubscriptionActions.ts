@@ -1,10 +1,10 @@
 import { useCallback } from 'react'
 import { usePaymentContext } from '../context/PaymentContext'
-import type { BillingDetails } from '../types/billing'
 import type {
+  BillingDetails,
   CheckoutRequestPayload,
   CheckoutResponse,
-} from '../types/subscription'
+} from '../types'
 
 export interface SubscribeWithCardParams {
   priceId?: string | null
