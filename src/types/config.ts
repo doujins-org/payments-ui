@@ -67,7 +67,10 @@ export interface PaymentConfig {
   solana?: PaymentSolanaConfig
 }
 
+export type PaymentMode = 'cards' | 'solana'
+
 export type NotificationStatus = 'default' | 'success' | 'info' | 'destructive'
+
 
 export interface NotificationPayload {
   title: string
@@ -76,3 +79,4 @@ export interface NotificationPayload {
 }
 
 export type NotificationHandler = (payload: NotificationPayload) => void
+

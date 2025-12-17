@@ -1,3 +1,7 @@
+export type PaymentPlatform = 'nmi' | 'ccbill'
+
+export type CheckoutStatus = 'success' | 'pending' | 'redirect_required' | 'blocked'
+
 export interface BillingDetails {
   firstName: string
   lastName: string
@@ -83,4 +87,101 @@ export interface BillingAccessGrant {
 export interface BillingStatus {
   is_premium: boolean
   access: BillingAccessGrant[]
+}
+
+export interface CheckoutResponse {
+  status: CheckoutStatus
+  message?: string
+  subscription_id?: string
+  payment_id?: string
+  transaction_id?: string
+  redirect_url?: string
+  delayed_start?: string
+}
+
+export interface CheckoutRequestPayload {
+  price_id: string
+  processor: string
+  payment_token?: string
+  payment_method_id?: string
+  provider?: string
+  email?: string
+  first_name?: string
+  last_name?: string
+  address1?: string
+  city?: string
+  state?: string
+  zip?: string
+  country?: string
+}
+
+export interface NmiSubscribePayload {
+  priceId: string
+  paymentToken?: string
+  paymentMethodId?: string
+  firstName?: string
+  lastName?: string
+  address1?: string
+  city?: string
+  state?: string
+  zipCode?: string
+  country?: string
+  email?: string
+  provider?: string
+  processor?: string
+}
+
+export interface CCBillSubscribePayload {
+  priceId: string
+  email: string
+  firstName: string
+  lastName: string
+  zipCode: string
+  country: string
+  processor?: string
+}
+
+export interface SubscriptionCheckoutPayload {
+  priceId: string
+  provider?: string
+  processor?: string
+  billing: BillingDetails
+}
+
+export interface SolanaWallet {
+  id: string
+  address: string
+  is_verified: boolean
+  verified_at?: string
+  created_at: string
+  updated_at?: string
+  user_id?: string
+}
+
+export interface WalletListResponse {
+  wallets: SolanaWallet[]
+  count: number
+}
+
+export interface WalletChallengeResponse {
+  wallet: string
+  message: string
+  expires_at: number
+  nonce: string
+}
+
+export interface VerifyWalletResponse {
+  verified: boolean
+  wallet: string
+  verified_at?: string
+  linked_wallet?: SolanaWallet
+}
+
+export interface WalletConnectionState {
+  isConnected: boolean
+  isConnecting: boolean
+  publicKey: string | null
+  wallets: SolanaWallet[]
+  isLoading: boolean
+  error: string | null
 }

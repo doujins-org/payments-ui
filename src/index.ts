@@ -1,6 +1,6 @@
 export * from './context/PaymentContext'
 export * from './context/PaymentsDialogContext'
-export * from './components/BillingThemeProvider'
+
 export * from './components/CardDetailsForm'
 export * from './components/StoredPaymentMethods'
 export * from './components/PaymentExperience'
@@ -12,7 +12,7 @@ export * from './components/account/PaymentMethodsSection'
 export type { BillingHistoryTranslations } from './components/account/BillingHistory'
 export type { CancelMembershipDialogTranslations } from './components/account/CancelMembershipDialog'
 export type { PaymentMethodsSectionTranslations } from './components/account/PaymentMethodsSection'
-// Solana wallet UI removed – exports omitted intentionally
+
 export * from './components/subscribe/WalletModal'
 export * from './components/subscribe/WalletDialog'
 export * from './components/checkout/SubscriptionCheckoutModal'
