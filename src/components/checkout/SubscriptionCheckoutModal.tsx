@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Dialog, DialogContent } from '../../components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog'
 import { AlertCircle } from 'lucide-react'
 import { PaymentExperience } from '../PaymentExperience'
 import { SubscriptionSuccessDialog } from './SubscriptionSuccessDialog'
@@ -119,28 +119,34 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent 
-          className="max-w-3xl max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden"
+        <DialogContent
+          className="max-w-3xl max-h-[90vh] overflow-y-auto border-border rounded-md [&::-webkit-scrollbar]:hidden"
         >
-          <div className="p-6 space-y-6">
-            {!priceId && (
-              <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-destructive">
-                <AlertCircle className="h-4 w-4" /> Select a subscription plan to continue.
+          <DialogHeader>
+            <DialogTitle>Checkout</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {!priceId ? (
+              <div className="flex items-center gap-2 text-center px-3 py-2 text-sm text-destructive">
+                <AlertCircle className="h-4 w-4" /> <span>Select a subscription plan to continue.</span>
               </div>
-            )}
-            
-            <PaymentExperience
-              usdAmount={usdAmount}
-              priceId={priceId ?? ''}
-              initialMode={initialMode}
-              onSolanaError={solanaError}
-              onSolanaSuccess={solanaSuccess}
-              enableNewCard={Boolean(priceId)}
-              enableStoredMethods={Boolean(priceId)}
-              enableSolanaPay={enableSolanaPay && Boolean(priceId)}
-              onNewCardPayment={priceId ? handleNewCardPayment : undefined}
-              onSavedMethodPayment={priceId ? handleSavedMethodPayment : undefined}
-            />
+            ) :
+              (
+                <PaymentExperience
+                  usdAmount={usdAmount}
+                  priceId={priceId ?? ''}
+                  initialMode={initialMode}
+                  onSolanaError={solanaError}
+                  onSolanaSuccess={solanaSuccess}
+                  enableNewCard={Boolean(priceId)}
+                  enableStoredMethods={Boolean(priceId)}
+                  enableSolanaPay={enableSolanaPay && Boolean(priceId)}
+                  onNewCardPayment={priceId ? handleNewCardPayment : undefined}
+                  onSavedMethodPayment={priceId ? handleSavedMethodPayment : undefined}
+                />
+              )
+            }
           </div>
         </DialogContent>
       </Dialog>
