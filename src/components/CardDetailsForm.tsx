@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '../components/ui/select'
 import { cn } from '../lib/utils'
+import { collectCssConfig, waitForCollectJs } from '../utils/collect'
 import { defaultBillingDetails } from '../constants/billing'
 
 export interface CardDetailsFormProps {
@@ -31,7 +32,6 @@ export interface CardDetailsFormProps {
 }
 
 const buildSelector = (prefix: string, field: string) => `#${prefix}-${field}`
-
 export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
   visible,
   onTokenize,
@@ -47,15 +47,15 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
   const { config } = usePaymentContext()
   const defaultValuesKey = useMemo(() => JSON.stringify(defaultValues ?? {}), [defaultValues])
 
-	const mergedDefaults: BillingDetails = useMemo(
-		() => ({
-			...defaultBillingDetails,
-			...defaultValues,
-			email:
-				defaultValues?.email ?? config.defaultUser?.email ?? defaultBillingDetails.email,
-		}),
-		[defaultValuesKey, config.defaultUser?.email]
-	)
+  const mergedDefaults: BillingDetails = useMemo(
+    () => ({
+      ...defaultBillingDetails,
+      ...defaultValues,
+      email:
+        defaultValues?.email ?? config.defaultUser?.email ?? defaultBillingDetails.email,
+    }),
+    [defaultValuesKey, config.defaultUser?.email]
+  )
 
   const [firstName, setFirstName] = useState(mergedDefaults.firstName)
   const [lastName, setLastName] = useState(mergedDefaults.lastName)
@@ -67,6 +67,21 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
   const [email, setEmail] = useState(mergedDefaults.email ?? '')
   const [localError, setLocalError] = useState<string | null>(null)
   const [isTokenizing, setIsTokenizing] = useState(false)
+  const [collectReady, setCollectReady] = useState(
+    typeof window !== 'undefined' && Boolean(window.CollectJS)
+  )
+
+  useEffect(() => {
+    if (collectReady) return
+    let active = true
+    waitForCollectJs().then((instance) => {
+      if (active && instance) {
+        setCollectReady(true)
+      }
+    })
+    
+    return () => { active = false }
+  }, [collectReady])
 
   useEffect(() => {
     if (!visible) {
@@ -113,8 +128,23 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
     onBillingChange,
   ])
 
+  const sanitizeCollectField = (field: { selector: string; [key: string]: unknown }) => {
+    const sanitized = { ...field }
+    if ('style_input' in sanitized || 'style_placeholder' in sanitized) {
+      delete sanitized.style_input
+      delete sanitized.style_placeholder
+      if (typeof window !== 'undefined') {
+        console.warn(
+          '[payments-ui] stripping unsupported Collect.js style fields',
+          Object.keys(field).filter((key) => key.startsWith('style_'))
+        )
+      }
+    }
+    return sanitized
+  }
+
   useEffect(() => {
-    if (typeof window === 'undefined' || !window.CollectJS || !visible) {
+    if (!collectReady || typeof window === 'undefined' || !window.CollectJS || !visible) {
       return
     }
 
@@ -145,10 +175,14 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
     if (!configured[collectPrefix]) {
       window.CollectJS.configure({
         variant: 'inline',
+        customCss: collectCssConfig.customCss,
+        focusCss: collectCssConfig.focusCss,
+        invalidCss: collectCssConfig.invalidCss,
+        placeholderCss: collectCssConfig.placeholderCss,
         fields: {
-          ccnumber: { selector: buildSelector(collectPrefix, 'ccnumber') },
-          ccexp: { selector: buildSelector(collectPrefix, 'ccexp') },
-          cvv: { selector: buildSelector(collectPrefix, 'cvv') },
+          ccnumber: sanitizeCollectField({ selector: buildSelector(collectPrefix, 'ccnumber') }),
+          ccexp: sanitizeCollectField({ selector: buildSelector(collectPrefix, 'ccexp') }),
+          cvv: sanitizeCollectField({ selector: buildSelector(collectPrefix, 'cvv') }),
         },
         callback: (response: CollectJSResponse) => {
           const fn = window.__doujinsCollectHandlers?.[collectPrefix]
@@ -159,6 +193,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
     }
   }, [
     collectPrefix,
+    collectReady,
     firstName,
     lastName,
     address1,
@@ -202,11 +237,11 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
 
   const errorMessage = localError ?? externalError
   const collectFieldClass =
-    'flex h-11 w-full items-center rounded-md border bg-white/5 px-3 text-sm text-white'
+    'relative flex h-11 w-full items-center overflow-hidden rounded-md border border-border/60 bg-background/40 px-3 text-sm text-foreground'
 
   return (
     <form
-      className={cn('space-y-5', className)}
+      className={cn('space-y-2', className)}
       onSubmit={handleSubmit}
       noValidate
     >
@@ -216,20 +251,21 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
         </div>
       )}
 
-      <div className="flex flex-col gap-4 md:flex-row">
+      <div className="flex flex-col gap-2 md:flex-row">
         <div className="flex-1 space-y-2">
-          <Label htmlFor="payments-first">First name</Label>
+          <Label htmlFor="firstName">First name</Label>
           <Input
-            id="payments-first"
+            id="firstName"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             required
           />
         </div>
+
         <div className="flex-1 space-y-2">
-          <Label htmlFor="payments-last">Last name</Label>
+          <Label htmlFor="lastName">Last name</Label>
           <Input
-            id="payments-last"
+            id="lastName"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             required
@@ -238,9 +274,9 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="payments-email">Email</Label>
+        <Label htmlFor="email">Email</Label>
         <Input
-          id="payments-email"
+          id="email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -249,45 +285,46 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="payments-address1">Address</Label>
+        <Label htmlFor="address1">Address</Label>
         <Input
-          id="payments-address1"
+          id="address1"
           value={address1}
           onChange={(e) => setAddress1(e.target.value)}
           required
         />
       </div>
 
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid gap-2 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="payments-city">City</Label>
+          <Label htmlFor="city">City</Label>
           <Input
-            id="payments-city"
+            id="city"
             value={city}
             onChange={(e) => setCity(e.target.value)}
             required
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="payments-state">State / Region</Label>
+          <Label htmlFor="state">State / Region</Label>
           <Input
-            id="payments-state"
+            id="state"
             value={stateRegion}
             onChange={(e) => setStateRegion(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid gap-2 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="payments-postal">Postal code</Label>
+          <Label htmlFor="postal">Postal code</Label>
           <Input
-            id="payments-postal"
+            id="postal"
             value={postalCode}
             onChange={(e) => setPostalCode(e.target.value)}
             required
           />
         </div>
+
         <div className="space-y-2">
           <Label>Country</Label>
           <Select value={country} onValueChange={setCountry}>
@@ -310,7 +347,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
         <div id={buildSelector(collectPrefix, 'ccnumber').slice(1)} className={collectFieldClass} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-2 md:grid-cols-2">
         <div className="space-y-2">
           <Label>Expiry</Label>
           <div id={buildSelector(collectPrefix, 'ccexp').slice(1)} className={collectFieldClass} />

@@ -1,7 +1,20 @@
+type CollectCssMap = Record<string, string | number>
+
 export interface CollectJSConfig {
   variant: 'inline' | string
-  fields: Record<string, { selector: string }>
+  fields: Record<
+    string,
+    {
+      selector: string
+      placeholder?: string
+    }
+  >
   callback: (response: CollectJSResponse) => void
+  customCss?: CollectCssMap
+  placeholderCss?: CollectCssMap
+  focusCss?: CollectCssMap
+  invalidCss?: CollectCssMap
+  validCss?: CollectCssMap
 }
 
 export interface CollectJSResponseCard {
