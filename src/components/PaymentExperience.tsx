@@ -160,7 +160,6 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
     return (
       <div className="space-y-4">
         <StoredPaymentMethods
-          showAddButton={false}
           selectedMethodId={selectedMethodId}
           onMethodSelect={handleMethodSelect}
         />

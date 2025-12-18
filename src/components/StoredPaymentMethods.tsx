@@ -1,16 +1,8 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo } from 'react'
 import { Loader2 } from 'lucide-react'
-import { CardDetailsForm } from './CardDetailsForm'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
-import type { BillingDetails, PaymentMethod } from '../types'
+import type { PaymentMethod } from '../types'
 import { Button } from '../components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '../components/ui/dialog'
 import { Badge } from '../components/ui/badge'
 import { ScrollArea } from '../components/ui/scroll-area'
 import { cn } from '../lib/utils'
@@ -25,7 +17,6 @@ const formatCardLabel = (method: PaymentMethod): string => {
 export interface StoredPaymentMethodsProps {
   selectedMethodId?: string | null
   onMethodSelect?: (method: PaymentMethod) => void
-  showAddButton?: boolean
   heading?: string
   description?: string
 }
@@ -33,38 +24,12 @@ export interface StoredPaymentMethodsProps {
 export const StoredPaymentMethods: React.FC<StoredPaymentMethodsProps> = ({
   selectedMethodId,
   onMethodSelect,
-  showAddButton = true,
 }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
-  const { listQuery, createMutation, deleteMutation } = usePaymentMethods()
-
+  const { listQuery } = usePaymentMethods()
   const payments = useMemo(() => listQuery.data?.data ?? [], [listQuery.data])
-
-  const handleCardTokenize = (token: string, billing: BillingDetails) => {
-    createMutation.mutate({ token, billing })
-  }
-
-  const handleDelete = (method: PaymentMethod) => {
-    setDeletingId(method.id)
-    deleteMutation.mutate(
-      { id: method.id },
-      {
-        onSettled: () => setDeletingId(null),
-      }
-    )
-  }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-4">
-        {showAddButton && (
-          <Button size="sm" variant="ghost" onClick={() => setIsModalOpen(true)}>
-            Add card
-          </Button>
-        )}
-      </div>
-
       {listQuery.isLoading ? (
         <div className="flex items-center justify-center py-4 text-sm text-muted-foreground">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading cards...
@@ -84,7 +49,7 @@ export const StoredPaymentMethods: React.FC<StoredPaymentMethodsProps> = ({
                   key={method.id}
                   className={cn(
                     'flex border border-border rounded-md px-4 py-3 flex-row items-center justify-between', {
-                    'bg-primary/5': isSelected
+                    'bg-muted/20': isSelected
                   }
                   )}
                 >
@@ -99,8 +64,9 @@ export const StoredPaymentMethods: React.FC<StoredPaymentMethodsProps> = ({
                       <Button
                         size="sm"
                         variant="ghost"
+                        disabled={isSelected}
                         onClick={() => onMethodSelect(method)}
-                        className={clsx('px-3', { 'bg-muted/90': !isSelected, 'bg-background': isSelected })}
+                        className={clsx('px-3', { 'bg-muted/90': !isSelected, 'bg-inherit': isSelected })}
                       >
                         {isSelected ? 'Selected' : 'Use card'}
                       </Button>
@@ -112,25 +78,6 @@ export const StoredPaymentMethods: React.FC<StoredPaymentMethodsProps> = ({
           </div>
         </ScrollArea>
       )}
-
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Add a new card</DialogTitle>
-            <DialogDescription>
-              Your card details are tokenized securely via our payment provider.
-            </DialogDescription>
-          </DialogHeader>
-          <CardDetailsForm
-            visible={isModalOpen}
-            collectPrefix="payments-ui-card"
-            submitting={createMutation.isPending}
-            submitLabel="Save card"
-            externalError={createMutation.error?.message ?? null}
-            onTokenize={handleCardTokenize}
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
