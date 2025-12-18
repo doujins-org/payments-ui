@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Sparkles } from 'lucide-react'
 import type { BillingDetails, PaymentMethod, SubmitPaymentResponse } from '../types'
 import { CardDetailsForm } from './CardDetailsForm'
 import { StoredPaymentMethods } from './StoredPaymentMethods'
@@ -7,6 +6,7 @@ import { Button } from '../components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { usePaymentNotifications } from '../hooks/usePaymentNotifications'
 import { SolanaPaymentView } from './SolanaPaymentView'
+import { clsx } from 'clsx'
 
 type AsyncStatus = 'idle' | 'processing' | 'success' | 'error'
 
@@ -44,7 +44,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   const showNewCard = enableNewCard && Boolean(onNewCardPayment)
   const showStored = enableStoredMethods && Boolean(onSavedMethodPayment)
   const defaultTab = showStored ? 'saved' : 'new'
-  const [activeTab, setActiveTab] = useState<'saved' | 'new'>(defaultTab)
+  const [activeTab, setActiveTab] = useState(defaultTab)
   const [mode, setMode] = useState<'cards' | 'solana'>(() =>
     initialMode === 'solana' && enableSolanaPay ? 'solana' : 'cards'
   )
@@ -198,16 +198,13 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   }
 
   const renderCardExperience = () => (
-    <Tabs
-      value={activeTab}
-      onValueChange={(value) => setActiveTab(value as 'saved' | 'new')}
-    >
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="saved" disabled={!showStored}>
+    <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <TabsList className='w-full rounded-md'>
+        <TabsTrigger className={clsx('cursor-pointer', { 'bg-background': activeTab == "saved" })} value="saved">
           Use saved card
         </TabsTrigger>
 
-        <TabsTrigger value="new" disabled={!showNewCard}>
+        <TabsTrigger className={clsx('cursor-pointer', { 'bg-background': activeTab == "new" })} value="new">
           Add new card
         </TabsTrigger>
       </TabsList>
@@ -219,6 +216,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
         {renderNewTab()}
       </TabsContent>
     </Tabs>
+
   )
 
   return (
