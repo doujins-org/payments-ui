@@ -37,21 +37,17 @@ export interface PaymentMethodsSectionTranslations {
   addedOn?: string
   active?: string
   inactive?: string
-  replaceCard?: string
   makeDefault?: string
   defaultMethod?: string
   remove?: string
   addNewCard?: string
   addNewCardDescription?: string
   saveCard?: string
-  replaceCardTitle?: string
-  replaceCardDescription?: string
   cardAddedSuccess?: string
   unableToAddCard?: string
   cardRemoved?: string
   unableToRemoveCard?: string
   cardUpdated?: string
-  unableToReplaceCard?: string
   defaultPaymentMethodUpdated?: string
   unableToSetDefault?: string
 }
@@ -86,21 +82,17 @@ const defaultTranslations: Required<PaymentMethodsSectionTranslations> = {
   addedOn: 'Added on',
   active: 'Active',
   inactive: 'Inactive',
-  replaceCard: 'Replace card',
   makeDefault: 'Make default',
   defaultMethod: 'Default method',
   remove: 'Remove',
   addNewCard: 'Add a new card',
   addNewCardDescription: 'Your card details are tokenized securely via our payment provider.',
   saveCard: 'Save card',
-  replaceCardTitle: 'Replace card',
-  replaceCardDescription: 'Update this card with new billing details.',
   cardAddedSuccess: 'Card added successfully',
   unableToAddCard: 'Unable to add card',
   cardRemoved: 'Card removed',
-  unableToRemoveCard: 'Unable to remove card',
   cardUpdated: 'Card updated',
-  unableToReplaceCard: 'Unable to replace card',
+  unableToRemoveCard: 'Unable to remove card',
   defaultPaymentMethodUpdated: 'Default payment method updated',
   unableToSetDefault: 'Unable to set default payment method',
 }
@@ -114,24 +106,23 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
   onNotify,
   translations: customTranslations,
 }) => {
-	const { client } = usePaymentContext()
-	const queryClient = useQueryClient()
-  
+  const { client } = usePaymentContext()
+  const queryClient = useQueryClient()
+
   // Simple service wrapper for payment methods
   const paymentMethods = {
     list: (params: { pageSize: number }) =>
       client.listPaymentMethods({ limit: params.pageSize }),
     create: (payload: CreatePaymentMethodPayload) => client.createPaymentMethod(payload),
-    update: (id: string, payload: CreatePaymentMethodPayload) => 
+    update: (id: string, payload: CreatePaymentMethodPayload) =>
       client.updatePaymentMethod(id, payload),
     remove: (id: string) => client.deletePaymentMethod(id),
     activate: (id: string) => client.activatePaymentMethod(id),
   }
-  
-	
-	const [isModalOpen, setIsModalOpen] = useState(false)
-	const [deletingId, setDeletingId] = useState<string | null>(null)
-	const [methodBeingReplaced, setMethodBeingReplaced] = useState<PaymentMethod | null>(null)
+
+
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const notify = onNotify ?? notifyDefault
   const t = { ...defaultTranslations, ...customTranslations }
 
@@ -160,53 +151,38 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
     },
   })
 
-	const deleteMutation = useMutation<void, Error, string>({
-		mutationFn: (id) => paymentMethods.remove(id),
-		onMutate: (id) => setDeletingId(id),
-		onSuccess: () => {
-			notify({ title: t.cardRemoved, status: 'success' })
-			void queryClient.invalidateQueries({ queryKey })
-		},
-		onError: (error) => {
-			notify({
-				title: t.unableToRemoveCard,
-				description: error.message,
-				status: 'destructive',
-			})
-		},
-		onSettled: () => setDeletingId(null),
-	})
+  const deleteMutation = useMutation<void, Error, string>({
+    mutationFn: (id) => paymentMethods.remove(id),
+    onMutate: (id) => setDeletingId(id),
+    onSuccess: () => {
+      notify({ title: t.cardRemoved, status: 'success' })
+      void queryClient.invalidateQueries({ queryKey })
+    },
+    onError: (error) => {
+      notify({
+        title: t.unableToRemoveCard,
+        description: error.message,
+        status: 'destructive',
+      })
+    },
+    onSettled: () => setDeletingId(null),
+  })
 
-	const replaceMutation = useMutation<PaymentMethod, Error, { id: string; payload: CreatePaymentMethodPayload }>({
-		mutationFn: ({ id, payload }) => paymentMethods.update(id, payload),
-		onSuccess: () => {
-			notify({ title: t.cardUpdated, status: 'success' })
-			setMethodBeingReplaced(null)
-			void queryClient.invalidateQueries({ queryKey })
-		},
-		onError: (error) => {
-			notify({
-				title: t.unableToReplaceCard,
-				description: error.message,
-				status: 'destructive',
-			})
-		},
-	})
 
-	const activateMutation = useMutation<void, Error, string>({
-		mutationFn: (id) => paymentMethods.activate(id),
-		onSuccess: () => {
-			notify({ title: t.defaultPaymentMethodUpdated, status: 'success' })
-			void queryClient.invalidateQueries({ queryKey })
-		},
-		onError: (error) => {
-			notify({
-				title: t.unableToSetDefault,
-				description: error.message,
-				status: 'destructive',
-			})
-		},
-	})
+  const activateMutation = useMutation<void, Error, string>({
+    mutationFn: (id) => paymentMethods.activate(id),
+    onSuccess: () => {
+      notify({ title: t.defaultPaymentMethodUpdated, status: 'success' })
+      void queryClient.invalidateQueries({ queryKey })
+    },
+    onError: (error) => {
+      notify({
+        title: t.unableToSetDefault,
+        description: error.message,
+        status: 'destructive',
+      })
+    },
+  })
 
   useEffect(() => {
     if (!isModalOpen) {
@@ -235,20 +211,17 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
     createMutation.mutate(buildPayload(token, billing))
   }
 
-  const handleReplaceTokenize = (token: string, billing: BillingDetails) => {
-    if (!methodBeingReplaced) return
-    replaceMutation.mutate({ id: methodBeingReplaced.id, payload: buildPayload(token, billing) })
-  }
 
   return (
-    <Card>
+    <Card className='bg-bckground border-border rounded-md'>
       <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <CardTitle className="flex items-center gap-2">
-            <WalletCards className="h-5 w-5 text-emerald-400" /> {t.title}
+            {t.title}
           </CardTitle>
           <CardDescription>{t.description}</CardDescription>
         </div>
+
         <Button onClick={() => setIsModalOpen(true)}>
           <CreditCard className="mr-2 h-4 w-4" /> {t.addCard}
         </Button>
@@ -269,43 +242,25 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
                 key={method.id}
                 className="rounded-lg border bg-white/5 p-4 shadow-sm"
               >
-                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <h4 className="text-base font-medium text-white">
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <div className="text-base font-medium text-white">
                       {formatCardLabel(method)}
-                    </h4>
-                    <p className="text-sm text-white/60">
-                      {t.addedOn}{' '}
-                      {method.created_at
-                        ? new Date(method.created_at).toLocaleDateString()
-                        : 'unknown date'}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Badge
-                      variant={method.is_active ? 'default' : 'secondary'}
-                    >
+                    </div>
+
+                    <Badge variant={method.is_active ? 'default' : 'secondary'}>
                       {method.is_active ? t.active : t.inactive}
                     </Badge>
+                  </div>
+
+                  <div>
                     {method.failure_reason && (
                       <Badge variant="destructive">{method.failure_reason}</Badge>
                     )}
                   </div>
                 </div>
+
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Button
-                    variant="ghost"
-                    className="text-blue-400"
-                    disabled={replaceMutation.isPending && methodBeingReplaced?.id === method.id}
-                    onClick={() => setMethodBeingReplaced(method)}
-                  >
-                    {replaceMutation.isPending && methodBeingReplaced?.id === method.id ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <CreditCard className="mr-2 h-4 w-4" />
-                    )}
-                    {t.replaceCard}
-                  </Button>
                   <Button
                     variant="outline"
                     disabled={method.is_active || activateMutation.isPending}
@@ -337,56 +292,29 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
       </CardContent>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-h-[95vh] overflow-y-auto">
+        <DialogContent
+          className="max-w-3xl max-h-[90vh] overflow-y-auto border-border rounded-md [&::-webkit-scrollbar]:hidden"
+        >
           <DialogHeader>
             <DialogTitle>{t.addNewCard}</DialogTitle>
-            <DialogDescription>
-              {t.addNewCardDescription}
-            </DialogDescription>
           </DialogHeader>
 
           <CardDetailsForm
             visible={isModalOpen}
-            collectPrefix={collectPrefix}
-            submitting={createMutation.isPending}
             submitLabel={t.saveCard}
+            collectPrefix={collectPrefix}
+            onTokenize={handleCardTokenize}
+            submitting={createMutation.isPending}
             defaultValues={{
+              provider,
               email: userEmail ?? '',
               country: defaultCountry,
-              provider,
             }}
             externalError={createMutation.error?.message ?? null}
-            onTokenize={handleCardTokenize}
-            className="rounded-2xl border bg-white/5 p-6"
           />
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(methodBeingReplaced)} onOpenChange={(open) => !open && setMethodBeingReplaced(null)}>
-        <DialogContent className="max-h-[95vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{t.replaceCardTitle}</DialogTitle>
-            <DialogDescription>{t.replaceCardDescription}</DialogDescription>
-          </DialogHeader>
-
-          {methodBeingReplaced && (
-            <CardDetailsForm
-              visible
-              collectPrefix={`${collectPrefix}-replace-${methodBeingReplaced.id}`}
-              submitting={replaceMutation.isPending}
-              submitLabel={t.replaceCard}
-              defaultValues={{
-                email: userEmail ?? '',
-                country: defaultCountry,
-                provider,
-              }}
-              externalError={replaceMutation.error?.message ?? null}
-              onTokenize={handleReplaceTokenize}
-              className="rounded-2xl border bg-white/5 p-6"
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </Card>
   )
 }
