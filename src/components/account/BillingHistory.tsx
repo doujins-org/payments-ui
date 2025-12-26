@@ -142,7 +142,7 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
   }
 
   return (
-    <Card className="border-0 bg-background/5 shadow-lg">
+    <Card className="border-0 bg-black/30 shadow-2xl backdrop-blur-xl">
       <div className="p-4 sm:p-6">
         <div className="flex cursor-pointer items-center justify-between" onClick={() => setIsExpanded((prev) => !prev)}>
           <div>

@@ -213,7 +213,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
 
 
   return (
-    <Card className='bg-bckground border-border rounded-md'>
+    <Card className="border-0 bg-black/30 shadow-2xl backdrop-blur-xl">
       <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <CardTitle className="flex items-center gap-2">
