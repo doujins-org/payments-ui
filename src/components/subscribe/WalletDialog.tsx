@@ -87,7 +87,7 @@ export const WalletDialog: React.FC<WalletDialogProps> = ({ open, onOpenChange }
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="z-[100] max-h-[95vh] max-w-lg overflow-y-auto rounded-2xl border border-white/20 p-6 backdrop-blur-xl bg-background">
+      <AlertDialogContent className="z-[100] max-h-[95vh] max-w-lg overflow-y-auto rounded-2xl border border-white/20 p-6 backdrop-blur-xl bg-background-regular">
         <AlertDialogHeader className="border-b border-white/10 pb-4">
           <div className="flex items-center justify-center gap-2">
             <Shield className="h-5 w-5 text-primary" />

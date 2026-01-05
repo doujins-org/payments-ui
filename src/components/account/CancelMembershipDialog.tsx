@@ -141,7 +141,7 @@ export const CancelMembershipDialog: React.FC<CancelMembershipDialogProps> = ({
         </Button>
       </AlertDialogTrigger>
 
-      <AlertDialogContent className="z-[100] max-h-[90vh] overflow-y-auto rounded-md border border-white/20 p-6 backdrop-blur-xl bg-background">
+      <AlertDialogContent className="z-[100] max-h-[90vh] overflow-y-auto rounded-md border border-white/20 p-6 backdrop-blur-xl bg-background-regular">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
             <TriangleAlert className="h-5 w-5 text-destructive" /> {t.title}
