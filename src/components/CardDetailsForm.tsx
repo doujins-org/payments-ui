@@ -208,6 +208,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
   ])
 
   const validate = (): boolean => {
+    const emailRequired = !defaultValues?.email && !config.defaultUser?.email
     if (
       !firstName.trim() ||
       !lastName.trim() ||
@@ -215,7 +216,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
       !city.trim() ||
       !postalCode.trim() ||
       !country.trim() ||
-      !email.trim()
+      (emailRequired && !email.trim())
     ) {
       setLocalError('Please complete all required billing fields.')
       return false
@@ -237,7 +238,10 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
 
   const errorMessage = localError ?? externalError
   const collectFieldClass =
-    'relative flex h-11 w-full items-center overflow-hidden rounded-md border border-border/60 bg-background/40 px-3 text-sm text-foreground'
+    'relative flex h-9 w-full items-center overflow-hidden rounded-md border border-white/30 bg-transparent px-3 text-sm text-foreground'
+
+  // Hide email field if email is provided via defaultValues or config
+  const showEmailField = !defaultValues?.email && !config.defaultUser?.email
 
   return (
     <form
@@ -273,16 +277,18 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-      </div>
+      {showEmailField && (
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="address1">Address</Label>
@@ -360,7 +366,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
 
       <Button
         type="submit"
-        className="w-full"
+        className="w-full border-0 bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50"
         disabled={submitting || submitDisabled || isTokenizing}
       >
         {submitting || isTokenizing ? (
