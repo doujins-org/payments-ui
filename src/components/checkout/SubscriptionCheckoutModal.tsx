@@ -120,10 +120,10 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
     <>
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent
-          className="max-w-3xl max-h-[90vh] overflow-y-auto border-border rounded-md [&::-webkit-scrollbar]:hidden"
+          className="z-[100] max-w-3xl max-h-[90vh] overflow-y-auto border border-white/20 p-6 backdrop-blur-xl bg-background rounded-md [&::-webkit-scrollbar]:hidden"
         >
           <DialogHeader>
-            <DialogTitle>Checkout</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-foreground">Checkout</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">

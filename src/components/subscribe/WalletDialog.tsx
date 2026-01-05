@@ -87,11 +87,11 @@ export const WalletDialog: React.FC<WalletDialogProps> = ({ open, onOpenChange }
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-h-[95vh] max-w-lg overflow-y-auto rounded-2xl border border-border bg-background">
-        <AlertDialogHeader className="border-b pb-4">
+      <AlertDialogContent className="z-[100] max-h-[95vh] max-w-lg overflow-y-auto rounded-2xl border border-white/20 p-6 backdrop-blur-xl bg-background">
+        <AlertDialogHeader className="border-b border-white/10 pb-4">
           <div className="flex items-center justify-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
-            <AlertDialogTitle className="text-center text-base font-semibold uppercase tracking-wide">
+            <AlertDialogTitle className="text-center text-base font-semibold uppercase tracking-wide text-foreground">
               Secure Payment via Mobius Pay
             </AlertDialogTitle>
           </div>
@@ -103,52 +103,52 @@ export const WalletDialog: React.FC<WalletDialogProps> = ({ open, onOpenChange }
         <form onSubmit={handleSubmit} className="space-y-5 px-2 py-4 sm:px-4">
           <div className="space-y-4">
             <div>
-              <Label className="mb-1 block text-sm text-muted-foreground">Name on Card</Label>
+              <Label className="mb-1 block text-sm text-foreground">Name on Card</Label>
               <div className="relative">
                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   <UserRound className="h-4 w-4" />
                 </span>
-                <Input value={form.nameOnCard} onChange={(e) => updateField('nameOnCard', e.target.value)} className="pl-10" />
+                <Input value={form.nameOnCard} onChange={(e) => updateField('nameOnCard', e.target.value)} className="pl-10 border-white/20 bg-foreground/5 text-foreground placeholder:text-muted-foreground" />
               </div>
               {errors.nameOnCard && <p className="mt-1 text-xs text-destructive">{errors.nameOnCard}</p>}
             </div>
 
             <div>
-              <Label className="mb-1 block text-sm text-muted-foreground">Credit Card Number</Label>
+              <Label className="mb-1 block text-sm text-foreground">Credit Card Number</Label>
               <div className="relative">
                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   <CreditCard className="h-4 w-4" />
                 </span>
-                <Input value={form.cardNumber} onChange={(e) => updateField('cardNumber', e.target.value)} className="pl-10" />
+                <Input value={form.cardNumber} onChange={(e) => updateField('cardNumber', e.target.value)} className="pl-10 border-white/20 bg-foreground/5 text-foreground placeholder:text-muted-foreground" />
               </div>
               {errors.cardNumber && <p className="mt-1 text-xs text-destructive">{errors.cardNumber}</p>}
             </div>
 
             <div className="flex gap-4">
               <div className="flex-1">
-                <Label className="mb-1 block text-sm text-muted-foreground">Expiration</Label>
+                <Label className="mb-1 block text-sm text-foreground">Expiration</Label>
                 <div className="relative">
                   <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                     <Calendar className="h-4 w-4" />
                   </span>
-                  <Input value={form.expiration} onChange={(e) => updateField('expiration', e.target.value)} className="pl-10" placeholder="MM/YY" />
+                  <Input value={form.expiration} onChange={(e) => updateField('expiration', e.target.value)} className="pl-10 border-white/20 bg-foreground/5 text-foreground placeholder:text-muted-foreground" placeholder="MM/YY" />
                 </div>
                 {errors.expiration && <p className="mt-1 text-xs text-destructive">{errors.expiration}</p>}
               </div>
               <div className="flex-1">
-                <Label className="mb-1 block text-sm text-muted-foreground">CVV</Label>
+                <Label className="mb-1 block text-sm text-foreground">CVV</Label>
                 <div className="relative">
                   <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                     <KeyRound className="h-4 w-4" />
                   </span>
-                  <Input value={form.cvv} onChange={(e) => updateField('cvv', e.target.value)} className="pl-10" />
+                  <Input value={form.cvv} onChange={(e) => updateField('cvv', e.target.value)} className="pl-10 border-white/20 bg-foreground/5 text-foreground placeholder:text-muted-foreground" />
                 </div>
                 {errors.cvv && <p className="mt-1 text-xs text-destructive">{errors.cvv}</p>}
               </div>
             </div>
           </div>
 
-          <div className="flex items-start gap-3 rounded-md border bg-muted/10 p-4">
+          <div className="flex items-start gap-3 rounded-md border border-white/20 bg-foreground/5 p-4">
             <Checkbox id="terms-agree" checked={form.termsAccepted} onCheckedChange={(checked) => updateField('termsAccepted', Boolean(checked))} />
             <Label htmlFor="terms-agree" className="text-sm text-muted-foreground">
               By completing this order, I confirm that I am 18 years or older and agree to your privacy policy and terms.
@@ -157,11 +157,11 @@ export const WalletDialog: React.FC<WalletDialogProps> = ({ open, onOpenChange }
           {errors.termsAccepted && <p className="text-xs text-destructive">{errors.termsAccepted}</p>}
 
           <AlertDialogFooter className="flex gap-2">
-            <Button type="submit" className="flex-1">
+            <Button type="submit" className="flex-1 border-0 bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50">
               Subscribe
             </Button>
             <AlertDialogCancel asChild>
-              <Button variant="outline" className="flex-1">
+              <Button variant="outline" className="flex-1 border-white/20 bg-transparent text-foreground hover:bg-foreground/10 hover:text-foreground">
                 Close
               </Button>
             </AlertDialogCancel>

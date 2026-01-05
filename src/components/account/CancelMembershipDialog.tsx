@@ -141,9 +141,9 @@ export const CancelMembershipDialog: React.FC<CancelMembershipDialogProps> = ({
         </Button>
       </AlertDialogTrigger>
 
-      <AlertDialogContent className="max-h-[90vh] overflow-y-auto rounded-md border border-border bg-background">
+      <AlertDialogContent className="z-[100] max-h-[90vh] overflow-y-auto rounded-md border border-white/20 p-6 backdrop-blur-xl bg-background">
         <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2 text-lg font-semibold">
+          <AlertDialogTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
             <TriangleAlert className="h-5 w-5 text-destructive" /> {t.title}
           </AlertDialogTitle>
           <AlertDialogDescription className="mt-3 space-y-3 text-muted-foreground">
@@ -157,7 +157,7 @@ export const CancelMembershipDialog: React.FC<CancelMembershipDialogProps> = ({
         </AlertDialogHeader>
 
         <div className="my-4 space-y-2 py-2">
-          <Label htmlFor="cancelReason" className="text-sm font-medium">
+          <Label htmlFor="cancelReason" className="text-sm font-medium text-foreground">
             {t.reasonLabel}
           </Label>
           <Textarea
@@ -166,7 +166,7 @@ export const CancelMembershipDialog: React.FC<CancelMembershipDialogProps> = ({
             onChange={handleReasonChange}
             placeholder={t.reasonPlaceholder}
             className={cn(
-              'w-full resize-none border-border bg-background',
+              'w-full resize-none border-white/20 bg-foreground/5 text-foreground placeholder:text-muted-foreground',
               showError && 'border-destructive'
             )}
             rows={4}
@@ -185,13 +185,13 @@ export const CancelMembershipDialog: React.FC<CancelMembershipDialogProps> = ({
 
         <AlertDialogFooter className="mt-6 gap-2">
           <AlertDialogCancel asChild>
-            <Button variant="outline" className="border-border text-muted-foreground">
+            <Button variant="outline" className="border-white/20 bg-transparent text-foreground hover:bg-foreground/10 hover:text-foreground">
               {t.keepMembership}
             </Button>
           </AlertDialogCancel>
           <AlertDialogAction asChild>
             <Button
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
               onClick={handleConfirm}
               disabled={!isReasonValid || isSubmitting}
             >

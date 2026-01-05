@@ -293,10 +293,11 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent
-          className="max-w-3xl max-h-[90vh] overflow-y-auto border-border rounded-md [&::-webkit-scrollbar]:hidden"
+          className="z-[100] max-w-3xl max-h-[90vh] overflow-y-auto border border-white/20 p-6 backdrop-blur-xl bg-background rounded-md [&::-webkit-scrollbar]:hidden"
         >
           <DialogHeader>
-            <DialogTitle>{t.addNewCard}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-foreground">{t.addNewCard}</DialogTitle>
+            <DialogDescription className="text-muted-foreground">{t.addNewCardDescription}</DialogDescription>
           </DialogHeader>
 
           <CardDetailsForm
