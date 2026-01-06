@@ -4,7 +4,23 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-const Select = SelectPrimitive.Root
+const Select: React.FC<{
+  children?: React.ReactNode
+  value?: string
+  defaultValue?: string
+  onValueChange?: (value: string) => void
+  open?: boolean
+  defaultOpen?: boolean
+  onOpenChange?: (open: boolean) => void
+  dir?: 'ltr' | 'rtl'
+  name?: string
+  disabled?: boolean
+  required?: boolean
+}> = ({ children, ...props }) => (
+  <div className="relative">
+    <SelectPrimitive.Root {...props}>{children}</SelectPrimitive.Root>
+  </div>
+)
 
 const SelectGroup = SelectPrimitive.Group
 
@@ -68,17 +84,22 @@ SelectScrollDownButton.displayName =
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(({ className, children, position = "popper", ...props }, ref) => (
+>(({ className, children, position = "popper", style, ...props }, ref) => (
   <SelectPrimitive.Content
     ref={ref}
     className={cn(
-      "relative z-[200] max-h-64 overflow-y-auto overflow-x-hidden rounded-md border border-white/20 bg-background-regular text-foreground shadow-lg backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-      position === "popper" &&
-        "w-[var(--radix-select-trigger-width)]",
+      "z-[200] max-h-64 w-full overflow-y-auto overflow-x-hidden rounded-md border border-white/20 bg-background-regular text-foreground shadow-lg backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
       className
     )}
     position={position}
-    sideOffset={4}
+    style={{
+      // Override Floating UI positioning to work inside transformed modals
+      position: 'absolute',
+      top: '100%',
+      left: 0,
+      marginTop: '4px',
+      ...style,
+    }}
     {...props}
   >
     <SelectScrollUpButton />
