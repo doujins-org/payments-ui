@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Pencil } from 'lucide-react'
 import type { BillingDetails } from '../types'
 import type { CollectJSResponse } from '../types/collect'
 import { usePaymentContext } from '../context/PaymentContext'
@@ -65,6 +65,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
   const [postalCode, setPostalCode] = useState(mergedDefaults.postalCode)
   const [country, setCountry] = useState(mergedDefaults.country)
   const [email, setEmail] = useState(mergedDefaults.email ?? '')
+  const [isEditingEmail, setIsEditingEmail] = useState(false)
   const [localError, setLocalError] = useState<string | null>(null)
   const [isTokenizing, setIsTokenizing] = useState(false)
   const [collectReady, setCollectReady] = useState(
@@ -208,7 +209,6 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
   ])
 
   const validate = (): boolean => {
-    const emailRequired = !defaultValues?.email && !config.defaultUser?.email
     if (
       !firstName.trim() ||
       !lastName.trim() ||
@@ -216,7 +216,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
       !city.trim() ||
       !postalCode.trim() ||
       !country.trim() ||
-      (emailRequired && !email.trim())
+      !email.trim()
     ) {
       setLocalError('Please complete all required billing fields.')
       return false
@@ -240,8 +240,9 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
   const collectFieldClass =
     'relative flex h-9 w-full items-center overflow-hidden rounded-md border border-white/30 bg-transparent px-3 text-sm text-foreground'
 
-  // Hide email field if email is provided via defaultValues or config
-  const showEmailField = !defaultValues?.email && !config.defaultUser?.email
+  // Check if email is provided via defaultValues or config
+  const hasDefaultEmail = Boolean(defaultValues?.email || config.defaultUser?.email)
+  const showEmailInput = !hasDefaultEmail || isEditingEmail
 
   return (
     <form
@@ -277,18 +278,47 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
         </div>
       </div>
 
-      {showEmailField && (
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-      )}
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        {showEmailInput ? (
+          <div className="flex gap-2 items-center">
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="flex-1"
+            />
+            {hasDefaultEmail && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setIsEditingEmail(false)
+                  setEmail(mergedDefaults.email ?? '')
+                }}
+                className="px-3 text-xs text-muted-foreground hover:text-foreground"
+              >
+                Cancel
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center justify-between h-9 w-full rounded-md border border-white/30 bg-transparent px-3 text-sm text-foreground">
+            <span>{email}</span>
+            <button
+              type="button"
+              onClick={() => setIsEditingEmail(true)}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Edit email"
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+      </div>
 
       <div className="space-y-2">
         <Label htmlFor="address1">Address</Label>
@@ -337,7 +367,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
             <SelectTrigger>
               <SelectValue placeholder="Select a country" />
             </SelectTrigger>
-            <SelectContent className="max-h-64 w-full">
+            <SelectContent>
               {countries.map((option) => (
                 <SelectItem key={option.code} value={option.code}>
                   {option.name}

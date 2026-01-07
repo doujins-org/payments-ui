@@ -4,23 +4,7 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-const Select: React.FC<{
-  children?: React.ReactNode
-  value?: string
-  defaultValue?: string
-  onValueChange?: (value: string) => void
-  open?: boolean
-  defaultOpen?: boolean
-  onOpenChange?: (open: boolean) => void
-  dir?: 'ltr' | 'rtl'
-  name?: string
-  disabled?: boolean
-  required?: boolean
-}> = ({ children, ...props }) => (
-  <div className="relative">
-    <SelectPrimitive.Root {...props}>{children}</SelectPrimitive.Root>
-  </div>
-)
+const Select = SelectPrimitive.Root
 
 const SelectGroup = SelectPrimitive.Group
 
@@ -84,44 +68,70 @@ SelectScrollDownButton.displayName =
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(
-  (
-    {
-      className,
-      children,
-      position = "popper",
-      side = "bottom",
-      sideOffset = 4,
-      align = "start",
-      ...props
-    },
-    ref
-  ) => {
-    const popperProps =
-      position === "popper" ? { side, sideOffset, align } : {}
+>(({ className, children, position = "popper", ...props }, ref) => {
+  const viewportRef = React.useRef<HTMLDivElement>(null)
 
-    return (
-      <SelectPrimitive.Portal>
-        <SelectPrimitive.Content
-          ref={ref}
+  // Use callback ref to apply styles when element is mounted
+  const contentRef = React.useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      // Apply max-height to 40% of viewport height
+      node.style.setProperty('max-height', '40vh', 'important')
+      
+      // Get the trigger width from CSS variable and apply it
+      // Radix Popper provides the anchor width (trigger width) as a CSS variable
+      const anchorWidth = window.getComputedStyle(node).getPropertyValue('--radix-popper-anchor-width')
+      if (anchorWidth) {
+        node.style.setProperty('width', anchorWidth, 'important')
+      }
+    }
+  }, [])
+
+  // Combine refs (for forwarded ref)
+  const combinedRef = React.useCallback((node: HTMLDivElement | null) => {
+    contentRef(node)
+    if (typeof ref === 'function') {
+      ref(node)
+    } else if (ref) {
+      ref.current = node
+    }
+  }, [contentRef, ref])
+
+  // Apply max-height to viewport for scrolling
+  React.useEffect(() => {
+    if (viewportRef.current) {
+      viewportRef.current.style.setProperty('max-height', '40vh', 'important')
+    }
+  })
+
+  return (
+    <SelectPrimitive.Portal>
+      <SelectPrimitive.Content
+        ref={combinedRef}
+        className={cn(
+          "relative z-50 min-w-[8rem] overflow-hidden rounded-md border border-white/20 bg-background-regular text-foreground shadow-lg backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+          position === "popper" &&
+            "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
+          className
+        )}
+        position={position}
+        {...props}
+      >
+        <SelectScrollUpButton />
+        <SelectPrimitive.Viewport
+          ref={viewportRef}
           className={cn(
-            "z-[200] max-h-64 w-[var(--radix-select-trigger-width)] overflow-y-auto overflow-x-hidden rounded-md border border-white/20 bg-background-regular text-foreground shadow-lg backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-            className
+            "p-1 overflow-y-auto",
+            position === "popper" &&
+              "w-full min-w-[var(--radix-select-trigger-width)]"
           )}
-          position={position}
-          {...popperProps}
-          {...props}
         >
-          <SelectScrollUpButton />
-          <SelectPrimitive.Viewport className="p-1">
-            {children}
-          </SelectPrimitive.Viewport>
-          <SelectScrollDownButton />
-        </SelectPrimitive.Content>
-      </SelectPrimitive.Portal>
-    )
-  }
-)
+          {children}
+        </SelectPrimitive.Viewport>
+        <SelectScrollDownButton />
+      </SelectPrimitive.Content>
+    </SelectPrimitive.Portal>
+  )
+})
 SelectContent.displayName = SelectPrimitive.Content.displayName
 
 const SelectLabel = React.forwardRef<

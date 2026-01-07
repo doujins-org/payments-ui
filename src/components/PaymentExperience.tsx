@@ -199,11 +199,11 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   const renderCardExperience = () => (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
       <TabsList className='w-full rounded-md mb-4'>
-        <TabsTrigger className={clsx('cursor-pointer', { 'bg-background': activeTab == "saved" })} value="saved">
+        <TabsTrigger className='cursor-pointer' value="saved">
           Use saved card
         </TabsTrigger>
 
-        <TabsTrigger className={clsx('cursor-pointer', { 'bg-background': activeTab == "new" })} value="new">
+        <TabsTrigger className='cursor-pointer' value="new">
           Add new card
         </TabsTrigger>
       </TabsList>
