@@ -1,0 +1,4 @@
+/* Ensure Radix popper content appears above modals */
+div[data-radix-popper-content-wrapper] {
+	z-index: 9999 !important;
+}

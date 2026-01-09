@@ -106,8 +106,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
   onNotify,
   translations: customTranslations,
 }) => {
-  const { client } = usePaymentContext()
-  const queryClient = useQueryClient()
+  const { client, queryClient } = usePaymentContext()
 
   // Simple service wrapper for payment methods
   const paymentMethods = {
@@ -131,7 +130,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
   const paymentQuery = useQuery<PaginatedPaymentMethods>({
     queryKey,
     queryFn: () => paymentMethods.list({ pageSize: 50 }),
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !!client,
     staleTime: 30_000,
   })
 
@@ -157,6 +156,9 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
     onSuccess: () => {
       notify({ title: t.cardRemoved, status: 'success' })
       void queryClient.invalidateQueries({ queryKey })
+      if (paymentQuery.refetch) {
+        paymentQuery.refetch()
+      }
     },
     onError: (error) => {
       notify({
@@ -189,6 +191,27 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
       createMutation.reset()
     }
   }, [createMutation, isModalOpen])
+
+  // Refetch payment methods on mount and when dialog closes
+  useEffect(() => {
+    if (!isModalOpen && paymentQuery.refetch) {
+      paymentQuery.refetch()
+    }
+    // Also fire on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isModalOpen])
+
+  // Debug: log query status and errors
+  /*if (process.env.NODE_ENV !== 'production') {
+    // eslint-disable-next-line no-console
+    console.log('[PaymentMethodsSection] paymentQuery status:', {
+      isLoading: paymentQuery.isLoading,
+      isFetching: paymentQuery.isFetching,
+      isError: paymentQuery.isError,
+      error: paymentQuery.error,
+      data: paymentQuery.data,
+    })
+  }*/
 
   const payments = useMemo(() => paymentQuery.data?.data ?? [], [paymentQuery.data])
   const loading = paymentQuery.isLoading || paymentQuery.isFetching
