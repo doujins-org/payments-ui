@@ -19,9 +19,12 @@ export interface CollectJSConfig {
 
 export interface CollectJSResponseCard {
   brand?: string
+  type?: string
+  number? : string
   expMonth?: string
   expYear?: string
   lastFour?: string
+  exp? : string
 }
 
 export interface CollectJSResponse {

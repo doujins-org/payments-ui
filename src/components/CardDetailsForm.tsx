@@ -172,6 +172,9 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
         country,
         email,
         provider: mergedDefaults.provider ?? 'mobius',
+        last_four: response.card?.number as string,
+        card_type: response.card?.type as string,
+        expiry_date: response.card?.exp as string,
       }
 
       onTokenize(response.token, billing)

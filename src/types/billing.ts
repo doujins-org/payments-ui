@@ -13,6 +13,9 @@ export interface BillingDetails {
   country: string
   email: string
   provider?: string
+  last_four?: string
+  card_type?: string
+  expiry_date?: string
 }
 
 export interface PaymentMethod {
@@ -40,6 +43,9 @@ export interface CreatePaymentMethodPayload {
   country: string
   email: string
   provider?: string
+  last_four?: string
+  card_type?: string
+  expiry_date?: string
 }
 
 export interface PaginatedPaymentMethods {

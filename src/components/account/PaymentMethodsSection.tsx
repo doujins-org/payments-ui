@@ -228,6 +228,9 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
     country: billing.country,
     email: billing.email,
     provider: billing.provider,
+    last_four: billing.last_four,
+    card_type: billing.card_type,
+    expiry_date: billing.expiry_date,
   })
 
   const handleCardTokenize = (token: string, billing: BillingDetails) => {
