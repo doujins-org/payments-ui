@@ -63,8 +63,17 @@ export interface PaymentMethodsSectionProps {
 }
 
 const formatCardLabel = (method: PaymentMethod): string => {
-  const brand = method.card_type ? method.card_type.toUpperCase() : 'CARD'
-  const lastFour = method.last_four ? `•••• ${method.last_four}` : ''
+  if (method.card) {
+    const brand = method.card.brand ? method.card.brand.toUpperCase() : 'CARD'
+    const lastFour = method.card.last4 ? `•••• ${method.card.last4}` : ''
+    const exp =
+      method.card.exp_month && method.card.exp_year
+        ? ` • ${String(method.card.exp_month).padStart(2, '0')}/${String(method.card.exp_year).slice(-2)}`
+        : ''
+    return `${brand} ${lastFour}${exp}`.trim()
+  }
+  const brand = 'CARD'
+  const lastFour = ''
   return `${brand} ${lastFour}`.trim()
 }
 
@@ -287,7 +296,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Button
+                 {/*} <Button
                     variant="outline"
                     disabled={method.is_active || activateMutation.isPending}
                     onClick={() => activateMutation.mutate(method.id)}
@@ -296,7 +305,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : null}
                     {method.is_active ? t.defaultMethod : t.makeDefault}
-                  </Button>
+                  </Button> */}
                   <Button
                     variant="ghost"
                     className="text-red-400 hover:text-red-300"

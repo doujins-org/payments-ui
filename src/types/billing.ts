@@ -21,11 +21,12 @@ export interface BillingDetails {
 export interface PaymentMethod {
   id: string
   processor?: string
-  brand?: string
-  card_type?: string
-  last_four?: string
-  exp_month?: number
-  exp_year?: number
+  card?: {
+    brand: string
+    last4: string
+    exp_month: number
+    exp_year: number
+  }
   is_active?: boolean
   failure_reason?: string | null
   created_at?: string
