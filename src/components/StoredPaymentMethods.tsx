@@ -9,9 +9,16 @@ import { cn } from '../lib/utils'
 import clsx from 'clsx'
 
 const formatCardLabel = (method: PaymentMethod): string => {
-  const brand = method.card_type ? method.card_type.toUpperCase() : 'CARD'
-  const lastFour = method.last_four ? `•••• ${method.last_four}` : ''
-  return `${brand} ${lastFour}`.trim()
+  if (method.card) {
+    const brand = method.card.brand ? method.card.brand.toUpperCase() : 'CARD'
+    const lastFour = method.card.last4 ? `•••• ${method.card.last4}` : ''
+    const exp =
+      method.card.exp_month && method.card.exp_year
+        ? ` • ${String(method.card.exp_month).padStart(2, '0')}/${String(method.card.exp_year).slice(-2)}`
+        : ''
+    return `${brand} ${lastFour}${exp}`.trim()
+  }
+  return 'CARD'
 }
 
 export interface StoredPaymentMethodsProps {
