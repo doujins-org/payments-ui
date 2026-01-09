@@ -32,6 +32,7 @@ export interface CardDetailsFormProps {
 }
 
 const buildSelector = (prefix: string, field: string) => `#${prefix}-${field}`
+
 export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
   visible,
   onTokenize,
@@ -88,8 +89,12 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
     if (!visible) {
       setLocalError(null)
       setIsTokenizing(false)
+      // Reset CollectJS configured flag for this prefix so fields reload on next open
+      if (typeof window !== 'undefined' && window.__doujinsCollectConfigured && collectPrefix) {
+        window.__doujinsCollectConfigured[collectPrefix] = false
+      }
     }
-  }, [visible])
+  }, [visible, collectPrefix])
 
   useEffect(() => {
     if (!visible) return
