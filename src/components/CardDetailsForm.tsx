@@ -18,6 +18,53 @@ import { cn } from '../lib/utils'
 import { collectCssConfig, waitForCollectJs } from '../utils/collect'
 import { defaultBillingDetails } from '../constants/billing'
 
+export interface CardDetailsFormTranslations {
+  firstName?: string
+  lastName?: string
+  email?: string
+  address?: string
+  city?: string
+  state?: string
+  postalCode?: string
+  country?: string
+  cardNumber?: string
+  expiry?: string
+  cvv?: string
+  submit?: string
+  processing?: string
+  errorRequiredFields?: string
+  errorTokenization?: string
+  errorFormNotReady?: string
+  infoSecure?: string
+  cancel?: string
+  editEmail?: string
+  selectCountry?: string
+}
+
+export const defaultCardDetailsFormTranslations: Required<CardDetailsFormTranslations> = {
+  firstName: 'First name',
+  lastName: 'Last name',
+  email: 'Email',
+  address: 'Address',
+  city: 'City',
+  state: 'State / Region',
+  postalCode: 'Postal code',
+  country: 'Country',
+  cardNumber: 'Card number',
+  expiry: 'Expiry',
+  cvv: 'CVV',
+  submit: 'Submit',
+  processing: 'Processing…',
+  errorRequiredFields: 'Please complete all required billing fields.',
+  errorTokenization: 'Payment tokenization failed. Please try again.',
+  errorFormNotReady: 'Payment form is not ready. Please try again later.',
+  infoSecure: 'Your payment information is encrypted and processed securely.',
+  cancel: 'Cancel',
+  editEmail: 'Edit email',
+  selectCountry: 'Select a country',
+}
+
+
 export interface CardDetailsFormProps {
   visible: boolean
   onTokenize: (token: string, billing: BillingDetails) => void
@@ -29,6 +76,7 @@ export interface CardDetailsFormProps {
   className?: string
   onBillingChange?: (billing: BillingDetails) => void
   submitDisabled?: boolean
+  translations?: CardDetailsFormTranslations
 }
 
 const buildSelector = (prefix: string, field: string) => `#${prefix}-${field}`
@@ -44,7 +92,9 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
   className,
   onBillingChange,
   submitDisabled = false,
+  translations,
 }) => {
+    const t = { ...defaultCardDetailsFormTranslations, ...translations }
   const { config } = usePaymentContext()
   const defaultValuesKey = useMemo(() => JSON.stringify(defaultValues ?? {}), [defaultValues])
 
@@ -226,7 +276,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
       !country.trim() ||
       !email.trim()
     ) {
-      setLocalError('Please complete all required billing fields.')
+      setLocalError(t.errorRequiredFields)
       return false
     }
     setLocalError(null)
@@ -237,7 +287,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
     event.preventDefault()
     if (!validate()) return
     if (!window.CollectJS) {
-      setLocalError('Payment form is not ready. Please try again later.')
+      setLocalError(t.errorFormNotReady)
       return
     }
     setIsTokenizing(true)
@@ -266,7 +316,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
 
       <div className="flex flex-col gap-2 md:flex-row">
         <div className="flex-1 space-y-2">
-          <Label htmlFor="firstName">First name</Label>
+          <Label htmlFor="firstName">{t.firstName}</Label>
           <Input
             id="firstName"
             value={firstName}
@@ -276,7 +326,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
         </div>
 
         <div className="flex-1 space-y-2">
-          <Label htmlFor="lastName">Last name</Label>
+          <Label htmlFor="lastName">{t.lastName}</Label>
           <Input
             id="lastName"
             value={lastName}
@@ -287,7 +337,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t.email}</Label>
         {showEmailInput ? (
           <div className="flex gap-2 items-center">
             <Input
@@ -309,7 +359,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
                 }}
                 className="px-3 text-xs text-muted-foreground hover:text-foreground"
               >
-                Cancel
+                {t.cancel}
               </Button>
             )}
           </div>
@@ -320,7 +370,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
               type="button"
               onClick={() => setIsEditingEmail(true)}
               className="text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Edit email"
+              aria-label={t.editEmail}
             >
               <Pencil className="h-4 w-4" />
             </button>
@@ -329,7 +379,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="address1">Address</Label>
+        <Label htmlFor="address1">{t.address}</Label>
         <Input
           id="address1"
           value={address1}
@@ -340,7 +390,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
 
       <div className="grid gap-2 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="city">City</Label>
+          <Label htmlFor="city">{t.city}</Label>
           <Input
             id="city"
             value={city}
@@ -349,7 +399,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="state">State / Region</Label>
+          <Label htmlFor="state">{t.state}</Label>
           <Input
             id="state"
             value={stateRegion}
@@ -360,7 +410,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
 
       <div className="grid gap-2 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="postal">Postal code</Label>
+          <Label htmlFor="postal">{t.postalCode}</Label>
           <Input
             id="postal"
             value={postalCode}
@@ -370,10 +420,10 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label>Country</Label>
+          <Label>{t.country}</Label>
           <Select value={country} onValueChange={setCountry}>
             <SelectTrigger>
-              <SelectValue placeholder="Select a country" />
+              <SelectValue placeholder={t.selectCountry} />
             </SelectTrigger>
             <SelectContent>
               {countries.map((option) => (
@@ -387,17 +437,17 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label>Card number</Label>
+        <Label>{t.cardNumber}</Label>
         <div id={buildSelector(collectPrefix, 'ccnumber').slice(1)} className={collectFieldClass} />
       </div>
 
       <div className="grid gap-2 md:grid-cols-2">
         <div className="space-y-2">
-          <Label>Expiry</Label>
+          <Label>{t.expiry}</Label>
           <div id={buildSelector(collectPrefix, 'ccexp').slice(1)} className={collectFieldClass} />
         </div>
         <div className="space-y-2">
-          <Label>CVV</Label>
+          <Label>{t.cvv}</Label>
           <div id={buildSelector(collectPrefix, 'cvv').slice(1)} className={collectFieldClass} />
         </div>
       </div>
@@ -409,15 +459,15 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
       >
         {submitting || isTokenizing ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing…
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t.processing}
           </>
         ) : (
-          submitLabel
+          submitLabel || t.submit
         )}
       </Button>
 
       <p className="text-xs text-white/60">
-        Your payment information is encrypted and processed securely.
+        {t.infoSecure}
       </p>
     </form>
   )
