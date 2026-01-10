@@ -7,14 +7,6 @@ import { useSubscriptionActions } from '../../hooks/useSubscriptionActions'
 import type { BillingDetails, SubmitPaymentResponse } from '../../types'
 
 
-// Standalone function to redirect to root with language suffix if present
-function redirectToRootWithLang() {
-  const match = window.location.pathname.match(/^\/(\w{2})(?:\/|$)/)
-  const lang = match ? `/${match[1]}` : ''
-  // @ts-ignore
-  window.location = lang || '/'
-}
-
 export interface SubscriptionCheckoutModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -164,7 +156,6 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
         open={showSuccess}
         onClose={() => {
           setShowSuccess(false)
-          redirectToRootWithLang()
         }}
         planName={planName}
         amountLabel={amountLabel ?? `$${usdAmount.toFixed(2)}`}
