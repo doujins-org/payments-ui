@@ -235,7 +235,7 @@ export const createClient = (config: ClientConfig) => {
       return request('POST', '/checkout', {
         body: payload,
         headers: {
-          'Idempotency-Key': key,
+          'X-Idempotency-Key': key,
         },
       })
     },

@@ -68,6 +68,9 @@ export const useSubscriptionActions = () => {
           state: billing.stateRegion,
           zip: billing.postalCode,
           country: billing.country,
+          last_four: billing.last_four,
+          card_type: billing.card_type,
+          expiry_date: billing.expiry_date,
         },
       }
       return client.checkout(payload, idempotencyKey)

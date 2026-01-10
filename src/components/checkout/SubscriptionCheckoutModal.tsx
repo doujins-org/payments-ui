@@ -6,6 +6,7 @@ import { SubscriptionSuccessDialog } from './SubscriptionSuccessDialog'
 import { useSubscriptionActions } from '../../hooks/useSubscriptionActions'
 import type { BillingDetails, SubmitPaymentResponse } from '../../types'
 
+
 export interface SubscriptionCheckoutModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -153,7 +154,9 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
 
       <SubscriptionSuccessDialog
         open={showSuccess}
-        onClose={() => setShowSuccess(false)}
+        onClose={() => {
+          setShowSuccess(false)
+        }}
         planName={planName}
         amountLabel={amountLabel ?? `$${usdAmount.toFixed(2)}`}
         billingPeriodLabel={billingPeriodLabel}
