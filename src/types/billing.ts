@@ -13,16 +13,20 @@ export interface BillingDetails {
   country: string
   email: string
   provider?: string
+  last_four?: string
+  card_type?: string
+  expiry_date?: string
 }
 
 export interface PaymentMethod {
   id: string
   processor?: string
-  brand?: string
-  card_type?: string
-  last_four?: string
-  exp_month?: number
-  exp_year?: number
+  card?: {
+    brand: string
+    last4: string
+    exp_month: number
+    exp_year: number
+  }
   is_active?: boolean
   failure_reason?: string | null
   created_at?: string
@@ -40,6 +44,9 @@ export interface CreatePaymentMethodPayload {
   country: string
   email: string
   provider?: string
+  last_four?: string
+  card_type?: string
+  expiry_date?: string
 }
 
 export interface PaginatedPaymentMethods {
@@ -101,18 +108,21 @@ export interface CheckoutResponse {
 
 export interface CheckoutRequestPayload {
   price_id: string
-  processor: string
-  payment_token?: string
-  payment_method_id?: string
   provider?: string
-  email?: string
-  first_name?: string
-  last_name?: string
-  address1?: string
-  city?: string
-  state?: string
-  zip?: string
-  country?: string
+  payment?: {
+    processor: string
+    payment_token?: string
+    payment_method_id?: string
+    email?: string
+    first_name?: string
+    last_name?: string
+    address1?: string
+    city?: string
+    state?: string
+    zip?: string
+    country?: string
+    // Add other payment fields as needed
+  }
 }
 
 export interface NmiSubscribePayload {

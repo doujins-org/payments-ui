@@ -63,8 +63,17 @@ export interface PaymentMethodsSectionProps {
 }
 
 const formatCardLabel = (method: PaymentMethod): string => {
-  const brand = method.card_type ? method.card_type.toUpperCase() : 'CARD'
-  const lastFour = method.last_four ? `•••• ${method.last_four}` : ''
+  if (method.card) {
+    const brand = method.card.brand ? method.card.brand.toUpperCase() : 'CARD'
+    const lastFour = method.card.last4 ? `•••• ${method.card.last4}` : ''
+    const exp =
+      method.card.exp_month && method.card.exp_year
+        ? ` • ${String(method.card.exp_month).padStart(2, '0')}/${String(method.card.exp_year).slice(-2)}`
+        : ''
+    return `${brand} ${lastFour}${exp}`.trim()
+  }
+  const brand = 'CARD'
+  const lastFour = ''
   return `${brand} ${lastFour}`.trim()
 }
 
@@ -106,8 +115,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
   onNotify,
   translations: customTranslations,
 }) => {
-  const { client } = usePaymentContext()
-  const queryClient = useQueryClient()
+  const { client, queryClient } = usePaymentContext()
 
   // Simple service wrapper for payment methods
   const paymentMethods = {
@@ -131,7 +139,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
   const paymentQuery = useQuery<PaginatedPaymentMethods>({
     queryKey,
     queryFn: () => paymentMethods.list({ pageSize: 50 }),
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !!client,
     staleTime: 30_000,
   })
 
@@ -157,6 +165,9 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
     onSuccess: () => {
       notify({ title: t.cardRemoved, status: 'success' })
       void queryClient.invalidateQueries({ queryKey })
+      if (paymentQuery.refetch) {
+        paymentQuery.refetch()
+      }
     },
     onError: (error) => {
       notify({
@@ -190,6 +201,27 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
     }
   }, [createMutation, isModalOpen])
 
+  // Refetch payment methods on mount and when dialog closes
+  useEffect(() => {
+    if (!isModalOpen && paymentQuery.refetch) {
+      paymentQuery.refetch()
+    }
+    // Also fire on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isModalOpen])
+
+  // Debug: log query status and errors
+  /*if (process.env.NODE_ENV !== 'production') {
+    // eslint-disable-next-line no-console
+    console.log('[PaymentMethodsSection] paymentQuery status:', {
+      isLoading: paymentQuery.isLoading,
+      isFetching: paymentQuery.isFetching,
+      isError: paymentQuery.isError,
+      error: paymentQuery.error,
+      data: paymentQuery.data,
+    })
+  }*/
+
   const payments = useMemo(() => paymentQuery.data?.data ?? [], [paymentQuery.data])
   const loading = paymentQuery.isLoading || paymentQuery.isFetching
 
@@ -205,6 +237,9 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
     country: billing.country,
     email: billing.email,
     provider: billing.provider,
+    last_four: billing.last_four,
+    card_type: billing.card_type,
+    expiry_date: billing.expiry_date,
   })
 
   const handleCardTokenize = (token: string, billing: BillingDetails) => {
@@ -261,7 +296,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Button
+                 {/*} <Button
                     variant="outline"
                     disabled={method.is_active || activateMutation.isPending}
                     onClick={() => activateMutation.mutate(method.id)}
@@ -270,7 +305,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : null}
                     {method.is_active ? t.defaultMethod : t.makeDefault}
-                  </Button>
+                  </Button> */}
                   <Button
                     variant="ghost"
                     className="text-red-400 hover:text-red-300"

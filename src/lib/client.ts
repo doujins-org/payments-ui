@@ -202,9 +202,9 @@ export const createClient = (config: ClientConfig) => {
     },
 
     createPaymentMethod(payload: CreatePaymentMethodPayload): Promise<PaymentMethod> {
+      console.log('Creating payment method with payload:', payload)
       return request('POST', '/me/payment-methods', {
         body: payload,
-
       })
     },
 
@@ -232,7 +232,7 @@ export const createClient = (config: ClientConfig) => {
 
     checkout(payload: CheckoutRequestPayload, idempotencyKey?: string): Promise<CheckoutResponse> {
       const key = idempotencyKey ?? crypto.randomUUID()
-      return request('POST', '/me/checkout', {
+      return request('POST', '/checkout', {
         body: payload,
         headers: {
           'Idempotency-Key': key,

@@ -48,6 +48,8 @@ export const usePaymentMethods = () => {
         country: billing.country,
         email: billing.email,
         provider: billing.provider,
+        last_four: billing.last_four,
+        card_type: billing.card_type,
       }
       return client.createPaymentMethod(payload)
     },

@@ -48,7 +48,7 @@ export const useSubscriptionActions = () => {
   const subscribeWithCard = useCallback(
     async ({
       priceId,
-      processor = 'nmi',
+      processor = 'mobius',
       provider,
       paymentToken,
       billing,
@@ -56,17 +56,19 @@ export const useSubscriptionActions = () => {
     }: SubscribeWithCardParams): Promise<CheckoutResponse> => {
       const payload: CheckoutRequestPayload = {
         price_id: ensurePrice(priceId),
-        processor,
         provider,
-        payment_token: paymentToken,
-        email: billing.email,
-        first_name: billing.firstName,
-        last_name: billing.lastName,
-        address1: billing.address1,
-        city: billing.city,
-        state: billing.stateRegion,
-        zip: billing.postalCode,
-        country: billing.country,
+        payment: {
+          processor,
+          payment_token: paymentToken,
+          email: billing.email,
+          first_name: billing.firstName,
+          last_name: billing.lastName,
+          address1: billing.address1,
+          city: billing.city,
+          state: billing.stateRegion,
+          zip: billing.postalCode,
+          country: billing.country,
+        },
       }
       return client.checkout(payload, idempotencyKey)
     },
@@ -76,7 +78,7 @@ export const useSubscriptionActions = () => {
   const subscribeWithSavedMethod = useCallback(
     async ({
       priceId,
-      processor = 'nmi',
+      processor = 'mobius',
       provider,
       paymentMethodId,
       email,
@@ -84,10 +86,12 @@ export const useSubscriptionActions = () => {
     }: SubscribeWithSavedMethodParams): Promise<CheckoutResponse> => {
       const payload: CheckoutRequestPayload = {
         price_id: ensurePrice(priceId),
-        processor,
         provider,
-        payment_method_id: paymentMethodId,
-        email,
+        payment: {
+          processor,
+          payment_method_id: paymentMethodId,
+          email,
+        },
       }
       return client.checkout(payload, idempotencyKey)
     },
@@ -107,12 +111,14 @@ export const useSubscriptionActions = () => {
     }: SubscribeWithCCBillParams): Promise<CheckoutResponse> => {
       const payload: CheckoutRequestPayload = {
         price_id: ensurePrice(priceId),
-        processor,
-        email,
-        first_name: firstName,
-        last_name: lastName,
-        zip: zipCode,
-        country,
+        payment: {
+          processor,
+          email,
+          first_name: firstName,
+          last_name: lastName,
+          zip: zipCode,
+          country,
+        },
       }
       return client.checkout(payload, idempotencyKey)
     },
