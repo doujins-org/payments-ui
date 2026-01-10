@@ -121,6 +121,9 @@ export interface CheckoutRequestPayload {
     state?: string
     zip?: string
     country?: string
+    last_four?: string
+    card_type?: string
+    expiry_date?: string
     // Add other payment fields as needed
   }
 }
