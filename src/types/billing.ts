@@ -108,18 +108,21 @@ export interface CheckoutResponse {
 
 export interface CheckoutRequestPayload {
   price_id: string
-  processor: string
-  payment_token?: string
-  payment_method_id?: string
   provider?: string
-  email?: string
-  first_name?: string
-  last_name?: string
-  address1?: string
-  city?: string
-  state?: string
-  zip?: string
-  country?: string
+  payment?: {
+    processor: string
+    payment_token?: string
+    payment_method_id?: string
+    email?: string
+    first_name?: string
+    last_name?: string
+    address1?: string
+    city?: string
+    state?: string
+    zip?: string
+    country?: string
+    // Add other payment fields as needed
+  }
 }
 
 export interface NmiSubscribePayload {
