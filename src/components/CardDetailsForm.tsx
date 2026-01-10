@@ -212,6 +212,9 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
         return
       }
 
+      // Format expiry date from MMYY to MM/YY
+      let rawExp = response.card?.exp as string
+      let formattedExp = rawExp && rawExp.length === 4 ? `${rawExp.slice(0,2)}/${rawExp.slice(2)}` : rawExp
       const billing: BillingDetails = {
         firstName,
         lastName,
@@ -224,7 +227,7 @@ export const CardDetailsForm: React.FC<CardDetailsFormProps> = ({
         provider: mergedDefaults.provider ?? 'mobius',
         last_four: response.card?.number as string,
         card_type: response.card?.type as string,
-        expiry_date: response.card?.exp as string,
+        expiry_date: formattedExp,
       }
 
       onTokenize(response.token, billing)
