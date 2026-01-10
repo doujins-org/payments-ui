@@ -341,6 +341,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
             collectPrefix={collectPrefix}
             onTokenize={handleCardTokenize}
             submitting={createMutation.isPending}
+            translations={t as any}
             defaultValues={{
               provider,
               email: userEmail ?? '',
