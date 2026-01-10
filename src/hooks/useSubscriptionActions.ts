@@ -48,7 +48,7 @@ export const useSubscriptionActions = () => {
   const subscribeWithCard = useCallback(
     async ({
       priceId,
-      processor = 'nmi',
+      processor = 'mobius',
       provider,
       paymentToken,
       billing,
@@ -78,7 +78,7 @@ export const useSubscriptionActions = () => {
   const subscribeWithSavedMethod = useCallback(
     async ({
       priceId,
-      processor = 'nmi',
+      processor = 'mobius',
       provider,
       paymentMethodId,
       email,
