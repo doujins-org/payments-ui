@@ -5,6 +5,7 @@ import type { CardDetailsFormTranslations } from './CardDetailsForm'
 import { StoredPaymentMethods } from './StoredPaymentMethods'
 import type { StoredPaymentMethodsTranslations } from './StoredPaymentMethods'
 import { Button } from '../components/ui/button'
+import { resolveErrorMessageByCode } from '../utils/errorMessages'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { usePaymentNotifications } from '../hooks/usePaymentNotifications'
 import { SolanaPaymentView } from './SolanaPaymentView'
@@ -24,6 +25,7 @@ export interface PaymentExperienceTranslations extends CardDetailsFormTranslatio
   storedNoSavedMethods?: string
   storedSelectedLabel?: string
   storedUseCardLabel?: string
+  errors?: Record<string, string>
 }
 
 export const defaultPaymentExperienceTranslations: Required<PaymentExperienceTranslations> = {
@@ -40,6 +42,7 @@ export const defaultPaymentExperienceTranslations: Required<PaymentExperienceTra
   storedNoSavedMethods: 'No saved payment methods yet.',
   storedSelectedLabel: 'Selected',
   storedUseCardLabel: 'Use card',
+  errors: {},
 }
 
 export interface PaymentExperienceProps {
@@ -143,6 +146,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   const handleNewCardTokenize = useCallback(
     async (token: string, billing: BillingDetails) => {
       if (!onNewCardPayment) return
+
       try {
         setNewCardStatus('processing')
         setNewCardError(null)
@@ -151,15 +155,18 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
         setNewCardStatus('success')
         notifyStatus('success', { source: 'new-card' })
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : 'Unable to complete payment'
+        const message = resolveErrorMessageByCode(
+          error,
+          t.errors,
+          'Unable to complete payment'
+        )
         setNewCardStatus('error')
         setNewCardError(message)
         notifyStatus('error', { source: 'new-card' })
         notifyError(message)
       }
     },
-    [notifyError, notifyStatus, onNewCardPayment]
+    [notifyError, notifyStatus, onNewCardPayment, t]
   )
 
   const showSolanaView = useCallback(() => {

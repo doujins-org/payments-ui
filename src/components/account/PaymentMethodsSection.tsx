@@ -27,6 +27,7 @@ import type {
   PaymentMethod,
 } from '../../types'
 import { usePaymentContext } from '../../context/PaymentContext'
+import { resolveErrorMessageByCode } from '../../utils/errorMessages'
 
 export interface PaymentMethodsSectionTranslations {
   title?: string
@@ -50,6 +51,7 @@ export interface PaymentMethodsSectionTranslations {
   cardUpdated?: string
   defaultPaymentMethodUpdated?: string
   unableToSetDefault?: string
+  errors?: Record<string, string>
 }
 
 export interface PaymentMethodsSectionProps {
@@ -104,6 +106,7 @@ const defaultTranslations: Required<PaymentMethodsSectionTranslations> = {
   unableToRemoveCard: 'Unable to remove card',
   defaultPaymentMethodUpdated: 'Default payment method updated',
   unableToSetDefault: 'Unable to set default payment method',
+  errors: {},
 }
 
 export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
@@ -128,9 +131,9 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
     activate: (id: string) => client.activatePaymentMethod(id),
   }
 
-
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [createErrorMessage, setCreateErrorMessage] = useState<string | null>(null)
   const notify = onNotify ?? notifyDefault
   const t = { ...defaultTranslations, ...customTranslations }
 
@@ -149,11 +152,14 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
       notify({ title: t.cardAddedSuccess, status: 'success' })
       setIsModalOpen(false)
       void queryClient.invalidateQueries({ queryKey })
+      setCreateErrorMessage(null)
     },
     onError: (error) => {
+      const message = resolveErrorMessageByCode(error, t.errors, error.message)
+      setCreateErrorMessage(message)
       notify({
         title: t.unableToAddCard,
-        description: error.message,
+        description: message,
         status: 'destructive',
       })
     },
@@ -198,8 +204,11 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
   useEffect(() => {
     if (!isModalOpen) {
       createMutation.reset()
+      setCreateErrorMessage(null)
     }
-  }, [createMutation, isModalOpen])
+    // Only re-run when dialog visibility changes to avoid reset loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isModalOpen])
 
   // Refetch payment methods on mount and when dialog closes
   useEffect(() => {
@@ -243,6 +252,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
   })
 
   const handleCardTokenize = (token: string, billing: BillingDetails) => {
+    setCreateErrorMessage(null)
     createMutation.mutate(buildPayload(token, billing))
   }
 
@@ -347,7 +357,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
               email: userEmail ?? '',
               country: defaultCountry,
             }}
-            externalError={createMutation.error?.message ?? null}
+            externalError={createErrorMessage}
           />
         </DialogContent>
       </Dialog>
