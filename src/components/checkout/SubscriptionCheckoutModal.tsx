@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog'
 import { AlertCircle } from 'lucide-react'
-import { PaymentExperience } from '../PaymentExperience'
+import { PaymentExperience, defaultPaymentExperienceTranslations } from '../PaymentExperience'
 import { SubscriptionSuccessDialog } from './SubscriptionSuccessDialog'
 import { useSubscriptionActions } from '../../hooks/useSubscriptionActions'
 import type { BillingDetails, SubmitPaymentResponse } from '../../types'
+import type { PaymentExperienceTranslations } from '../PaymentExperience'
 
 
 export interface SubscriptionCheckoutModalProps {
@@ -22,6 +23,18 @@ export interface SubscriptionCheckoutModalProps {
   onSolanaSuccess?: (result: SubmitPaymentResponse | string) => void
   onSolanaError?: (error: string) => void
   initialMode?: 'cards' | 'solana'
+  translations?: SubscriptionCheckoutModalTranslations
+}
+
+export interface SubscriptionCheckoutModalTranslations extends PaymentExperienceTranslations {
+  title?: string
+  selectPlanMessage?: string
+}
+
+const defaultTranslations: Required<SubscriptionCheckoutModalTranslations> = {
+  ...defaultPaymentExperienceTranslations,
+  title: 'Checkout',
+  selectPlanMessage: 'Select a subscription plan to continue.',
 }
 
 export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps> = ({
@@ -39,10 +52,15 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
   onSolanaSuccess,
   onSolanaError,
   initialMode = 'cards',
+  translations,
 }) => {
   const [showSuccess, setShowSuccess] = useState(false)
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID())
   const { subscribeWithCard, subscribeWithSavedMethod } = useSubscriptionActions()
+  const t: Required<SubscriptionCheckoutModalTranslations> = {
+    ...defaultTranslations,
+    ...translations,
+  }
 
   // Generate a new idempotency key when the modal opens or priceId changes
   // This ensures retries use the same key, but new checkout attempts get fresh keys
@@ -124,13 +142,13 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
           className="z-[100] max-w-xl max-h-[90vh] overflow-y-auto border border-white/20 p-6 backdrop-blur-xl bg-background-regular rounded-md [&::-webkit-scrollbar]:hidden"
         >
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-foreground">Checkout</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-foreground">{t.title}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             {!priceId ? (
               <div className="flex items-center gap-2 text-center px-3 py-2 text-sm text-destructive">
-                <AlertCircle className="h-4 w-4" /> <span>Select a subscription plan to continue.</span>
+                <AlertCircle className="h-4 w-4" /> <span>{t.selectPlanMessage}</span>
               </div>
             ) :
               (
@@ -145,6 +163,7 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
                   enableSolanaPay={enableSolanaPay && Boolean(priceId)}
                   onNewCardPayment={priceId ? handleNewCardPayment : undefined}
                   onSavedMethodPayment={priceId ? handleSavedMethodPayment : undefined}
+                  translations={t}
                 />
               )
             }

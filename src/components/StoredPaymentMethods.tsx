@@ -8,6 +8,20 @@ import { ScrollArea } from '../components/ui/scroll-area'
 import { cn } from '../lib/utils'
 import clsx from 'clsx'
 
+export interface StoredPaymentMethodsTranslations {
+  loadingCards?: string
+  noSavedMethods?: string
+  selectedLabel?: string
+  useCardLabel?: string
+}
+
+const defaultTranslations: Required<StoredPaymentMethodsTranslations> = {
+  loadingCards: 'Loading cards...',
+  noSavedMethods: 'No saved payment methods yet.',
+  selectedLabel: 'Selected',
+  useCardLabel: 'Use card',
+}
+
 const formatCardLabel = (method: PaymentMethod): string => {
   if (method.card) {
     const brand = method.card.brand ? method.card.brand.toUpperCase() : 'CARD'
@@ -26,24 +40,27 @@ export interface StoredPaymentMethodsProps {
   onMethodSelect?: (method: PaymentMethod) => void
   heading?: string
   description?: string
+  translations?: StoredPaymentMethodsTranslations
 }
 
 export const StoredPaymentMethods: React.FC<StoredPaymentMethodsProps> = ({
   selectedMethodId,
   onMethodSelect,
+  translations,
 }) => {
   const { listQuery } = usePaymentMethods()
   const payments = useMemo(() => listQuery.data?.data ?? [], [listQuery.data])
+  const t = { ...defaultTranslations, ...translations }
 
   return (
     <div className="space-y-4">
       {listQuery.isLoading ? (
         <div className="flex items-center justify-center py-4 text-sm text-muted-foreground">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading cards...
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t.loadingCards}
         </div>
       ) : payments.length === 0 ? (
         <div className="p-4 text-center text-sm text-muted-foreground">
-          No saved payment methods yet.
+          {t.noSavedMethods}
         </div>
       ) : (
         <ScrollArea className="max-h-[320px] pr-2">
@@ -75,7 +92,7 @@ export const StoredPaymentMethods: React.FC<StoredPaymentMethodsProps> = ({
                         onClick={() => onMethodSelect(method)}
                         className={clsx('px-3', { 'bg-muted/90': !isSelected, 'bg-inherit': isSelected })}
                       >
-                        {isSelected ? 'Selected' : 'Use card'}
+                        {isSelected ? t.selectedLabel : t.useCardLabel}
                       </Button>
                     )}
                   </div>

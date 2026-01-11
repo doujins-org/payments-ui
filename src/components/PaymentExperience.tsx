@@ -1,14 +1,46 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import type { BillingDetails, PaymentMethod, SubmitPaymentResponse } from '../types'
-import { CardDetailsForm } from './CardDetailsForm'
+import { CardDetailsForm, defaultCardDetailsFormTranslations } from './CardDetailsForm'
+import type { CardDetailsFormTranslations } from './CardDetailsForm'
 import { StoredPaymentMethods } from './StoredPaymentMethods'
+import type { StoredPaymentMethodsTranslations } from './StoredPaymentMethods'
 import { Button } from '../components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { usePaymentNotifications } from '../hooks/usePaymentNotifications'
 import { SolanaPaymentView } from './SolanaPaymentView'
-import { clsx } from 'clsx'
 
 type AsyncStatus = 'idle' | 'processing' | 'success' | 'error'
+
+export interface PaymentExperienceTranslations extends CardDetailsFormTranslations {
+  useSavedCardTab?: string
+  addNewCardTab?: string
+  savedUnavailable?: string
+  payWithSavedCard?: string
+  processingSavedCard?: string
+  savedErrorFallback?: string
+  newCardUnavailable?: string
+  payNow?: string
+  storedLoadingCards?: string
+  storedNoSavedMethods?: string
+  storedSelectedLabel?: string
+  storedUseCardLabel?: string
+}
+
+export const defaultPaymentExperienceTranslations: Required<PaymentExperienceTranslations> = {
+  ...defaultCardDetailsFormTranslations,
+  useSavedCardTab: 'Use saved card',
+  addNewCardTab: 'Add new card',
+  savedUnavailable: 'Saved payment methods are unavailable right now. Add a new card to get started.',
+  payWithSavedCard: 'Pay with selected card',
+  processingSavedCard: 'Processing...',
+  savedErrorFallback: 'Unable to complete payment with saved card',
+  newCardUnavailable: 'Select a subscription plan to add a new card.',
+  payNow: 'Pay now',
+  storedLoadingCards: 'Loading cards...',
+  storedNoSavedMethods: 'No saved payment methods yet.',
+  storedSelectedLabel: 'Selected',
+  storedUseCardLabel: 'Use card',
+}
 
 export interface PaymentExperienceProps {
   priceId: string
@@ -27,6 +59,7 @@ export interface PaymentExperienceProps {
   onSolanaSuccess?: (result: SubmitPaymentResponse | string) => void
   onSolanaError?: (error: string) => void
   initialMode?: 'cards' | 'solana'
+  translations?: PaymentExperienceTranslations
 }
 
 export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
@@ -40,7 +73,12 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   onSolanaSuccess,
   onSolanaError,
   initialMode = 'cards',
+  translations,
 }) => {
+  const t: Required<PaymentExperienceTranslations> = {
+    ...defaultPaymentExperienceTranslations,
+    ...translations,
+  }
   const showNewCard = enableNewCard && Boolean(onNewCardPayment)
   const showStored = enableStoredMethods && Boolean(onSavedMethodPayment)
   const defaultTab = showStored ? 'saved' : 'new'
@@ -94,13 +132,13 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
       const message =
         error instanceof Error
           ? error.message
-          : 'Unable to complete payment with saved card'
+          : t.savedErrorFallback
       setSavedStatus('error')
-      setSavedError(message)
+      setSavedError(message as string)
       notifyStatus('error', { source: 'saved-payment' })
-      notifyError(message)
+      notifyError(message as string)
     }
-  }, [notifyError, notifyStatus, onSavedMethodPayment, selectedMethodId, usdAmount])
+  }, [notifyError, notifyStatus, onSavedMethodPayment, selectedMethodId, t.savedErrorFallback, usdAmount])
 
   const handleNewCardTokenize = useCallback(
     async (token: string, billing: BillingDetails) => {
@@ -152,7 +190,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
     if (!showStored) {
       return (
         <p className="text-sm text-muted-foreground">
-          Saved payment methods are unavailable right now. Add a new card to get started.
+          {t.savedUnavailable}
         </p>
       )
     }
@@ -162,6 +200,12 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
         <StoredPaymentMethods
           selectedMethodId={selectedMethodId}
           onMethodSelect={handleMethodSelect}
+          translations={{
+            loadingCards: t.storedLoadingCards,
+            noSavedMethods: t.storedNoSavedMethods,
+            selectedLabel: t.storedSelectedLabel,
+            useCardLabel: t.storedUseCardLabel,
+          }}
         />
 
         <Button
@@ -169,7 +213,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
           disabled={!selectedMethodId || savedStatus === 'processing'}
           onClick={handleSavedPayment}
         >
-          {savedStatus === 'processing' ? 'Processing...' : 'Pay with selected card'}
+          {savedStatus === 'processing' ? t.processingSavedCard : t.payWithSavedCard}
         </Button>
         {savedError && <p className="text-sm text-destructive">{savedError}</p>}
       </div>
@@ -180,7 +224,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
     if (!showNewCard) {
       return (
         <p className="text-sm text-muted-foreground">
-          Select a subscription plan to add a new card.
+          {t.newCardUnavailable}
         </p>
       )
     }
@@ -188,10 +232,11 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
     return (
       <CardDetailsForm
         visible
-        submitLabel="Pay now"
+        submitLabel={t.payNow}
         externalError={newCardError}
         onTokenize={handleNewCardTokenize}
         submitting={newCardStatus === 'processing'}
+        translations={t}
       />
     )
   }
@@ -200,11 +245,11 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
     <Tabs value={activeTab} onValueChange={setActiveTab}>
       <TabsList className='w-full rounded-md mb-4'>
         <TabsTrigger className='cursor-pointer' value="saved">
-          Use saved card
+          {t.useSavedCardTab}
         </TabsTrigger>
 
         <TabsTrigger className='cursor-pointer' value="new">
-          Add new card
+          {t.addNewCardTab}
         </TabsTrigger>
       </TabsList>
 
