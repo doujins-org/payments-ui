@@ -10,7 +10,7 @@ export interface SubscribeWithCardParams {
   priceId?: string | null
   processor?: string
   provider?: string
-  paymentToken: string
+  paymentToken?: string
   billing: BillingDetails
   idempotencyKey?: string
 }
@@ -21,17 +21,6 @@ export interface SubscribeWithSavedMethodParams {
   provider?: string
   paymentMethodId: string
   email?: string
-  idempotencyKey?: string
-}
-
-export interface SubscribeWithCCBillParams {
-  priceId?: string | null
-  email: string
-  firstName: string
-  lastName: string
-  zipCode: string
-  country: string
-  processor?: string
   idempotencyKey?: string
 }
 
@@ -54,25 +43,35 @@ export const useSubscriptionActions = () => {
       billing,
       idempotencyKey,
     }: SubscribeWithCardParams): Promise<CheckoutResponse> => {
+      if (processor !== 'ccbill' && !paymentToken) {
+        throw new Error('payments-ui: payment token is required for card checkout')
+      }
+
+      const payment: CheckoutRequestPayload['payment'] = {
+        processor,
+        email: billing.email,
+        first_name: billing.firstName,
+        last_name: billing.lastName,
+        address1: billing.address1,
+        city: billing.city,
+        state: billing.stateRegion,
+        zip: billing.postalCode,
+        country: billing.country,
+      }
+
+      if (paymentToken) {
+        payment.payment_token = paymentToken
+        payment.last_four = billing.last_four
+        payment.card_type = billing.card_type
+        payment.expiry_date = billing.expiry_date
+      }
+
       const payload: CheckoutRequestPayload = {
         price_id: ensurePrice(priceId),
         provider,
-        payment: {
-          processor,
-          payment_token: paymentToken,
-          email: billing.email,
-          first_name: billing.firstName,
-          last_name: billing.lastName,
-          address1: billing.address1,
-          city: billing.city,
-          state: billing.stateRegion,
-          zip: billing.postalCode,
-          country: billing.country,
-          last_four: billing.last_four,
-          card_type: billing.card_type,
-          expiry_date: billing.expiry_date,
-        },
+        payment,
       }
+
       return client.checkout(payload, idempotencyKey)
     },
     [client]
@@ -101,36 +100,8 @@ export const useSubscriptionActions = () => {
     [client]
   )
 
-  const subscribeWithCCBill = useCallback(
-    async ({
-      priceId,
-      email,
-      firstName,
-      lastName,
-      zipCode,
-      country,
-      processor = 'ccbill',
-      idempotencyKey,
-    }: SubscribeWithCCBillParams): Promise<CheckoutResponse> => {
-      const payload: CheckoutRequestPayload = {
-        price_id: ensurePrice(priceId),
-        payment: {
-          processor,
-          email,
-          first_name: firstName,
-          last_name: lastName,
-          zip: zipCode,
-          country,
-        },
-      }
-      return client.checkout(payload, idempotencyKey)
-    },
-    [client]
-  )
-
   return {
     subscribeWithCard,
     subscribeWithSavedMethod,
-    subscribeWithCCBill,
   }
 }

@@ -4,7 +4,7 @@ import { AlertCircle } from 'lucide-react'
 import { PaymentExperience, defaultPaymentExperienceTranslations } from '../PaymentExperience'
 import { SubscriptionSuccessDialog } from './SubscriptionSuccessDialog'
 import { useSubscriptionActions } from '../../hooks/useSubscriptionActions'
-import type { BillingDetails, SubmitPaymentResponse } from '../../types'
+import type { BillingDetails, CheckoutResponse, SubmitPaymentResponse } from '../../types'
 import type { PaymentExperienceTranslations } from '../PaymentExperience'
 
 
@@ -91,13 +91,35 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
     }
   }
 
-  const assertCheckoutSuccess = (status: string, message?: string) => {
-    if (status === 'blocked') {
-      throw new Error(message || 'This subscription cannot be completed right now.')
+  const handleCheckoutResponse = (response: CheckoutResponse) => {
+    if (response.status === 'blocked') {
+      throw new Error(response.message || 'This subscription cannot be completed right now.')
     }
-    if (status === 'redirect_required') {
-      throw new Error(message || 'Additional action required in an alternate flow.')
+
+    const nextAction = response.next_action
+    if (nextAction?.type === 'redirect_to_url') {
+      const redirectUrl = nextAction.redirect_to_url?.url || response.payment?.redirect_url
+      if (!redirectUrl) {
+        throw new Error(response.message || 'Checkout requires a redirect URL.')
+      }
+      if (typeof window !== 'undefined') {
+        window.location.assign(redirectUrl)
+      }
+      return
     }
+
+    if (response.payment?.redirect_url) {
+      if (typeof window !== 'undefined') {
+        window.location.assign(response.payment.redirect_url)
+      }
+      return
+    }
+
+    if (nextAction && nextAction.type !== 'none') {
+      throw new Error(response.message || 'Unsupported checkout action.')
+    }
+
+    notifySuccess()
   }
 
   const handleNewCardPayment = async ({ token, billing }: { token: string; billing: BillingDetails }) => {
@@ -109,8 +131,7 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
       priceId: ensurePrice(),
     })
 
-    assertCheckoutSuccess(response.status, response.message)
-    notifySuccess()
+    handleCheckoutResponse(response)
   }
 
   const handleSavedMethodPayment = async ({ paymentMethodId }: { paymentMethodId: string }) => {
@@ -121,8 +142,18 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
       email: userEmail ?? '',
       idempotencyKey,
     })
-    assertCheckoutSuccess(response.status, response.message)
-    notifySuccess()
+    handleCheckoutResponse(response)
+  }
+
+  const handleCcbillPayment = async ({ billing }: { billing: BillingDetails }) => {
+    const response = await subscribeWithCard({
+      billing,
+      idempotencyKey,
+      processor: 'ccbill',
+      priceId: ensurePrice(),
+    })
+
+    handleCheckoutResponse(response)
   }
 
   const solanaSuccess = (result: SubmitPaymentResponse | string) => {
@@ -163,6 +194,7 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
                   enableSolanaPay={enableSolanaPay && Boolean(priceId)}
                   onNewCardPayment={priceId ? handleNewCardPayment : undefined}
                   onSavedMethodPayment={priceId ? handleSavedMethodPayment : undefined}
+                  onCcbillPayment={priceId ? handleCcbillPayment : undefined}
                   translations={t}
                 />
               )

@@ -1,6 +1,6 @@
 export type PaymentPlatform = 'nmi' | 'ccbill'
 
-export type CheckoutStatus = 'success' | 'pending' | 'redirect_required' | 'blocked'
+export type CheckoutStatus = string
 
 export interface BillingDetails {
   firstName: string
@@ -97,23 +97,59 @@ export interface BillingStatus {
   access: BillingAccessGrant[]
 }
 
-export interface CheckoutResponse {
-  status: CheckoutStatus
-  message?: string
-  subscription_id?: string
-  payment_id?: string
-  transaction_id?: string
+export type CheckoutMode = 'one_off' | 'subscription'
+
+export type CheckoutNextActionType =
+  | 'redirect_to_url'
+  | 'solana_qr'
+  | 'solana_transaction'
+  | 'none'
+
+export interface CheckoutNextActionRedirect {
+  url: string
+  return_url?: string
+}
+
+export interface CheckoutNextAction {
+  type: CheckoutNextActionType
+  redirect_to_url?: CheckoutNextActionRedirect
+}
+
+export interface CheckoutPaymentResponse {
+  processor: string
+  reference?: string
+  transaction_url?: string
+  transaction_data?: string
   redirect_url?: string
-  delayed_start?: string
+  transaction_id?: string
+}
+
+export interface CheckoutResponse {
+  object?: string
+  id: string
+  status: CheckoutStatus
+  mode?: CheckoutMode
+  price_id?: string
+  payment?: CheckoutPaymentResponse
+  payment_id?: string
+  subscription_id?: string
+  expires_at?: string
+  next_action?: CheckoutNextAction
+  message?: string
+  metadata?: Record<string, string>
 }
 
 export interface CheckoutRequestPayload {
   price_id: string
+  mode?: CheckoutMode
   provider?: string
-  payment?: {
+  payment: {
     processor: string
     payment_token?: string
     payment_method_id?: string
+    token_symbol?: string
+    flow?: 'transfer_request' | 'transaction_request'
+    wallet?: string
     email?: string
     first_name?: string
     last_name?: string
@@ -125,8 +161,8 @@ export interface CheckoutRequestPayload {
     last_four?: string
     card_type?: string
     expiry_date?: string
-    // Add other payment fields as needed
   }
+  metadata?: Record<string, string>
 }
 
 export interface NmiSubscribePayload {
@@ -142,16 +178,6 @@ export interface NmiSubscribePayload {
   country?: string
   email?: string
   provider?: string
-  processor?: string
-}
-
-export interface CCBillSubscribePayload {
-  priceId: string
-  email: string
-  firstName: string
-  lastName: string
-  zipCode: string
-  country: string
   processor?: string
 }
 

@@ -25,6 +25,8 @@ export interface PaymentExperienceTranslations extends CardDetailsFormTranslatio
   storedNoSavedMethods?: string
   storedSelectedLabel?: string
   storedUseCardLabel?: string
+  payWithCcbill?: string
+  processingCcbill?: string
   errors?: Record<string, string>
 }
 
@@ -42,6 +44,8 @@ export const defaultPaymentExperienceTranslations: Required<PaymentExperienceTra
   storedNoSavedMethods: 'No saved payment methods yet.',
   storedSelectedLabel: 'Selected',
   storedUseCardLabel: 'Use card',
+  payWithCcbill: 'Pay with CCBill',
+  processingCcbill: 'Redirecting...',
   errors: {},
 }
 
@@ -56,6 +60,7 @@ export interface PaymentExperienceProps {
     paymentMethodId: string
     amount: number
   }) => Promise<void> | void
+  onCcbillPayment?: (payload: { billing: BillingDetails }) => Promise<void> | void
   enableNewCard?: boolean
   enableStoredMethods?: boolean
   enableSolanaPay?: boolean
@@ -70,6 +75,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   usdAmount,
   onNewCardPayment,
   onSavedMethodPayment,
+  onCcbillPayment,
   enableNewCard = true,
   enableStoredMethods = true,
   enableSolanaPay = true,
@@ -84,6 +90,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   }
   const showNewCard = enableNewCard && Boolean(onNewCardPayment)
   const showStored = enableStoredMethods && Boolean(onSavedMethodPayment)
+  const showCcbill = showNewCard && Boolean(onCcbillPayment)
   const defaultTab = showStored ? 'saved' : 'new'
   const [activeTab, setActiveTab] = useState(defaultTab)
   const [mode, setMode] = useState<'cards' | 'solana'>(() =>
@@ -94,6 +101,9 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   const [savedError, setSavedError] = useState<string | null>(null)
   const [newCardStatus, setNewCardStatus] = useState<AsyncStatus>('idle')
   const [newCardError, setNewCardError] = useState<string | null>(null)
+  const [billingDetails, setBillingDetails] = useState<BillingDetails | null>(null)
+  const [ccbillStatus, setCcbillStatus] = useState<AsyncStatus>('idle')
+  const [ccbillError, setCcbillError] = useState<string | null>(null)
   const { notifyStatus, notifyError } = usePaymentNotifications()
 
   useEffect(() => {
@@ -112,6 +122,33 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
       setMode('cards')
     }
   }, [enableSolanaPay, initialMode])
+
+  useEffect(() => {
+    if (!showNewCard) {
+      setBillingDetails(null)
+      setCcbillStatus('idle')
+      setCcbillError(null)
+    }
+  }, [showNewCard])
+
+  const handleBillingChange = useCallback((billing: BillingDetails) => {
+    setBillingDetails(billing)
+    setCcbillError(null)
+    setCcbillStatus('idle')
+  }, [])
+
+  const isBillingComplete = useCallback((billing: BillingDetails | null) => {
+    if (!billing) return false
+    return Boolean(
+      billing.firstName.trim() &&
+        billing.lastName.trim() &&
+        billing.address1.trim() &&
+        billing.city.trim() &&
+        billing.postalCode.trim() &&
+        billing.country.trim() &&
+        billing.email.trim()
+    )
+  }, [])
 
   const handleMethodSelect = useCallback((method: PaymentMethod) => {
     setSelectedMethodId(method.id)
@@ -169,6 +206,46 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
     },
     [notifyError, notifyStatus, onNewCardPayment, t]
   )
+
+  const handleCcbillPayment = useCallback(async () => {
+    if (!onCcbillPayment) return
+
+    if (!billingDetails || !isBillingComplete(billingDetails)) {
+      const message = t.errorRequiredFields
+      setActiveTab('new')
+      setCcbillStatus('error')
+      setCcbillError(message)
+      notifyStatus('error', { source: 'ccbill' })
+      notifyError(message)
+      return
+    }
+
+    try {
+      setCcbillStatus('processing')
+      setCcbillError(null)
+      notifyStatus('processing', { source: 'ccbill' })
+      await onCcbillPayment({ billing: billingDetails })
+      setCcbillStatus('success')
+      notifyStatus('success', { source: 'ccbill' })
+    } catch (error) {
+      const message = resolveErrorMessageByCode(
+        error,
+        t.errors,
+        'Unable to start CCBill checkout'
+      )
+      setCcbillStatus('error')
+      setCcbillError(message)
+      notifyStatus('error', { source: 'ccbill' })
+      notifyError(message)
+    }
+  }, [
+    billingDetails,
+    isBillingComplete,
+    notifyError,
+    notifyStatus,
+    onCcbillPayment,
+    t,
+  ])
 
   const showSolanaView = useCallback(() => {
     if (!enableSolanaPay) return
@@ -244,6 +321,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
         externalError={newCardError}
         onTokenize={handleNewCardTokenize}
         submitting={newCardStatus === 'processing'}
+        onBillingChange={handleBillingChange}
         translations={t}
       />
     )
@@ -255,12 +333,12 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
         <TabsTrigger className='cursor-pointer' value="saved">
           {t.useSavedCardTab}
         </TabsTrigger>
-
+ 
         <TabsTrigger className='cursor-pointer' value="new">
           {t.addNewCardTab}
         </TabsTrigger>
       </TabsList>
-
+ 
       <TabsContent value="saved">
         {renderSavedTab()}
       </TabsContent>
@@ -268,12 +346,35 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
         {renderNewTab()}
       </TabsContent>
     </Tabs>
-
+ 
   )
 
+  const renderCcbillAction = () => {
+    if (!showCcbill) return null
+
+    return (
+      <div className="space-y-2 border-t border-white/10 pt-4">
+        <Button
+          className="w-full"
+          variant="outline"
+          disabled={ccbillStatus === 'processing'}
+          onClick={handleCcbillPayment}
+        >
+          {ccbillStatus === 'processing' ? t.processingCcbill : t.payWithCcbill}
+        </Button>
+        {ccbillError && <p className="text-sm text-destructive">{ccbillError}</p>}
+      </div>
+    )
+  }
+ 
   return (
     <div className="space-y-6 pt-4">
-      {mode === 'cards' && renderCardExperience()}
+      {mode === 'cards' && (
+        <>
+          {renderCardExperience()}
+          {renderCcbillAction()}
+        </>
+      )}
       {mode === 'solana' && enableSolanaPay && (
         <SolanaPaymentView
           priceId={priceId}
@@ -286,3 +387,4 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
     </div>
   )
 }
+
