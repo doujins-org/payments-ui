@@ -49,7 +49,7 @@ const notifyDefault = (payload: NotificationPayload) => {
   console[level === 'error' ? 'error' : 'log']('[payments-ui] cancellation', payload)
 }
 
-const defaultTranslations: Required<CancelMembershipDialogTranslations> = {
+export const defaultTranslations: Required<CancelMembershipDialogTranslations> = {
   buttonLabel: 'Cancel Membership',
   title: 'Confirm Membership Cancellation',
   description: 'You are about to cancel your membership. Please review the consequences:',

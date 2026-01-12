@@ -20,7 +20,10 @@ export interface BillingDetails {
 
 export interface PaymentMethod {
   id: string
+  object?: string
+  type?: string
   processor?: string
+  livemode?: boolean
   card?: {
     brand: string
     last4: string
@@ -30,7 +33,100 @@ export interface PaymentMethod {
   is_active?: boolean
   failure_reason?: string | null
   created_at?: string
-  
+  created?: number
+  subscriptions?: Array<{
+    id: string
+    display_name: string
+    description?: string
+    created_at: string
+  }>
+}
+
+export interface SubscriptionPrice {
+  id: string
+  display_name: string
+  amount: number
+  currency: string
+  billing_cycle_days?: number
+  processors?: Record<string, unknown>
+}
+
+export interface SubscriptionProduct {
+  id: string
+  slug?: string
+  display_name?: string
+  description?: string
+  tier_group?: string
+  tier_rank?: number
+  entitlements_spec?: unknown
+  credits_spec?: unknown
+  is_active?: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export type SubscriptionStatus = 'active' | 'cancelled' | 'past_due' | 'all' | 'pending'
+
+export interface SubscriptionAccess {
+  kind: string
+  entitlement: string
+  processor?: string
+  processor_subscription_id?: string
+  start_at?: string | null
+  end_at?: string | null
+}
+
+export interface Subscription {
+  id: string
+  user_id?: string
+  product_id?: string
+  price_id?: string
+  status: string
+  started_at?: string
+  current_period_starts_at?: string
+  current_period_ends_at?: string
+  created_at?: string
+  updated_at?: string
+  processor?: string
+  processor_subscription_id?: string
+  payment_method_id?: string
+  cancel_feedback?: string | null
+  cancel_type?: string | null
+  cancelled_at?: string | null
+  price?: SubscriptionPrice
+  product?: SubscriptionProduct
+  access?: SubscriptionAccess
+}
+
+export interface PaginatedSubscriptions {
+  data: Subscription[]
+  total: number
+  limit: number
+  offset: number
+  hasMore: boolean
+}
+
+export interface UpdateSubscriptionPaymentMethodPayload {
+  subscription_id: string
+  payment_method_id: string
+}
+
+export interface UpdateSubscriptionPaymentMethodResponse {
+  success?: boolean
+  message?: string
+  subscription_id: string
+  payment_method_id: string
+}
+
+export interface ChangeSubscriptionPayload {
+  price_id: string
+}
+
+export interface ChangeSubscriptionResponse {
+  status: string
+  action?: 'upgrade' | 'downgrade'
+  message?: string
+  subscription_id?: string
 }
 
 export interface CreatePaymentMethodPayload {
