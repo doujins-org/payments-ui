@@ -30,6 +30,7 @@ export interface PaymentMethod {
   is_active?: boolean
   failure_reason?: string | null
   created_at?: string
+  
 }
 
 export interface CreatePaymentMethodPayload {

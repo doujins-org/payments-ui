@@ -132,16 +132,17 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
       setSavedStatus('success')
       notifyStatus('success', { source: 'saved-payment' })
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : t.savedErrorFallback
+      const message = resolveErrorMessageByCode(
+        error,
+        t.errors,
+        t.savedErrorFallback
+      )
       setSavedStatus('error')
-      setSavedError(message as string)
+      setSavedError(message)
       notifyStatus('error', { source: 'saved-payment' })
-      notifyError(message as string)
+      notifyError(message)
     }
-  }, [notifyError, notifyStatus, onSavedMethodPayment, selectedMethodId, t.savedErrorFallback, usdAmount])
+  }, [notifyError, notifyStatus, onSavedMethodPayment, selectedMethodId, t, usdAmount])
 
   const handleNewCardTokenize = useCallback(
     async (token: string, billing: BillingDetails) => {
