@@ -11,13 +11,21 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2, RefreshCw, WalletCards } from 'lucide-react'
+import { ChevronDown, Loader2, RefreshCw, WalletCards } from 'lucide-react'
 import type {
   NotificationHandler,
   NotificationPayload,
@@ -28,7 +36,11 @@ import type {
 } from '../../types'
 import { usePaymentContext } from '../../context/PaymentContext'
 import { resolveErrorMessageByCode } from '../../utils/errorMessages'
-import { CancelMembershipDialog, CancelMembershipDialogTranslations } from './CancelMembershipDialog'
+import {
+  CancelMembershipDialog,
+  CancelMembershipDialogTranslations,
+  defaultTranslations as cancelDialogDefaultTranslations,
+} from './CancelMembershipDialog'
 
 export interface SubscriptionsSectionTranslations {
   title?: string
@@ -49,6 +61,7 @@ export interface SubscriptionsSectionTranslations {
   changePlanPlaceholder?: string
   planChanged?: string
   planChangeFailed?: string
+  planChangeUnavailable?: string
   resumeSuccess?: string
   resumeFailed?: string
   update?: string
@@ -56,6 +69,12 @@ export interface SubscriptionsSectionTranslations {
   price?: string
   currentPeriod?: string
   refresh?: string
+  manage?: string
+  close?: string
+  paymentMethodTab?: string
+  changePlanTab?: string
+  statusTab?: string
+  cancelTab?: string
 }
 
 const notifyDefault = (payload: NotificationPayload) => {
@@ -82,6 +101,7 @@ const defaultTranslations: Required<SubscriptionsSectionTranslations> = {
   changePlanPlaceholder: 'Enter a new price ID',
   planChanged: 'Subscription updated',
   planChangeFailed: 'Unable to update subscription',
+  planChangeUnavailable: 'Plan changes are unavailable for this subscription.',
   resumeSuccess: 'Resume requested',
   resumeFailed: 'Unable to resume subscription',
   update: 'Update',
@@ -89,6 +109,12 @@ const defaultTranslations: Required<SubscriptionsSectionTranslations> = {
   price: 'Price',
   currentPeriod: 'Current period',
   refresh: 'Refresh',
+  manage: 'Manage',
+  close: 'Close',
+  paymentMethodTab: 'Payment method',
+  changePlanTab: 'Change plan',
+  statusTab: 'Details',
+  cancelTab: 'Cancel/Resume',
 }
 
 const formatCardLabel = (method: PaymentMethod): string => {
@@ -112,6 +138,7 @@ export interface SubscriptionsSectionProps {
   onNotify?: NotificationHandler
   statusFilter?: string
   cancelDialogTranslations?: CancelMembershipDialogTranslations
+  onCancelled?: () => void
 }
 
 export const SubscriptionsSection: React.FC<SubscriptionsSectionProps> = ({
@@ -120,20 +147,35 @@ export const SubscriptionsSection: React.FC<SubscriptionsSectionProps> = ({
   onNotify,
   statusFilter,
   cancelDialogTranslations,
+  onCancelled,
 }) => {
   const { client, queryClient } = usePaymentContext()
   const notify = onNotify ?? notifyDefault
   const t = { ...defaultTranslations, ...customTranslations }
+  const cancelTranslations = cancelDialogTranslations ?? cancelDialogDefaultTranslations
 
   const [paymentSelections, setPaymentSelections] = useState<Record<string, string>>({})
   const [priceInputs, setPriceInputs] = useState<Record<string, string>>({})
+  const [activeSubId, setActiveSubId] = useState<string | null>(null)
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
+  const [sectionsOpen, setSectionsOpen] = useState<Record<string, boolean>>({
+    status: true,
+    payment: false,
+    plan: false,
+    cancel: false,
+  })
 
-  const subscriptionsQueryKey = ['payments-ui', 'subscriptions', statusFilter]
+  const normalizedStatusFilter = statusFilter ?? 'all'
+  const subscriptionsQueryKey = ['payments-ui', 'subscriptions', normalizedStatusFilter]
   const paymentMethodsQueryKey = ['payments-ui', 'payment-methods']
 
   const subscriptionsQuery = useQuery<PaginatedSubscriptions>({
     queryKey: subscriptionsQueryKey,
-    queryFn: () => client.listSubscriptions({ status: statusFilter ?? undefined, limit: 50 }),
+    queryFn: () =>
+      client.listSubscriptions({
+        status: normalizedStatusFilter,
+        limit: 50,
+      }),
     enabled: isAuthenticated && !!client,
     staleTime: 30_000,
   })
@@ -147,16 +189,30 @@ export const SubscriptionsSection: React.FC<SubscriptionsSectionProps> = ({
 
   const subscriptions = useMemo(() => subscriptionsQuery.data?.data ?? [], [subscriptionsQuery.data])
   const paymentMethods = useMemo(() => paymentMethodsQuery.data?.data ?? [], [paymentMethodsQuery.data])
+  const activeSubscription = useMemo(
+    () => subscriptions.find((sub) => sub.id === activeSubId),
+    [subscriptions, activeSubId]
+  )
 
   useEffect(() => {
-    const nextSelections: Record<string, string> = {}
-    subscriptions.forEach((sub) => {
-      if (sub.payment_method_id) {
-        nextSelections[sub.id] = sub.payment_method_id
-      }
+    setPaymentSelections((prev) => {
+      const next: Record<string, string> = {}
+      subscriptions.forEach((sub) => {
+        next[sub.id] = prev[sub.id] ?? ''
+      })
+      return next
     })
-    setPaymentSelections((prev) => ({ ...nextSelections, ...prev }))
   }, [subscriptions])
+
+  useEffect(() => {
+    setCancelDialogOpen(false)
+    /*setSectionsOpen({
+      status: true,
+      payment: true,
+      plan: !!activeSubscription?.price?.id,
+      cancel: false,
+    })*/
+  }, [activeSubId])
 
   const updatePaymentMethodMutation = useMutation({
     mutationFn: (payload: { subscriptionId: string; paymentMethodId: string }) =>
@@ -208,12 +264,25 @@ export const SubscriptionsSection: React.FC<SubscriptionsSectionProps> = ({
   })
 
   const isLoading = subscriptionsQuery.isLoading || subscriptionsQuery.isFetching
+  const isError = subscriptionsQuery.isError
+  const errorMessage =
+    subscriptionsQuery.error instanceof Error
+      ? subscriptionsQuery.error.message
+      : undefined
+
+  useEffect(() => {
+    if (subscriptionsQuery.refetch) {
+      void subscriptionsQuery.refetch()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const formatPrice = (sub: Subscription) => {
     const price = sub.price
     if (!price) return t.price
     const amount = (price.amount / 100).toFixed(2)
-    return `${price.display_name ?? t.price} — ${price.currency ?? ''} ${amount}`
+    const currency = price.currency ? price.currency?.toUpperCase() : ''
+    return `${price.display_name ?? t.price} — ${currency} ${amount}`
   }
 
   const renderStatusBadge = (status: string) => {
@@ -239,7 +308,16 @@ export const SubscriptionsSection: React.FC<SubscriptionsSectionProps> = ({
 
   const handleUpdatePaymentMethod = (subscriptionId: string) => {
     const paymentMethodId = paymentSelections[subscriptionId]
+    const currentPaymentMethodId = "pm_" +subscriptions.find((s) => s.id === subscriptionId)?.payment_method_id
     if (!paymentMethodId) return
+    if (currentPaymentMethodId && paymentMethodId === currentPaymentMethodId) {
+      notify({
+        title: t.paymentMethodUpdateFailed,
+        description: t.paymentMethodUpdateFailed,
+        status: 'destructive',
+      })
+      return
+    }
     updatePaymentMethodMutation.mutate({ subscriptionId, paymentMethodId })
   }
 
@@ -249,147 +327,271 @@ export const SubscriptionsSection: React.FC<SubscriptionsSectionProps> = ({
     changeSubscriptionMutation.mutate({ priceId })
   }
 
+  const toggleSection = (key: string) => {
+    setSectionsOpen((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }))
+  }
+
   return (
-    <Card className="border-0 bg-black/30 shadow-2xl backdrop-blur-xl">
-      <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <CardTitle className="flex items-center gap-2">
-            <WalletCards className="h-5 w-5" />
-            {t.title}
-          </CardTitle>
-          <CardDescription>{t.description}</CardDescription>
-        </div>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => subscriptionsQuery.refetch?.()}
-          disabled={subscriptionsQuery.isFetching}
-        >
-          <RefreshCw className="mr-2 h-4 w-4" /> {subscriptionsQuery.isFetching ? t.loading : t.refresh}
-        </Button>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-10 text-white/60">
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" /> {t.loading}
+    <>
+      <Card className="border-0 bg-black/30 shadow-2xl backdrop-blur-xl">
+        <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <WalletCards className="h-5 w-5" />
+              {t.title}
+            </CardTitle>
+            <CardDescription>{t.description}</CardDescription>
           </div>
-        ) : subscriptions.length === 0 ? (
-          <div className="p-6 text-sm text-center">
-            {t.noSubscriptions}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {subscriptions.map((subscription) => {
-              const isCancelled = subscription.status.toLowerCase() === 'cancelled'
-              return (
-                <div
-                  key={subscription.id}
-                  className="rounded-lg border bg-white/5 p-4 shadow-sm"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                      <div className="text-base font-semibold text-white">
-                        {subscription.product?.display_name ?? t.product}
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => subscriptionsQuery.refetch?.()}
+            disabled={subscriptionsQuery.isFetching}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" /> {subscriptionsQuery.isFetching ? t.loading : t.refresh}
+          </Button>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-10 text-white/60">
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" /> {t.loading}
+            </div>
+          ) : isError ? (
+            <div className="rounded-md border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100">
+              {errorMessage ?? 'Unable to load subscriptions.'}
+            </div>
+          ) : subscriptions.length === 0 ? (
+            <div className="p-6 text-sm text-center">
+              {t.noSubscriptions}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {subscriptions.map((subscription) => {
+                return (
+                  <div
+                    key={subscription.id}
+                    className="rounded-lg border bg-white/5 p-4 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <div className="text-base font-semibold text-white">
+                          {subscription.product?.display_name ?? t.product}
+                        </div>
+                        <div className="text-sm text-white/80">
+                          {formatPrice(subscription)}
+                        </div>
                       </div>
-                      <div className="text-sm text-white/80">
-                        {formatPrice(subscription)}
-                      </div>
-                      <div className="text-xs text-white/60">
-                        {t.currentPeriod}: {subscription.current_period_starts_at ?? '—'} → {subscription.current_period_ends_at ?? '—'}
+                      <div className="flex items-center gap-2">
+                        {renderStatusBadge(subscription.status)}
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="rounded-full bg-foreground/10 text-muted-foreground hover:bg-foreground/20 hover:text-foreground"
+                          onClick={() => setActiveSubId(subscription.id)}
+                        >
+                          {t.update}
+                        </Button>
                       </div>
                     </div>
-                    {renderStatusBadge(subscription.status)}
                   </div>
+                )
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-                  <div className="mt-3 space-y-2">
-                    <div className="text-xs uppercase tracking-wide text-white/60">{t.paymentMethodLabel}</div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Select
-                        value={paymentSelections[subscription.id]}
-                        onValueChange={(value) =>
-                          setPaymentSelections((prev) => ({ ...prev, [subscription.id]: value }))
-                        }
-                        disabled={paymentMethodsQuery.isLoading || paymentMethods.length === 0}
-                      >
-                        <SelectTrigger className="w-64 text-white">
-                          <SelectValue placeholder={paymentMethodsQuery.isLoading ? t.loading : ''} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {paymentMethods.map((method) => (
+    <Dialog open={!!activeSubscription} onOpenChange={(open) => setActiveSubId(open ? activeSubId : null)}>
+      <DialogContent className="max-w-2xl min-h-[300px] border border-white/20 bg-background-regular p-6 text-foreground">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {activeSubscription?.product?.display_name ?? t.product}
+          </DialogTitle>
+          <DialogDescription className="text-white/70">
+            {activeSubscription ? formatPrice(activeSubscription) : null}
+          </DialogDescription>
+        </DialogHeader>
+
+        {activeSubscription && (
+          <div className="mt-4 space-y-3">
+            <div className="overflow-hidden rounded-lg border border-white/15 bg-white/5">
+              <button
+                type="button"
+                className="flex w-full items-center justify-between px-4 py-3 text-left text-white hover:bg-white/10"
+                onClick={() => toggleSection('status')}
+              >
+                <span className="text-sm font-semibold">{t.statusTab}</span>
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${sectionsOpen.status ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {sectionsOpen.status ? (
+                <div className="space-y-3 border-t border-white/10 px-4 py-3">
+                  <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-3">
+                    <div className="text-sm font-medium text-white/80">{t.status}</div>
+                    {renderStatusBadge(activeSubscription.status)}
+                  </div>
+                  <div className="text-xs text-white/60">
+                    {t.currentPeriod}: {activeSubscription.started_at ? new Date(activeSubscription.started_at).toLocaleDateString() : '—'} →{' '}
+                    {activeSubscription.current_period_ends_at ?? '—'}
+                  </div>
+                  {activeSubscription.status.toLowerCase() === 'cancelled' ? (
+                    <Button
+                      variant="secondary"
+                      onClick={() => resumeSubscriptionMutation.mutate()}
+                      disabled={resumeSubscriptionMutation.isPending}
+                      className="rounded-full px-4"
+                    >
+                      {resumeSubscriptionMutation.isPending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : null}
+                      {t.resume}
+                    </Button>
+                  ) : (
+                    null
+                  )}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="overflow-hidden rounded-lg border border-white/15 bg-white/5">
+              <button
+                type="button"
+                className="flex w-full items-center justify-between px-4 py-3 text-left text-white hover:bg-white/10"
+                onClick={() => toggleSection('payment')}
+              >
+                <span className="text-sm font-semibold">{t.paymentMethodTab}</span>
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${sectionsOpen.payment ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {sectionsOpen.payment ? (
+                <div className="space-y-2 border-t border-white/10 px-4 py-3">
+                  <div className="text-xs uppercase tracking-wide text-white/60">{t.paymentMethodLabel}</div>
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-2">
+                    
+                    <Select
+                      value={
+                        paymentSelections[activeSubscription.id] ||
+                        "pm_" + activeSubscription.payment_method_id ||
+                        ''
+                      }
+                      onValueChange={(value) =>
+                        setPaymentSelections((prev) => ({ ...prev, [activeSubscription.id]: value }))
+                      }
+                      disabled={paymentMethodsQuery.isLoading || paymentMethods.length === 0}
+                    >
+                      <SelectTrigger className="w-full md:w-64 text-white">
+                        <SelectValue placeholder={paymentMethodsQuery.isLoading ? t.loading : ''} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {paymentMethods
+                          .filter((method) => method.id !== activeSubscription.payment_method_id)
+                          .map((method) => (
                             <SelectItem key={method.id} value={method.id}>
                               {formatCardLabel(method)}
                             </SelectItem>
                           ))}
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        size="sm"
-                        onClick={() => handleUpdatePaymentMethod(subscription.id)}
-                        disabled={updatePaymentMethodMutation.isPending}
-                      >
-                        {updatePaymentMethodMutation.isPending ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : null}
-                        {t.update}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 space-y-2">
-                    <div className="text-xs uppercase tracking-wide text-white/60">{t.changePlan}</div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Input
-                        className="w-64"
-                        value={priceInputs[subscription.id] ?? ''}
-                        onChange={(e) =>
-                          setPriceInputs((prev) => ({ ...prev, [subscription.id]: e.target.value }))
-                        }
-                        placeholder={t.changePlanPlaceholder}
-                      />
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleChangePrice(subscription.id)}
-                        disabled={changeSubscriptionMutation.isPending}
-                      >
-                        {changeSubscriptionMutation.isPending ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : null}
-                        {t.update}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {!isCancelled ? (
-                      <CancelMembershipDialog
-                        translations={cancelDialogTranslations}
-                        onNotify={onNotify}
-                        onCancelled={() => {
-                          void queryClient.invalidateQueries({ queryKey: subscriptionsQueryKey })
-                        }}
-                      />
-                    ) : (
-                      <Button
-                        variant="secondary"
-                        onClick={() => resumeSubscriptionMutation.mutate()}
-                        disabled={resumeSubscriptionMutation.isPending}
-                      >
-                        {resumeSubscriptionMutation.isPending ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : null}
-                        {t.resume}
-                      </Button>
-                    )}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      onClick={() => handleUpdatePaymentMethod(activeSubscription.id)}
+                      disabled={
+                        updatePaymentMethodMutation.isPending ||
+                        !paymentSelections[activeSubscription.id] ||
+                        paymentSelections[activeSubscription.id] === activeSubscription.payment_method_id
+                      }
+                       className="border-0 bg-green-bg text-white hover:bg-green-bg/80 disabled:opacity-50"
+                    >
+                      {updatePaymentMethodMutation.isPending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : null}
+                      {t.update}
+                    </Button>
                   </div>
                 </div>
-              )
-            })}
+              ) : null}
+            </div>
+
+            <div className="overflow-hidden rounded-lg border border-white/15 bg-white/5">
+              <button
+                type="button"
+                className="flex w-full items-center justify-between px-4 py-3 text-left text-white hover:bg-white/10 disabled:opacity-50"
+                onClick={() => toggleSection('plan')}
+                disabled={!activeSubscription.price?.id}
+              >
+                <span className="text-sm font-semibold">{t.changePlanTab}</span>
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${sectionsOpen.plan ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {sectionsOpen.plan ? (
+                <div className="space-y-2 border-t border-white/10 px-4 py-3">
+                  {activeSubscription.price?.id ? (
+                    <>
+                      <div className="text-xs uppercase tracking-wide text-white/60">{t.changePlan}</div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Input
+                          className="w-64"
+                          value={priceInputs[activeSubscription.id] ?? ''}
+                          onChange={(e) =>
+                            setPriceInputs((prev) => ({ ...prev, [activeSubscription.id]: e.target.value }))
+                          }
+                          placeholder={t.changePlanPlaceholder}
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleChangePrice(activeSubscription.id)}
+                          disabled={changeSubscriptionMutation.isPending}
+                          className="rounded-full"
+                        >
+                          {changeSubscriptionMutation.isPending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : null}
+                          {t.update}
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-white/70">
+                      {t.planChangeUnavailable}
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+
+        <DialogFooter className="flex flex-wrap gap-2">
+          <CancelMembershipDialog
+            translations={cancelTranslations}
+            onNotify={onNotify}
+            open={cancelDialogOpen}
+            onOpenChange={(openState) => setCancelDialogOpen(openState)}
+            onCancelled={() => {
+              void queryClient.invalidateQueries({ queryKey: subscriptionsQueryKey })
+              onCancelled?.()
+              setActiveSubId(null)
+            }}
+          />
+          <Button
+            variant="secondary"
+            onClick={() => setActiveSubId(null)}
+            className="border-white/20 bg-transparent text-foreground hover:bg-foreground/10 hover:text-foreground"
+          >
+            {t.close}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }
