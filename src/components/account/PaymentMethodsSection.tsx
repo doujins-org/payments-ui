@@ -313,45 +313,6 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
                         <Badge variant="destructive">{method.failure_reason}</Badge>
                       )}
                     </div>
-
-                    {hasSubscriptions ? (
-                      <div className="rounded-md border border-white/10 bg-white/5 p-3">
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm font-medium text-white/80">
-                            {t.activeSubscriptions}
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-xs text-white/70 hover:text-white"
-                            onClick={() =>
-                              setExpandedSubscriptions((prev) => ({
-                                ...prev,
-                                [method.id]: !prev[method.id],
-                              }))
-                            }
-                            aria-expanded={isSubscriptionsOpen}
-                          >
-                            <ChevronDown
-                              className={`mr-1 h-4 w-4 transition-transform ${isSubscriptionsOpen ? 'rotate-180' : ''}`}
-                            />
-                            {isSubscriptionsOpen ? t.hideSubscriptions : t.showSubscriptions}
-                          </Button>
-                        </div>
-                        {isSubscriptionsOpen ? (
-                          <ul className="mt-2 text-sm text-white/70">
-                            {method.subscriptions?.map((subscription) => (
-                              <li key={subscription.id}>
-                                <span className="font-semibold text-white">
-                                  {subscription.display_name}
-                                </span>
-                                {subscription.description ? ` - ${subscription.description}` : ''}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : null}
-                      </div>
-                    ) : null}
                   </div>
 
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -365,21 +326,21 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
                       ) : null}
                       {method.is_active ? t.defaultMethod : t.makeDefault}
                     </Button> */}
-                    {!hasSubscriptions ? (
-                      <Button
-                        variant="ghost"
-                        className="text-red-400 hover:text-red-300"
-                        disabled={deletingId === method.id && deleteMutation.isPending}
-                        onClick={() => deleteMutation.mutate(method.id)}
-                      >
-                        {deletingId === method.id && deleteMutation.isPending ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="mr-2 h-4 w-4" />
-                        )}
-                        {t.remove}
-                      </Button>
-                    ) : null}
+      
+                    <Button
+                      variant="ghost"
+                      className="text-red-400 hover:text-red-300"
+                      disabled={deletingId === method.id && deleteMutation.isPending}
+                      onClick={() => deleteMutation.mutate(method.id)}
+                    >
+                      {deletingId === method.id && deleteMutation.isPending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="mr-2 h-4 w-4" />
+                      )}
+                      {t.remove}
+                    </Button>
+              
                   </div>
                 </div>
               )

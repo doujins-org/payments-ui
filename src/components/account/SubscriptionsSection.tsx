@@ -519,7 +519,7 @@ export const SubscriptionsSection: React.FC<SubscriptionsSectionProps> = ({
               ) : null}
             </div>
 
-            <div className="overflow-hidden rounded-lg border border-white/15 bg-white/5">
+            {/*<div className="overflow-hidden rounded-lg border border-white/15 bg-white/5">
               <button
                 type="button"
                 className="flex w-full items-center justify-between px-4 py-3 text-left text-white hover:bg-white/10 disabled:opacity-50"
@@ -566,7 +566,7 @@ export const SubscriptionsSection: React.FC<SubscriptionsSectionProps> = ({
                   )}
                 </div>
               ) : null}
-            </div>
+            </div>*/}
           </div>
         )}
 
