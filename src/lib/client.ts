@@ -16,12 +16,18 @@ import type {
   CheckoutRequestPayload,
   CheckoutResponse,
   CreatePaymentMethodPayload,
+  ChangeSubscriptionPayload,
+  ChangeSubscriptionResponse,
   Payment,
   PaymentMethod,
+  PaginatedSubscriptions,
+  Subscription,
   TokenInfo,
   PaymentStatusResponse,
   SolanaPayQRCodeIntent,
   SolanaPayStatusResponse,
+  UpdateSubscriptionPaymentMethodPayload,
+  UpdateSubscriptionPaymentMethodResponse,
 } from '../types'
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
@@ -240,9 +246,51 @@ export const createClient = (config: ClientConfig) => {
       })
     },
 
-    cancelSubscription(feedback?: string): Promise<{ message: string; success: boolean }> {
+    cancelSubscription(
+      feedback?: string
+    ): Promise<{ status?: string; message?: string; success?: boolean }> {
       return request('POST', '/me/subscriptions/cancel', {
         body: feedback ? { feedback } : undefined,
+      })
+    },
+
+    async listSubscriptions(params?: {
+      status?: string
+      limit?: number
+      offset?: number
+    }): Promise<PaginatedSubscriptions> {
+      const result = await request<ListResponse<Subscription>>(
+        'GET',
+        '/me/subscriptions',
+        {
+          query: {
+            status: params?.status,
+            limit: params?.limit,
+            offset: params?.offset,
+          },
+        }
+      )
+      return normalizeList(result)
+    },
+
+    updateSubscriptionPaymentMethod(
+      payload: UpdateSubscriptionPaymentMethodPayload
+    ): Promise<UpdateSubscriptionPaymentMethodResponse> {
+      return request('PUT', '/me/subscriptions/payment-method', {
+        body: {
+          subscription_id: payload.subscription_id,
+          payment_method_id: payload.payment_method_id,
+        },
+      })
+    },
+
+    resumeSubscription(): Promise<{ status: string }> {
+      return request('POST', '/me/subscriptions/resume')
+    },
+
+    changeSubscription(payload: ChangeSubscriptionPayload): Promise<ChangeSubscriptionResponse> {
+      return request('POST', '/me/subscriptions/change', {
+        body: payload,
       })
     },
 

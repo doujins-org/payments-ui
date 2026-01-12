@@ -42,6 +42,8 @@ export interface CancelMembershipDialogProps {
   onCancelled?: () => void
   onNotify?: NotificationHandler
   translations?: CancelMembershipDialogTranslations
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 const notifyDefault = (payload: NotificationPayload) => {
@@ -49,7 +51,7 @@ const notifyDefault = (payload: NotificationPayload) => {
   console[level === 'error' ? 'error' : 'log']('[payments-ui] cancellation', payload)
 }
 
-const defaultTranslations: Required<CancelMembershipDialogTranslations> = {
+export const defaultTranslations: Required<CancelMembershipDialogTranslations> = {
   buttonLabel: 'Cancel Membership',
   title: 'Confirm Membership Cancellation',
   description: 'You are about to cancel your membership. Please review the consequences:',
@@ -73,16 +75,27 @@ export const CancelMembershipDialog: React.FC<CancelMembershipDialogProps> = ({
   onCancelled,
   onNotify,
   translations: customTranslations,
+  open,
+  onOpenChange,
 }) => {
   const { client } = usePaymentContext()
   const notify = onNotify ?? notifyDefault
   const t = { ...defaultTranslations, ...customTranslations }
 
   const [cancelReason, setCancelReason] = useState('')
-  const [isOpen, setIsOpen] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(false)
   const [isReasonValid, setIsReasonValid] = useState(false)
   const [hasInteracted, setHasInteracted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const isControlled = typeof open === 'boolean'
+  const isOpen = isControlled ? open : internalOpen
+
+  const setOpen = (next: boolean) => {
+    if (!isControlled) {
+      setInternalOpen(next)
+    }
+    onOpenChange?.(next)
+  }
 
   useEffect(() => {
     const trimmed = cancelReason.trim()
@@ -90,7 +103,7 @@ export const CancelMembershipDialog: React.FC<CancelMembershipDialogProps> = ({
   }, [cancelReason, minReasonLength])
 
   const handleOpenChange = (open: boolean) => {
-    setIsOpen(open)
+    setOpen(open)
     if (!open) {
       setCancelReason('')
       setIsReasonValid(false)
@@ -136,7 +149,7 @@ export const CancelMembershipDialog: React.FC<CancelMembershipDialogProps> = ({
   return (
     <AlertDialog open={isOpen} onOpenChange={handleOpenChange}>
       <AlertDialogTrigger asChild>
-        <Button variant="outline" className="border-destructive/50 text-destructive">
+        <Button className="bg-destructive text-destructive-foreground border-destructive/50 hover:bg-destructive/90">
           <Ban className="mr-2 h-4 w-4" /> {t.buttonLabel}
         </Button>
       </AlertDialogTrigger>

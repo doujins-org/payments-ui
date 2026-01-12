@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CreditCard, Loader2, Trash2, WalletCards } from 'lucide-react'
+import { ChevronDown, CreditCard, Loader2, Trash2, WalletCards } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -52,6 +52,9 @@ export interface PaymentMethodsSectionTranslations {
   defaultPaymentMethodUpdated?: string
   unableToSetDefault?: string
   errors?: Record<string, string>
+  activeSubscriptions?: string
+  showSubscriptions?: string
+  hideSubscriptions?: string
 }
 
 export interface PaymentMethodsSectionProps {
@@ -107,6 +110,9 @@ const defaultTranslations: Required<PaymentMethodsSectionTranslations> = {
   defaultPaymentMethodUpdated: 'Default payment method updated',
   unableToSetDefault: 'Unable to set default payment method',
   errors: {},
+  activeSubscriptions: 'Active subscriptions',
+  showSubscriptions: 'Show',
+  hideSubscriptions: 'Hide',
 }
 
 export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
@@ -134,6 +140,7 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [createErrorMessage, setCreateErrorMessage] = useState<string | null>(null)
+  const [expandedSubscriptions, setExpandedSubscriptions] = useState<Record<string, boolean>>({})
   const notify = onNotify ?? notifyDefault
   const t = { ...defaultTranslations, ...customTranslations }
 
@@ -282,56 +289,62 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
           </div>
         ) : (
           <div className="space-y-3">
-            {payments.map((method) => (
-              <div
-                key={method.id}
-                className="rounded-lg border bg-white/5 p-4 shadow-sm"
-              >
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <div className="text-base font-medium text-white">
-                      {formatCardLabel(method)}
+            {payments.map((method) => {
+              const hasSubscriptions = (method.subscriptions?.length ?? 0) > 0
+              const isSubscriptionsOpen = expandedSubscriptions[method.id] ?? false
+              return (
+                <div
+                  key={method.id}
+                  className="rounded-lg border bg-white/5 p-4 shadow-sm"
+                >
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <div className="text-base font-medium text-white">
+                        {formatCardLabel(method)}
+                      </div>
+
+                      {/*<Badge variant={method.is_active ? 'default' : 'secondary'}>
+                        {method.is_active ? t.active : t.inactive}
+                      </Badge>*/}
                     </div>
 
-                    <Badge variant={method.is_active ? 'default' : 'secondary'}>
-                      {method.is_active ? t.active : t.inactive}
-                    </Badge>
+                    <div>
+                      {method.failure_reason && (
+                        <Badge variant="destructive">{method.failure_reason}</Badge>
+                      )}
+                    </div>
                   </div>
 
-                  <div>
-                    {method.failure_reason && (
-                      <Badge variant="destructive">{method.failure_reason}</Badge>
-                    )}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {/* <Button
+                      variant="outline"
+                      disabled={method.is_active || activateMutation.isPending}
+                      onClick={() => activateMutation.mutate(method.id)}
+                    >
+                      {activateMutation.isPending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : null}
+                      {method.is_active ? t.defaultMethod : t.makeDefault}
+                    </Button> */}
+      
+                    <Button
+                      variant="ghost"
+                      className="text-red-400 hover:text-red-300"
+                      disabled={deletingId === method.id && deleteMutation.isPending}
+                      onClick={() => deleteMutation.mutate(method.id)}
+                    >
+                      {deletingId === method.id && deleteMutation.isPending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="mr-2 h-4 w-4" />
+                      )}
+                      {t.remove}
+                    </Button>
+              
                   </div>
                 </div>
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                 {/*} <Button
-                    variant="outline"
-                    disabled={method.is_active || activateMutation.isPending}
-                    onClick={() => activateMutation.mutate(method.id)}
-                  >
-                    {activateMutation.isPending ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
-                    {method.is_active ? t.defaultMethod : t.makeDefault}
-                  </Button> */}
-                  <Button
-                    variant="ghost"
-                    className="text-red-400 hover:text-red-300"
-                    disabled={deletingId === method.id && deleteMutation.isPending}
-                    onClick={() => deleteMutation.mutate(method.id)}
-                  >
-                    {deletingId === method.id && deleteMutation.isPending ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="mr-2 h-4 w-4" />
-                    )}
-                    {t.remove}
-                  </Button>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </CardContent>
