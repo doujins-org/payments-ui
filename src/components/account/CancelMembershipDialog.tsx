@@ -133,7 +133,11 @@ export const CancelMembershipDialog: React.FC<CancelMembershipDialogProps> = ({
         description: t.cancellationSuccess,
         status: 'success',
       })
-      onCancelled?.()
+      try {
+        await onCancelled?.()
+      } catch (callbackError) {
+        console.warn('[payments-ui] cancellation callback failed', callbackError)
+      }
       handleOpenChange(false)
     } catch (error) {
       const message =

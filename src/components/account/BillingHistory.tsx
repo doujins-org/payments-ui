@@ -34,6 +34,8 @@ export interface BillingHistoryProps {
   pageSize?: number
   initialPage?: number
   enableCancel?: boolean
+  locale?: string
+  onCancelled?: () => void | Promise<void>
   onNotify?: NotificationHandler
   translations?: BillingHistoryTranslations
 }
@@ -61,12 +63,20 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
   pageSize = 10,
   initialPage = 1,
   enableCancel = true,
+  locale,
+  onCancelled,
   onNotify,
   translations: customTranslations,
 }) => {
   const { client } = usePaymentContext()
   const notify = onNotify ?? notifyDefault
   const t = { ...defaultTranslations, ...customTranslations }
+  const resolvedLocale =
+    locale && locale.trim().length > 0
+      ? locale
+      : typeof navigator !== 'undefined' && navigator.language
+      ? navigator.language
+      : 'en-US'
   const [isExpanded, setIsExpanded] = useState(false)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
@@ -123,21 +133,41 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
     return data?.pages ?? []
   }, [historyQuery.data])
 
-  const formatDate = (value: string) =>
-    new Date(value).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
+  const dateFormatter = useMemo(() => {
+    try {
+      return new Intl.DateTimeFormat(resolvedLocale, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      })
+    } catch {
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      })
+    }
+  }, [resolvedLocale])
+
+  const formatDate = (value: string) => {
+    const parsed = new Date(value)
+    if (Number.isNaN(parsed.getTime())) {
+      return value
+    }
+    return dateFormatter.format(parsed)
+  }
 
   const formatAmount = (amount: number, currency: string) => {
+    const normalizedAmount = amount / 100
+    const normalizedCurrency =
+      typeof currency === 'string' ? currency.toUpperCase() : currency
     try {
-      return new Intl.NumberFormat('en-US', {
+      return new Intl.NumberFormat(resolvedLocale, {
         style: 'currency',
-        currency,
-      }).format(amount)
+        currency: normalizedCurrency,
+      }).format(normalizedAmount)
     } catch {
-      return `${amount.toFixed(2)} ${currency}`
+      return `${normalizedAmount.toFixed(2)} ${currency}`
     }
   }
 
@@ -162,7 +192,9 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
             <div className="space-y-4">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <p className="text-sm text-muted-foreground">{t.reviewActivity}</p>
-                {enableCancel && <CancelMembershipDialog onNotify={notify} />}
+                {enableCancel && (
+                  <CancelMembershipDialog onNotify={notify} onCancelled={onCancelled} />
+                )}
               </div>
 
               <div className="max-h-[300px] overflow-y-auto rounded-lg border ">
