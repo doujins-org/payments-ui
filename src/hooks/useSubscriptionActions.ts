@@ -26,11 +26,8 @@ export interface SubscribeWithSavedMethodParams {
 
 export interface SubscribeWithCCBillParams {
   priceId?: string | null
-  email: string
-  firstName: string
-  lastName: string
-  zipCode: string
-  country: string
+  billing: BillingDetails
+  provider?: string
   processor?: string
   idempotencyKey?: string
 }
@@ -116,25 +113,25 @@ export const useSubscriptionActions = () => {
   const subscribeWithCCBill = useCallback(
     async ({
       priceId,
-      email,
-      firstName,
-      lastName,
-      zipCode,
-      country,
+      billing,
+      provider,
       processor = 'ccbill',
       idempotencyKey,
     }: SubscribeWithCCBillParams): Promise<CheckoutResponse> => {
       const payload: CheckoutRequestPayload = {
         price_id: ensurePrice(priceId),
-        payment: { 
+        provider,
+        payment: {
           processor,
-          email,
-          first_name: firstName,
-          last_name: lastName,
-          zip: zipCode,
-          country,
+          email: billing.email,
+          first_name: billing.firstName,
+          last_name: billing.lastName,
+          address1: billing.address1,
+          city: billing.city,
+          state: billing.stateRegion,
+          zip: billing.postalCode,
+          country: billing.country,
         },
-       
       }
       return client.checkout(payload, idempotencyKey)
     },

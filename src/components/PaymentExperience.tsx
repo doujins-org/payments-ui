@@ -9,6 +9,10 @@ import { resolveErrorMessageByCode } from '../utils/errorMessages'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { usePaymentNotifications } from '../hooks/usePaymentNotifications'
 import { SolanaPaymentView } from './SolanaPaymentView'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog'
+import { Input } from '../components/ui/input'
+import { Label } from '../components/ui/label'
+import { defaultBillingDetails } from '../constants/billing'
 
 type AsyncStatus = 'idle' | 'processing' | 'success' | 'error'
 
@@ -67,6 +71,7 @@ export interface PaymentExperienceProps {
   onSolanaSuccess?: (result: SubmitPaymentResponse | string) => void
   onSolanaError?: (error: string) => void
   initialMode?: 'cards' | 'solana'
+  userEmail?: string | null
   translations?: PaymentExperienceTranslations
 }
 
@@ -82,6 +87,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   onSolanaSuccess,
   onSolanaError,
   initialMode = 'cards',
+  userEmail,
   translations,
 }) => {
   const t: Required<PaymentExperienceTranslations> = {
@@ -104,6 +110,13 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   const [billingDetails, setBillingDetails] = useState<BillingDetails | null>(null)
   const [ccbillStatus, setCcbillStatus] = useState<AsyncStatus>('idle')
   const [ccbillError, setCcbillError] = useState<string | null>(null)
+  const [ccbillModalOpen, setCcbillModalOpen] = useState(false)
+  const [ccbillBilling, setCcbillBilling] = useState<BillingDetails>(() => {
+    // Try to get default email from CardDetailsForm logic
+    let defaultEmail = userEmail ?? ''
+   
+    return { ...defaultBillingDetails, email: defaultEmail }
+  })
   const { notifyStatus, notifyError } = usePaymentNotifications()
 
   useEffect(() => {
@@ -128,6 +141,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
       setBillingDetails(null)
       setCcbillStatus('idle')
       setCcbillError(null)
+      setCcbillModalOpen(false)
     }
   }, [showNewCard])
 
@@ -136,6 +150,43 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
     setCcbillError(null)
     setCcbillStatus('idle')
   }, [])
+
+  const openCcbillModal = useCallback(() => {
+    setCcbillError(null)
+    setCcbillStatus('idle')
+    setCcbillBilling((prev) => {
+      let email = prev.email
+      if (billingDetails && billingDetails.email) {
+        email = billingDetails.email
+      } else if (typeof window !== 'undefined') {
+        try {
+          const config = (window as any).paymentsUiConfig || {}
+          if (config.defaultUser && config.defaultUser.email) {
+            email = config.defaultUser.email
+          }
+        } catch {}
+      }
+      if (billingDetails) {
+        return {
+          ...billingDetails,
+          email,
+          provider: billingDetails.provider ?? prev.provider ?? defaultBillingDetails.provider,
+        }
+      }
+      return { ...prev, email, provider: prev.provider ?? defaultBillingDetails.provider }
+    })
+    setCcbillModalOpen(true)
+  }, [billingDetails])
+
+  const handleCcbillFieldChange = useCallback(
+    (field: keyof BillingDetails, value: string) => {
+      setCcbillBilling((prev) => {
+        const provider = prev.provider ?? billingDetails?.provider ?? defaultBillingDetails.provider
+        return { ...prev, [field]: value, provider }
+      })
+    },
+    [billingDetails]
+  )
 
   const isBillingComplete = useCallback((billing: BillingDetails | null) => {
     if (!billing) return false
@@ -210,9 +261,8 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   const handleCcbillPayment = useCallback(async () => {
     if (!onCcbillPayment) return
 
-    if (!billingDetails || !isBillingComplete(billingDetails)) {
+    if (!isBillingComplete(ccbillBilling)) {
       const message = t.errorRequiredFields
-      setActiveTab('new')
       setCcbillStatus('error')
       setCcbillError(message)
       notifyStatus('error', { source: 'ccbill' })
@@ -224,8 +274,9 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
       setCcbillStatus('processing')
       setCcbillError(null)
       notifyStatus('processing', { source: 'ccbill' })
-      await onCcbillPayment({ billing: billingDetails })
+      await onCcbillPayment({ billing: ccbillBilling })
       setCcbillStatus('success')
+      setCcbillModalOpen(false)
       notifyStatus('success', { source: 'ccbill' })
     } catch (error) {
       const message = resolveErrorMessageByCode(
@@ -239,7 +290,7 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
       notifyError(message)
     }
   }, [
-    billingDetails,
+    ccbillBilling,
     isBillingComplete,
     notifyError,
     notifyStatus,
@@ -269,6 +320,124 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
       onSolanaError?.(error)
     },
     [onSolanaError]
+  )
+
+  const renderCcbillModal = () => (
+    <Dialog
+      open={ccbillModalOpen}
+      onOpenChange={(open) => {
+        setCcbillModalOpen(open)
+        if (!open) {
+          setCcbillStatus('idle')
+          setCcbillError(null)
+        }
+      }}
+    >
+      <DialogContent className="sm:max-w-lg" style={{ zIndex: 9999, border: 'none' }}>
+        <DialogHeader>
+          <DialogTitle>{t.payWithCcbill}</DialogTitle>
+        </DialogHeader>
+
+        <div className="grid gap-3">
+          <div className="grid gap-2 sm:grid-cols-2 sm:gap-3">
+            <div className="grid gap-2">
+              <Label htmlFor="ccbill-first-name">{t.firstName}</Label>
+              <Input
+                id="ccbill-first-name"
+                value={ccbillBilling.firstName}
+                onChange={(e) => handleCcbillFieldChange('firstName', e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="ccbill-last-name">{t.lastName}</Label>
+              <Input
+                id="ccbill-last-name"
+                value={ccbillBilling.lastName}
+                onChange={(e) => handleCcbillFieldChange('lastName', e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="ccbill-email">{t.email}</Label>
+            <Input
+              id="ccbill-email"
+              type="email"
+              value={ccbillBilling.email}
+              onChange={(e) => handleCcbillFieldChange('email', e.target.value)}
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="ccbill-address">{t.address}</Label>
+            <Input
+              id="ccbill-address"
+              value={ccbillBilling.address1}
+              onChange={(e) => handleCcbillFieldChange('address1', e.target.value)}
+            />
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-2 sm:gap-3">
+            <div className="grid gap-2">
+              <Label htmlFor="ccbill-city">{t.city}</Label>
+              <Input
+                id="ccbill-city"
+                value={ccbillBilling.city}
+                onChange={(e) => handleCcbillFieldChange('city', e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="ccbill-state">{t.state}</Label>
+              <Input
+                id="ccbill-state"
+                value={ccbillBilling.stateRegion ?? ''}
+                onChange={(e) => handleCcbillFieldChange('stateRegion', e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-2 sm:gap-3">
+            <div className="grid gap-2">
+              <Label htmlFor="ccbill-zip">{t.postalCode}</Label>
+              <Input
+                id="ccbill-zip"
+                value={ccbillBilling.postalCode}
+                onChange={(e) => handleCcbillFieldChange('postalCode', e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="ccbill-country">{t.country}</Label>
+              <Input
+                id="ccbill-country"
+                value={ccbillBilling.country}
+                onChange={(e) => handleCcbillFieldChange('country', e.target.value)}
+              />
+            </div>
+          </div>
+
+          {ccbillError && <p className="text-sm text-destructive">{ccbillError}</p>}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={() => setCcbillModalOpen(false)}
+              disabled={ccbillStatus === 'processing'}
+            >
+              {t.cancel}
+            </Button>
+            <Button
+              className="min-w-[140px] bg-emerald-600 text-white hover:bg-emerald-500"
+              type="button"
+              disabled={ccbillStatus === 'processing'}
+              onClick={handleCcbillPayment}
+            >
+              {ccbillStatus === 'processing' ? t.processingCcbill : t.payWithCcbill}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 
   const renderSavedTab = () => {
@@ -357,12 +526,13 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
         <Button
           className="w-full"
           variant="outline"
+          type="button"
           disabled={ccbillStatus === 'processing'}
-          onClick={handleCcbillPayment}
+          onClick={openCcbillModal}
         >
           {ccbillStatus === 'processing' ? t.processingCcbill : t.payWithCcbill}
         </Button>
-        {ccbillError && <p className="text-sm text-destructive">{ccbillError}</p>}
+        {renderCcbillModal()}
       </div>
     )
   }
@@ -387,4 +557,3 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
     </div>
   )
 }
-
