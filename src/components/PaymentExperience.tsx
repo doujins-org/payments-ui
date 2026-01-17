@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { defaultBillingDetails } from '../constants/billing'
+import { countries } from '../data/countries'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 
 type AsyncStatus = 'idle' | 'processing' | 'success' | 'error'
 
@@ -407,11 +409,21 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
             </div>
             <div className="grid gap-2">
               <Label htmlFor="ccbill-country">{t.country}</Label>
-              <Input
-                id="ccbill-country"
+              <Select
                 value={ccbillBilling.country}
-                onChange={(e) => handleCcbillFieldChange('country', e.target.value)}
-              />
+                onValueChange={(value) => handleCcbillFieldChange('country', value)}
+              >
+                <SelectTrigger id="ccbill-country">
+                  <SelectValue placeholder={t.selectCountry || 'Select a country'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map((option) => (
+                    <SelectItem key={option.code} value={option.code}>
+                      {option.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
