@@ -56,7 +56,7 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
 }) => {
   const [showSuccess, setShowSuccess] = useState(false)
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID())
-  const { subscribeWithCard, subscribeWithSavedMethod } = useSubscriptionActions()
+  const { subscribeWithCard, subscribeWithSavedMethod, subscribeWithCCBill } = useSubscriptionActions()
   const t: Required<SubscriptionCheckoutModalTranslations> = {
     ...defaultTranslations,
     ...translations,
@@ -146,10 +146,10 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
   }
 
   const handleCcbillPayment = async ({ billing }: { billing: BillingDetails }) => {
-    const response = await subscribeWithCard({
+    const response = await subscribeWithCCBill({
       billing,
+      provider,
       idempotencyKey,
-      processor: 'ccbill',
       priceId: ensurePrice(),
     })
 
@@ -191,6 +191,7 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
                   onSolanaSuccess={solanaSuccess}
                   enableNewCard={Boolean(priceId)}
                   enableStoredMethods={Boolean(priceId)}
+                  userEmail={userEmail ?? undefined}
                   enableSolanaPay={enableSolanaPay && Boolean(priceId)}
                   onNewCardPayment={priceId ? handleNewCardPayment : undefined}
                   onSavedMethodPayment={priceId ? handleSavedMethodPayment : undefined}
