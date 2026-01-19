@@ -23,10 +23,6 @@ import type {
   PaginatedSubscriptions,
   Subscription,
   TokenInfo,
-  PaymentStatusResponse,
-  SolanaPayQRCodeIntent,
-  SolanaPayStatusResponse,
-  UpdateSubscriptionPaymentMethodPayload,
   UpdateSubscriptionPaymentMethodResponse,
 } from '../types'
 
@@ -230,12 +226,6 @@ export const createClient = (config: ClientConfig) => {
       })
     },
 
-    activatePaymentMethod(id: string): Promise<void> {
-      return request<void>('PUT', `/me/payment-methods/${id}/activate`, {
-
-      })
-    },
-
     checkout(payload: CheckoutRequestPayload, idempotencyKey?: string): Promise<CheckoutResponse> {
       const key = idempotencyKey ?? crypto.randomUUID()
       return request('POST', '/checkout', {
@@ -247,9 +237,10 @@ export const createClient = (config: ClientConfig) => {
     },
 
     cancelSubscription(
+      subscriptionId: string,
       feedback?: string
     ): Promise<{ status?: string; message?: string; success?: boolean }> {
-      return request('POST', '/me/subscriptions/cancel', {
+      return request('POST', `/me/subscriptions/${subscriptionId}/cancel`, {
         body: feedback ? { feedback } : undefined,
       })
     },
@@ -274,22 +265,22 @@ export const createClient = (config: ClientConfig) => {
     },
 
     updateSubscriptionPaymentMethod(
-      payload: UpdateSubscriptionPaymentMethodPayload
+      subscriptionId: string,
+      paymentMethodId: string
     ): Promise<UpdateSubscriptionPaymentMethodResponse> {
-      return request('PUT', '/me/subscriptions/payment-method', {
+      return request('PUT', `/me/subscriptions/${subscriptionId}/payment-method`, {
         body: {
-          subscription_id: payload.subscription_id,
-          payment_method_id: payload.payment_method_id,
+          payment_method_id: paymentMethodId,
         },
       })
     },
 
-    resumeSubscription(): Promise<{ status: string }> {
-      return request('POST', '/me/subscriptions/resume')
+    resumeSubscription(subscriptionId: string): Promise<{ status: string }> {
+      return request('POST', `/me/subscriptions/${subscriptionId}/resume`)
     },
 
-    changeSubscription(payload: ChangeSubscriptionPayload): Promise<ChangeSubscriptionResponse> {
-      return request('POST', '/me/subscriptions/change', {
+    changeSubscription(subscriptionId: string, payload: ChangeSubscriptionPayload): Promise<ChangeSubscriptionResponse> {
+      return request('POST', `/me/subscriptions/${subscriptionId}/change-tier`, {
         body: payload,
       })
     },
@@ -309,10 +300,23 @@ export const createClient = (config: ClientConfig) => {
       return normalizeList(result)
     },
 
-    async getSolanaTokens(): Promise<TokenInfo[]> {
+    async getSolanaTokens(params?: {
+      checkoutSessionId?: string
+      walletId?: string
+      wallet?: string
+      priceId?: string
+    }): Promise<TokenInfo[]> {
       const response = await request<{ tokens?: TokenInfo[] } | TokenInfo[]>(
         'GET',
-        '/solana/tokens'
+        '/solana/tokens',
+        {
+          query: {
+            checkout_session_id: params?.checkoutSessionId,
+            wallet_id: params?.walletId,
+            wallet: params?.wallet,
+            price_id: params?.priceId,
+          },
+        }
       )
       if (Array.isArray(response)) {
         return response
@@ -320,70 +324,6 @@ export const createClient = (config: ClientConfig) => {
       return response.tokens ?? []
     },
 
-    async createSolanaPayIntent(payload: {
-      priceId: string
-      token: string
-      userWallet?: string
-    }): Promise<SolanaPayQRCodeIntent> {
-      const response = await request<any>('POST', '/solana/pay', {
-        body: {
-          price_id: payload.priceId,
-          token: payload.token,
-          ...(payload.userWallet ? { user_wallet: payload.userWallet } : {}),
-        },
-      })
-
-      return response as SolanaPayQRCodeIntent
-    },
-
-    async getSolanaPayStatus(reference: string): Promise<SolanaPayStatusResponse> {
-      const response = await request<{
-        status: string
-        payment_id?: string
-        signature?: string
-        intent_id?: string
-      }>(
-        'GET',
-        `/solana/pay/${reference}`
-      )
-
-      if (response.status === 'confirmed') {
-        return {
-          status: 'confirmed',
-          payment_id: response.payment_id ?? '',
-          transaction: response.signature ?? null,
-          intent_id: response.intent_id,
-        }
-      }
-
-      if (response.status === 'expired') {
-        return {
-          status: 'failed',
-          payment_id: response.payment_id ?? '',
-          transaction: response.signature ?? null,
-          intent_id: response.intent_id,
-          error_message: 'Payment intent expired',
-        }
-      }
-
-      return {
-        status: 'pending',
-        payment_id: response.payment_id ?? '',
-        transaction: response.signature ?? null,
-        intent_id: response.intent_id,
-      }
-    },
-
-    async getPaymentStatus(id: string): Promise<PaymentStatusResponse | null> {
-      try {
-        return await request<PaymentStatusResponse>('GET', `/payment/status/${id}`)
-      } catch (error) {
-        if (error instanceof ClientApiError && error.status === 404) {
-          return null
-        }
-        throw error
-      }
-    },
   }
 }
 

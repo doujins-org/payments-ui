@@ -134,7 +134,6 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
     update: (id: string, payload: CreatePaymentMethodPayload) =>
       client.updatePaymentMethod(id, payload),
     remove: (id: string) => client.deletePaymentMethod(id),
-    activate: (id: string) => client.activatePaymentMethod(id),
   }
 
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -190,22 +189,6 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
       })
     },
     onSettled: () => setDeletingId(null),
-  })
-
-
-  const activateMutation = useMutation<void, Error, string>({
-    mutationFn: (id) => paymentMethods.activate(id),
-    onSuccess: () => {
-      notify({ title: t.defaultPaymentMethodUpdated, status: 'success' })
-      void queryClient.invalidateQueries({ queryKey })
-    },
-    onError: (error) => {
-      notify({
-        title: t.unableToSetDefault,
-        description: error.message,
-        status: 'destructive',
-      })
-    },
   })
 
   useEffect(() => {
@@ -316,17 +299,6 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
                   </div>
 
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {/* <Button
-                      variant="outline"
-                      disabled={method.is_active || activateMutation.isPending}
-                      onClick={() => activateMutation.mutate(method.id)}
-                    >
-                      {activateMutation.isPending ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : null}
-                      {method.is_active ? t.defaultMethod : t.makeDefault}
-                    </Button> */}
-      
                     <Button
                       variant="ghost"
                       className="text-red-400 hover:text-red-300"

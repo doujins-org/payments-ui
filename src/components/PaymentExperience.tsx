@@ -58,6 +58,8 @@ export const defaultPaymentExperienceTranslations: Required<PaymentExperienceTra
 export interface PaymentExperienceProps {
   priceId: string
   usdAmount: number
+  checkoutSessionId?: string
+  walletId?: string
   onNewCardPayment?: (payload: {
     token: string
     billing: BillingDetails
@@ -80,6 +82,8 @@ export interface PaymentExperienceProps {
 export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
   priceId,
   usdAmount,
+  checkoutSessionId,
+  walletId,
   onNewCardPayment,
   onSavedMethodPayment,
   onCcbillPayment,
@@ -561,6 +565,8 @@ export const PaymentExperience: React.FC<PaymentExperienceProps> = ({
         <SolanaPaymentView
           priceId={priceId}
           usdAmount={usdAmount}
+          checkoutSessionId={checkoutSessionId}
+          walletId={walletId}
           onSuccess={handleSolanaSuccess}
           onError={handleSolanaError}
           onClose={exitSolanaView}

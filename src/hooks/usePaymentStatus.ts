@@ -31,7 +31,7 @@ export const usePaymentStatus = (options: PaymentStatusHookOptions = {}) => {
   const [error, setError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
 
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const isMonitoringRef = useRef(false)
 
   // Clear interval on unmount
@@ -103,19 +103,14 @@ export const usePaymentStatus = (options: PaymentStatusHookOptions = {}) => {
   )
 
   // Check payment status from backend
+  // Note: Backend payment status endpoint is not available, returning null
   const checkPaymentStatus = useCallback(
-    async (id: string): Promise<PaymentStatusResponse | null> => {
-      try {
-        return await client.getPaymentStatus(id)
-      } catch (error) {
-        console.error('Failed to check payment status:', {
-          purchaseId: id,
-          error,
-        })
-        return null
-      }
+    async (_id: string): Promise<PaymentStatusResponse | null> => {
+      // Payment status checking via backend is not supported
+      // Use Solana blockchain status checking instead
+      return null
     },
-    [client]
+    []
   )
 
   // Monitor transaction until confirmed or failed

@@ -69,6 +69,20 @@ export interface SupportedTokensResponse {
   tokens: TokenInfo[]
 }
 
+export interface TokenQuoteInfo {
+  token_units: number | string
+  token_amount: string
+  token_price_usd?: number
+  fx_rate_to_usd?: number
+  fx_currency?: string
+  quoted_at?: string
+}
+
+export interface TokenBalanceInfo {
+  units: number | string
+  amount: string
+}
+
 export interface TokenInfo {
   name: string
   mint: string
@@ -76,6 +90,8 @@ export interface TokenInfo {
   decimals: number
   price: number
   is_native?: boolean
+  quote?: TokenQuoteInfo
+  balance?: TokenBalanceInfo
 }
 
 // Frontend payment state types

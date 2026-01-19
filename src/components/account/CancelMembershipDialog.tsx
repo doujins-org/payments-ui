@@ -38,6 +38,7 @@ export interface CancelMembershipDialogTranslations {
 }
 
 export interface CancelMembershipDialogProps {
+  subscriptionId: string
   minReasonLength?: number
   onCancelled?: () => void
   onNotify?: NotificationHandler
@@ -71,6 +72,7 @@ export const defaultTranslations: Required<CancelMembershipDialogTranslations> =
 }
 
 export const CancelMembershipDialog: React.FC<CancelMembershipDialogProps> = ({
+  subscriptionId,
   minReasonLength = 15,
   onCancelled,
   onNotify,
@@ -127,7 +129,7 @@ export const CancelMembershipDialog: React.FC<CancelMembershipDialogProps> = ({
 
     setIsSubmitting(true)
     try {
-      await client.cancelSubscription(cancelReason.trim())
+      await client.cancelSubscription(subscriptionId, cancelReason.trim())
       notify({
         title: t.membershipCancelled,
         description: t.cancellationSuccess,

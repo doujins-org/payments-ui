@@ -13,6 +13,8 @@ export interface SubscriptionCheckoutModalProps {
   onOpenChange: (open: boolean) => void
   priceId?: string | null
   usdAmount?: number
+  checkoutSessionId?: string
+  walletId?: string
   planName?: string
   amountLabel?: string
   billingPeriodLabel?: string
@@ -42,6 +44,8 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
   onOpenChange,
   priceId,
   usdAmount = 0,
+  checkoutSessionId,
+  walletId,
   planName,
   amountLabel,
   billingPeriodLabel,
@@ -186,6 +190,8 @@ export const SubscriptionCheckoutModal: React.FC<SubscriptionCheckoutModalProps>
                 <PaymentExperience
                   usdAmount={usdAmount}
                   priceId={priceId ?? ''}
+                  checkoutSessionId={checkoutSessionId}
+                  walletId={walletId}
                   initialMode={initialMode}
                   onSolanaError={solanaError}
                   onSolanaSuccess={solanaSuccess}

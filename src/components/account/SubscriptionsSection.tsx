@@ -216,10 +216,7 @@ export const SubscriptionsSection: React.FC<SubscriptionsSectionProps> = ({
 
   const updatePaymentMethodMutation = useMutation({
     mutationFn: (payload: { subscriptionId: string; paymentMethodId: string }) =>
-      client.updateSubscriptionPaymentMethod({
-        subscription_id: payload.subscriptionId,
-        payment_method_id: payload.paymentMethodId,
-      }),
+      client.updateSubscriptionPaymentMethod(payload.subscriptionId, payload.paymentMethodId),
     onSuccess: () => {
       notify({ title: t.paymentMethodUpdated, status: 'success' })
       void queryClient.invalidateQueries({ queryKey: subscriptionsQueryKey })
@@ -234,7 +231,7 @@ export const SubscriptionsSection: React.FC<SubscriptionsSectionProps> = ({
   })
 
   const resumeSubscriptionMutation = useMutation({
-    mutationFn: () => client.resumeSubscription(),
+    mutationFn: (subscriptionId: string) => client.resumeSubscription(subscriptionId),
     onSuccess: () => {
       notify({ title: t.resumeSuccess, status: 'success' })
       void queryClient.invalidateQueries({ queryKey: subscriptionsQueryKey })
@@ -249,7 +246,8 @@ export const SubscriptionsSection: React.FC<SubscriptionsSectionProps> = ({
   })
 
   const changeSubscriptionMutation = useMutation({
-    mutationFn: (payload: { priceId: string }) => client.changeSubscription({ price_id: payload.priceId }),
+    mutationFn: (payload: { subscriptionId: string; priceId: string }) =>
+      client.changeSubscription(payload.subscriptionId, { price_id: payload.priceId }),
     onSuccess: () => {
       notify({ title: t.planChanged, status: 'success' })
       void queryClient.invalidateQueries({ queryKey: subscriptionsQueryKey })
@@ -324,7 +322,7 @@ export const SubscriptionsSection: React.FC<SubscriptionsSectionProps> = ({
   const handleChangePrice = (subscriptionId: string) => {
     const priceId = priceInputs[subscriptionId]
     if (!priceId) return
-    changeSubscriptionMutation.mutate({ priceId })
+    changeSubscriptionMutation.mutate({ subscriptionId, priceId })
   }
 
   const toggleSection = (key: string) => {
@@ -443,7 +441,7 @@ export const SubscriptionsSection: React.FC<SubscriptionsSectionProps> = ({
                   {activeSubscription.status.toLowerCase() === 'cancelled' ? (
                     <Button
                       variant="secondary"
-                      onClick={() => resumeSubscriptionMutation.mutate()}
+                      onClick={() => resumeSubscriptionMutation.mutate(activeSubscription.id)}
                       disabled={resumeSubscriptionMutation.isPending}
                       className="rounded-full px-4"
                     >
@@ -572,6 +570,7 @@ export const SubscriptionsSection: React.FC<SubscriptionsSectionProps> = ({
 
         <DialogFooter className="flex flex-wrap gap-2">
           <CancelMembershipDialog
+            subscriptionId={activeSubscription?.id ?? ''}
             translations={cancelTranslations}
             onNotify={onNotify}
             open={cancelDialogOpen}

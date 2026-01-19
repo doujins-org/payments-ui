@@ -31,6 +31,7 @@ export interface BillingHistoryTranslations {
 }
 
 export interface BillingHistoryProps {
+  subscriptionId?: string
   pageSize?: number
   initialPage?: number
   enableCancel?: boolean
@@ -60,6 +61,7 @@ const defaultTranslations: Required<BillingHistoryTranslations> = {
 }
 
 export const BillingHistory: React.FC<BillingHistoryProps> = ({
+  subscriptionId,
   pageSize = 10,
   initialPage = 1,
   enableCancel = true,
@@ -192,8 +194,8 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
             <div className="space-y-4">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <p className="text-sm text-muted-foreground">{t.reviewActivity}</p>
-                {enableCancel && (
-                  <CancelMembershipDialog onNotify={notify} onCancelled={onCancelled} />
+                {enableCancel && subscriptionId && (
+                  <CancelMembershipDialog subscriptionId={subscriptionId} onNotify={notify} onCancelled={onCancelled} />
                 )}
               </div>
 

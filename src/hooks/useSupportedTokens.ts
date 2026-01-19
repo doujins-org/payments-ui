@@ -1,8 +1,15 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react'
 import { TokenInfo } from '../types'
 import { usePaymentContext } from '../context/PaymentContext'
 
-export const useSupportedTokens = () => {
+export interface SolanaTokensQuery {
+  checkoutSessionId?: string
+  walletId?: string
+  wallet?: string
+  priceId?: string
+}
+
+export const useSupportedTokens = (query?: SolanaTokensQuery) => {
   const { client } = usePaymentContext()
   const [tokens, setTokens] = useState<TokenInfo[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -12,64 +19,99 @@ export const useSupportedTokens = () => {
   // Cache duration: 5 minutes
   const CACHE_DURATION = 5 * 60 * 1000
 
-  // Use refs to avoid dependency issues
-  const tokensRef = useRef(tokens)
-  const lastFetchedRef = useRef(lastFetched)
+  const cacheRef = useRef(
+    new Map<string, { tokens: TokenInfo[]; fetchedAt: number }>()
+  )
 
-  // Update refs when state changes
-  tokensRef.current = tokens
-  lastFetchedRef.current = lastFetched
+  const queryKey = useMemo(() => {
+    const checkoutSessionId = query?.checkoutSessionId?.trim() || ''
+    const walletId = query?.walletId?.trim() || ''
+    const wallet = query?.wallet?.trim() || ''
+    const priceId = query?.priceId?.trim() || ''
+    return [checkoutSessionId, walletId, wallet, priceId].join('|')
+  }, [query?.checkoutSessionId, query?.walletId, query?.wallet, query?.priceId])
 
   // Fetch supported tokens from backend
-  const fetchSupportedTokens = useCallback(async () => {
-    // Check if we have fresh cached data
-    if (
-      tokensRef.current.length > 0 &&
-      lastFetchedRef.current &&
-      Date.now() - lastFetchedRef.current < CACHE_DURATION
-    ) {
-      return tokensRef.current
-    }
+  const fetchSupportedTokens = useCallback(
+    async (overrideQuery?: SolanaTokensQuery) => {
+      const checkoutSessionId =
+        overrideQuery?.checkoutSessionId ?? query?.checkoutSessionId
+      const walletId = overrideQuery?.walletId ?? query?.walletId
+      const wallet = overrideQuery?.wallet ?? query?.wallet
+      const priceId = overrideQuery?.priceId ?? query?.priceId
 
-    setIsLoading(true)
-    setError(null)
+      const key = [
+        checkoutSessionId?.trim() || '',
+        walletId?.trim() || '',
+        wallet?.trim() || '',
+        priceId?.trim() || '',
+      ].join('|')
 
-    try {
-      console.log('payments-ui: fetching supported Solana tokens')
-      const tokens = await client.getSolanaTokens()
+      const cached = cacheRef.current.get(key)
+      if (cached && Date.now() - cached.fetchedAt < CACHE_DURATION) {
+        setTokens(cached.tokens)
+        setLastFetched(cached.fetchedAt)
+        return cached.tokens
+      }
 
-      // Sort tokens by symbol for consistent ordering
-      const sortedTokens = [...tokens].sort((a, b) =>
-        a.symbol.localeCompare(b.symbol)
-      )
+      setIsLoading(true)
+      setError(null)
 
-      setTokens(sortedTokens)
-      console.log('payments-ui: loaded supported tokens', {
-        count: sortedTokens.length,
-      })
-      setLastFetched(Date.now())
-      return sortedTokens
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Failed to fetch supported tokens'
-      setError(errorMessage)
-      console.error('Failed to fetch supported tokens:', error)
+      try {
+        console.log('payments-ui: fetching supported Solana tokens', {
+          checkoutSessionId: checkoutSessionId || undefined,
+          walletId: walletId || undefined,
+          wallet: wallet || undefined,
+          priceId: priceId || undefined,
+        })
+        const tokens = await client.getSolanaTokens({
+          checkoutSessionId,
+          walletId,
+          wallet,
+          priceId,
+        })
 
-      // Return empty array on error
-      return []
-    } finally {
-      setIsLoading(false)
-    }
-  }, [client])
+        // Sort tokens by symbol for consistent ordering
+        const sortedTokens = [...tokens].sort((a, b) =>
+          a.symbol.localeCompare(b.symbol)
+        )
+
+        const fetchedAt = Date.now()
+        cacheRef.current.set(key, { tokens: sortedTokens, fetchedAt })
+        setTokens(sortedTokens)
+        console.log('payments-ui: loaded supported tokens', {
+          count: sortedTokens.length,
+        })
+        setLastFetched(fetchedAt)
+        return sortedTokens
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'Failed to fetch supported tokens'
+        setError(errorMessage)
+        console.error('Failed to fetch supported tokens:', error)
+
+        // Return empty array on error
+        return []
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [
+      CACHE_DURATION,
+      client,
+      query?.checkoutSessionId,
+      query?.priceId,
+      query?.wallet,
+      query?.walletId,
+    ]
+  )
 
   // Auto-fetch on mount
   useEffect(() => {
-    if (tokens.length === 0) {
-      fetchSupportedTokens()
-    }
-  }, [tokens.length, fetchSupportedTokens])
+    void fetchSupportedTokens()
+  }, [fetchSupportedTokens, queryKey])
 
   // Get token by symbol
   const getTokenBySymbol = useCallback(
@@ -117,9 +159,10 @@ export const useSupportedTokens = () => {
 
   // Refresh tokens (bypass cache)
   const refreshTokens = useCallback(async () => {
-    setLastFetched(null) // Clear cache
-    return await fetchSupportedTokens()
-  }, [fetchSupportedTokens])
+    cacheRef.current.delete(queryKey)
+    setLastFetched(null)
+    return await fetchSupportedTokens({ ...query })
+  }, [fetchSupportedTokens, query, queryKey])
 
   // Check if cache is stale
   const isCacheStale = useCallback((): boolean => {
