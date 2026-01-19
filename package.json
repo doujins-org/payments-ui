@@ -1,6 +1,6 @@
 {
   "name": "@doujins/payments-ui",
-  "version": "0.1.20",
+  "version": "0.1.21",
   "description": "Payments UI",
   "type": "module",
   "main": "dist/index.cjs",
@@ -11,13 +11,14 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    }
+    },
+    "./styles.css": "./dist/styles.css"
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup --config tsup.config.ts",
+    "build": "tsup --config tsup.config.ts && cp src/styles.css dist/styles.css",
     "dev": "tsup --config tsup.config.ts --watch",
     "test": "vitest run",
     "test:watch": "vitest",
